@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "@onflow/fcl": "^0.0.76",
+    "@onflow/types": "^0.0.5"
+  },
+  "name": "lending",
+  "description": "Money market on Flow",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pacmoon/lending.git"
+  },
+  "author": "pacmoon team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pacmoon/lending/issues"
+  },
+  "homepage": "https://github.com/pacmoon/lending#readme"
+}
