@@ -5,7 +5,7 @@
 * Install json parsing tool `jq` by `brew install jq`
 * Run `yarn` or `npm install`
 * Start emulator by `flow emulator -v`, (use `--persist` flag if want to reuse emulator environment)
-* Check and run `./gen-env-keys.sh` several times, basically it performs:
+* Check and run `./commands/gen-env-keys.sh` several times, basically it performs:
   - Generate {privateKey, publicKey} pair by `flow keys generate --sig-algo=ECDSA_secp256k1`
   - Create emulator deployer accounts (see `flow.json`) by `flow accounts create --key "generated-publicKey" --sig-algo "ECDSA_secp256k1" --signer "emulator-account"`
 * Replace emulator deployers' `privateKey` fields in `flow.json` file correspondingly, or simply keep the given json file unchanged, whose {privateKey, publicKey} are listed below:

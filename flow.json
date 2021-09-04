@@ -1,11 +1,11 @@
 {
-	"emulators": {
-		"default": {
-			"port": 3569,
-			"serviceAccount": "emulator-account"
-		}
-	},
-	"contracts": {
+  "emulators": {
+    "default": {
+      "port": 3569,
+      "serviceAccount": "emulator-account"
+    }
+  },
+  "contracts": {
     "FungibleToken": {
       "source": "./cadence/contracts/FungibleToken.cdc",
       "aliases": {
@@ -30,16 +30,16 @@
       }
     }
   },
-	"networks": {
-		"emulator": "127.0.0.1:3569",
-		"mainnet": "access.mainnet.nodes.onflow.org:9000",
-		"testnet": "access.devnet.nodes.onflow.org:9000"
-	},
-	"accounts": {
-		"emulator-account": {
-			"address": "f8d6e0586b0a20c7",
-			"key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f"
-		},
+  "networks": {
+    "emulator": "127.0.0.1:3569",
+    "mainnet": "access.mainnet.nodes.onflow.org:9000",
+    "testnet": "access.devnet.nodes.onflow.org:9000"
+  },
+  "accounts": {
+    "emulator-account": {
+      "address": "f8d6e0586b0a20c7",
+      "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f"
+    },
     "emulator-auditor-deployer": {
       "address": "01cf0e2f2f715450",
       "key":{
@@ -90,8 +90,8 @@
         "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
       }
     }
-	},
-	"deployments": {
+  },
+  "deployments": {
     "emulator": {
       "emulator-account": [
         "FUSD"
