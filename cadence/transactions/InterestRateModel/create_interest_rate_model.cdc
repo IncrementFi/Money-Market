@@ -6,9 +6,9 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 transaction(
     modelName: String,
     blocksPerYear: UInt64,
-    baseRatePerYear: UFix64, 
-    baseSlope: UFix64,
-    jumpSlope: UFix64,
+    zeroUtilInterestRatePerYear: UFix64, 
+    criticalUtilInterestRatePerYear: UFix64,
+    fullUtilInterestRatePerYear: UFix64,
     criticalUtilRate: UFix64
 ) {
     prepare(adminAccount: AuthAccount) {
@@ -24,10 +24,10 @@ transaction(
         let newModel <- adminRef.createInterestRateModel(
             modelName: modelName,
             blocksPerYear: blocksPerYear,
-            baseRatePerYear: baseRatePerYear,
-            baseSlope: baseSlope,
-            jumpSlope: jumpSlope,
-            criticalUtilRate: criticalUtilRate
+            zeroUtilInterestRatePerYear: zeroUtilInterestRatePerYear,
+            criticalUtilInterestRatePerYear: criticalUtilInterestRatePerYear,
+            fullUtilInterestRatePerYear: fullUtilInterestRatePerYear,
+            criticalUtilPoint: criticalUtilRate
         )
         adminAccount.save(<-newModel, to: TwoSegmentsInterestRateModel.InterestRateModelStoragePath)
         // Create a private capability to InterestRateModel resource, which is only used for adminAccount to update parameters
@@ -35,13 +35,13 @@ transaction(
             TwoSegmentsInterestRateModel.InterestRateModelPrivatePath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
-        // Create a public capability to InterestRateModel resource that only exposes InterestRateModelInterface
-        adminAccount.link<&{InterestRateModelInterface}>(
+        // Create a public capability to InterestRateModel resource that only exposes ModelPublic
+        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{InterestRateModelInterface.ModelPublic}>(
             TwoSegmentsInterestRateModel.InterestRateModelPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
-        // Create another public capability to InterestRateModel resource that only exposes InterestRateModelParamsGetter
-        adminAccount.link<&{TwoSegmentsInterestRateModel.InterestRateModelParamsGetter}>(
+        // Create another public capability to InterestRateModel resource that only exposes ModelParamsGetter
+        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{TwoSegmentsInterestRateModel.ModelParamsGetter}>(
             TwoSegmentsInterestRateModel.InterestRateModelParamsPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )

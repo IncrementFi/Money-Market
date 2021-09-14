@@ -2,10 +2,10 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 
 transaction(
     newBlocksPerYear: UInt64,
-    newBaseRatePerYear: UFix64, 
-    newBaseSlope: UFix64,
-    newJumpSlope: UFix64,
-    newCriticalUtilRate: UFix64
+    newZeroUtilInterestRatePerYear: UFix64, 
+    newCriticalUtilInterestRatePerYear: UFix64,
+    newFullUtilInterestRatePerYear: UFix64,
+    newCriticalUtilPoint: UFix64
 ) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
@@ -17,10 +17,10 @@ transaction(
         adminRef.updateInterestRateModelParams(
             updateCapability: updateCapability,
             newBlocksPerYear: newBlocksPerYear,
-            newBaseRatePerYear: newBaseRatePerYear,
-            newBaseSlope: newBaseSlope,
-            newJumpSlope: newJumpSlope,
-            newCriticalUtilRate: newCriticalUtilRate
+            newZeroUtilInterestRatePerYear: newZeroUtilInterestRatePerYear,
+            newCriticalUtilInterestRatePerYear: newCriticalUtilInterestRatePerYear,
+            newFullUtilInterestRatePerYear: newFullUtilInterestRatePerYear,
+            newCriticalUtilPoint: newCriticalUtilPoint
         )
     }
 }

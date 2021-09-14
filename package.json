@@ -1,7 +1,12 @@
 {
   "dependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
     "@onflow/fcl": "^0.0.76",
-    "@onflow/types": "^0.0.5"
+    "@onflow/types": "^0.0.5",
+    "babel-jest": "^27.2.0",
+    "flow-js-testing": "^0.1.13",
+    "jest": "^27.2.0"
   },
   "name": "lending",
   "description": "Money market on Flow",
@@ -10,9 +15,8 @@
   "directories": {
     "test": "test"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",

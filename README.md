@@ -26,5 +26,11 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 
 
 
-### Run test:
+### Unittest with [flow-js-testing](https://github.com/onflow/flow-js-testing):
+* Docs: https://docs.onflow.org/flow-js-testing/
+* Testsuite setup: Check examples under ./tests/setup/setup_<testsuite>.js
+* Testsuite development: Check examples under ./tests/test/<testsuite>.test.js
 
+
+### Run tests:
+* `npm test`
