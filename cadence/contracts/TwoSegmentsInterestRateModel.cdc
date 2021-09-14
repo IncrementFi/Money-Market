@@ -1,6 +1,6 @@
 import InterestRateModelInterface from "./InterestRateModelInterface.cdc"
 
-pub contract TwoSegmentsInterestRateModel {
+pub contract TwoSegmentsInterestRateModel: InterestRateModelInterface {
     // The storage path for the Admin resource
     pub let AdminStoragePath: StoragePath
     // The storage path for the InterestRateModel resource
@@ -16,27 +16,27 @@ pub contract TwoSegmentsInterestRateModel {
     pub event InterestRateModelUpdated(
         _ oldBlocksPerYear: UInt64, _ newBlocksPerYear: UInt64,
         _ oldBaseRatePerBlock: UFix64, _ newBaseRatePerBlock: UFix64,
-        _ oldBaseSlope: UFix64, _ newBaseSlope: UFix64,
-        _ oldJumpSlope: UFix64, _ newJumpSlope: UFix64,
+        _ oldBaseMultiplierPerBlock: UFix64, _ newBaseMultiplierPerBlock: UFix64,
+        _ oldJumpMultiplierPerBlock: UFix64, _ newJumpMultiplierPerBlock: UFix64,
         _ oldCriticalUtilRate: UFix64, _ newCriticalUtilRate: UFix64
     )
 
     // Interface exposing model specific fields, e.g.: modelName, model params.
-    pub resource interface InterestRateModelParamsGetter {
+    pub resource interface ModelParamsGetter {
         pub fun getInterestRateModelParams(): {String: AnyStruct}
     }
 
-    pub resource InterestRateModel: InterestRateModelInterface, InterestRateModelParamsGetter {
+    pub resource InterestRateModel: InterestRateModelInterface.ModelPublic, ModelParamsGetter {
         access(self) let modelName: String
         // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt64
-        // The base interest rate per block which is the y-intercept when utilization rate is 0
+        // The base borrow interest rate per block when utilization rate is 0 (the y-intercept)
         access(self) var baseRatePerBlock: UFix64
-        // The multiplier of utilization rate that gives the slope of the interest rate
-        access(self) var baseSlope: UFix64
-        // The slope after hitting the critical utilization point
-        access(self) var jumpSlope: UFix64
-        // The critical point of utilization rate beyond which the jumpSlope is applied
+        // The multiplier of utilization rate that gives the base slope of the borrow interest rate when utilRate% <= criticalUtilRate%
+        access(self) var baseMultiplierPerBlock: UFix64
+        // The multiplier of utilization rate that gives the jump slope of the borrow interest rate when utilRate% > criticalUtilRate%
+        access(self) var jumpMultiplierPerBlock: UFix64
+        // The critical point of utilization rate beyond which the jumpMultiplierPerBlock is applied
         access(self) var criticalUtilRate: UFix64
 
         pub fun getUtilizationRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64 {
@@ -46,16 +46,18 @@ pub contract TwoSegmentsInterestRateModel {
             return borrows / (cash + borrows - reserves);
         }
 
+        // Get the borrow interest rate per block
         pub fun getBorrowRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64 {
             let utilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
             if (utilRate <= self.criticalUtilRate) {
-                return self.baseSlope * utilRate + self.baseRatePerBlock
+                return self.baseMultiplierPerBlock * utilRate + self.baseRatePerBlock
             } else {
-                let criticalUtilBorrowRate = self.baseSlope * self.criticalUtilRate + self.baseRatePerBlock
-                return (utilRate - self.criticalUtilRate) * self.jumpSlope + criticalUtilBorrowRate
+                let criticalUtilBorrowRate = self.baseMultiplierPerBlock * self.criticalUtilRate + self.baseRatePerBlock
+                return (utilRate - self.criticalUtilRate) * self.jumpMultiplierPerBlock + criticalUtilBorrowRate
             }
         }
 
+        // Get the supply interest rate per block
         pub fun getSupplyRate(cash: UFix64, borrows: UFix64, reserves: UFix64, reserveFactor: UFix64): UFix64 {
             assert(reserveFactor < 1.0, message: "reserveFactor should always be less than 1.0")
 
@@ -69,65 +71,77 @@ pub contract TwoSegmentsInterestRateModel {
                 "modelName": self.modelName,
                 "blocksPerYear": self.blocksPerYear,
                 "baseRatePerBlock": self.baseRatePerBlock,
-                "baseSlope": self.baseSlope,
-                "jumpSlope": self.jumpSlope,
+                "baseMultiplierPerBlock": self.baseMultiplierPerBlock,
+                "jumpMultiplierPerBlock": self.jumpMultiplierPerBlock,
                 "criticalUtilRate": self.criticalUtilRate
             }
         }
 
         access(contract) fun setInterestRateModelParams(
-            _ blocksPerYear: UInt64,
-            _ baseRatePerYear: UFix64,
-            _ baseSlope: UFix64,
-            _ jumpSlope: UFix64,
-            _ criticalUtilRate: UFix64
+            _ newBlocksPerYear: UInt64,
+            _ newZeroUtilInterestRatePerYear: UFix64,
+            _ newCriticalUtilInterestRatePerYear: UFix64,
+            _ newFullUtilInterestRatePerYear: UFix64,
+            _ newCriticalUtilPoint: UFix64
         ) {
+            pre {
+                newCriticalUtilPoint > 0.0 && newCriticalUtilPoint < 1.0: "criticalUtilRate should be within (0.0, 1.0)"
+                newZeroUtilInterestRatePerYear <= newCriticalUtilInterestRatePerYear &&
+                newCriticalUtilInterestRatePerYear <= newFullUtilInterestRatePerYear : "Invalid InterestRateModel Parameters"
+            }
+
             let _blocksPerYear = self.blocksPerYear
-            if (blocksPerYear != _blocksPerYear) {
-                self.blocksPerYear = blocksPerYear
-            }
+            self.blocksPerYear = newBlocksPerYear
             let _baseRatePerBlock = self.baseRatePerBlock
-            self.baseRatePerBlock = baseRatePerYear / UFix64(self.blocksPerYear)
-            let _baseSlope = self.baseSlope
-            if (baseSlope != _baseSlope) {
-                self.baseSlope = baseSlope
-            }
-            let _jumpSlope = self.jumpSlope
-            if (jumpSlope != _jumpSlope) {
-                self.jumpSlope = jumpSlope
-            }
+            self.baseRatePerBlock = newZeroUtilInterestRatePerYear / UFix64(self.blocksPerYear)            
+            let _baseMultiplierPerBlock = self.baseMultiplierPerBlock
+            self.baseMultiplierPerBlock = (newCriticalUtilInterestRatePerYear - newZeroUtilInterestRatePerYear) / newCriticalUtilPoint / UFix64(newBlocksPerYear)
+            let _jumpMultiplierPerBlock = self.jumpMultiplierPerBlock
+            self.jumpMultiplierPerBlock = (newFullUtilInterestRatePerYear - newCriticalUtilInterestRatePerYear) / (1.0 - newCriticalUtilPoint) / UFix64(newBlocksPerYear)
             let _criticalUtilRate = self.criticalUtilRate
-            if (criticalUtilRate != _criticalUtilRate) {
-                self.criticalUtilRate = criticalUtilRate
-            }
+            self.criticalUtilRate = newCriticalUtilPoint
             emit InterestRateModelUpdated(
                 _blocksPerYear, self.blocksPerYear,
                 _baseRatePerBlock, self.baseRatePerBlock,
-                _baseSlope, self.baseSlope,
-                _jumpSlope, self.jumpSlope,
+                _baseMultiplierPerBlock, self.baseMultiplierPerBlock,
+                _jumpMultiplierPerBlock, self.jumpMultiplierPerBlock,
                 _criticalUtilRate, self.criticalUtilRate
             )
         }
 
+        /**
+        * @param {string} modelName - e.g. "TwoSegmentsInterestRateModel"
+        * @param {UInt64} blocksPerYear - 1s avg blocktime for testnet (31536000 blocks / year), 2.5s avg blocktime for mainnet (12614400 blocks / year).
+        * @param {UFix64} zeroUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 0%, e.g. 0.0 (0%)
+        * @param {UFix64} criticalUtilInterestRatePerYear - Borrow interest rate per year when utilization rate hits the critical point, e.g. 0.0 (0%) e.g. 0.05 (5%)
+        * @param {UFix64} fullUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 100%, e.g. 0.35 (35%)
+        * @param {UFix64} criticalUtilPoint - The critical utilization point beyond which the interest rate jumps (i.e. two-segments interest model), e.g. 0.8 (80%)
+        */
         init(
             modelName: String,
             blocksPerYear: UInt64,
-            baseRatePerYear: UFix64,
-            baseSlope: UFix64,
-            jumpSlope: UFix64,
-            criticalUtilRate: UFix64
+            zeroUtilInterestRatePerYear: UFix64,
+            criticalUtilInterestRatePerYear: UFix64,
+            fullUtilInterestRatePerYear: UFix64,
+            criticalUtilPoint: UFix64
         ) {
+            pre {
+                criticalUtilPoint > 0.0 && criticalUtilPoint < 1.0: "criticalUtilRate should be within (0.0, 1.0)"
+                zeroUtilInterestRatePerYear <= criticalUtilInterestRatePerYear &&
+                criticalUtilInterestRatePerYear <= fullUtilInterestRatePerYear : "Invalid InterestRateModel Parameters"
+            }
+
             self.modelName = modelName;
             self.blocksPerYear = blocksPerYear
-            self.baseRatePerBlock = baseRatePerYear / UFix64(blocksPerYear)
-            self.baseSlope = baseSlope
-            self.jumpSlope = jumpSlope
-            self.criticalUtilRate = criticalUtilRate
+            self.baseRatePerBlock = zeroUtilInterestRatePerYear / UFix64(blocksPerYear)
+            self.baseMultiplierPerBlock = (criticalUtilInterestRatePerYear - zeroUtilInterestRatePerYear) / criticalUtilPoint / UFix64(blocksPerYear)
+            self.jumpMultiplierPerBlock = (fullUtilInterestRatePerYear - criticalUtilInterestRatePerYear) / (1.0 - criticalUtilPoint) / UFix64(blocksPerYear)
+            self.criticalUtilRate = criticalUtilPoint
             emit InterestRateModelUpdated(
                 0,   self.blocksPerYear,
                 0.0, self.baseRatePerBlock,
-                0.0, self.baseSlope,
-                0.0, self.jumpSlope,
+                0.0, self.baseMultiplierPerBlock,
+                0.0, self.jumpMultiplierPerBlock,
                 0.0, self.criticalUtilRate
             )
         }
@@ -137,31 +151,35 @@ pub contract TwoSegmentsInterestRateModel {
         pub fun createInterestRateModel(
             modelName: String,
             blocksPerYear: UInt64,
-            baseRatePerYear: UFix64,
-            baseSlope: UFix64,
-            jumpSlope: UFix64,
-            criticalUtilRate: UFix64): @InterestRateModel
+            zeroUtilInterestRatePerYear: UFix64,
+            criticalUtilInterestRatePerYear: UFix64,
+            fullUtilInterestRatePerYear: UFix64,
+            criticalUtilPoint: UFix64): @InterestRateModel
         {
             return <-create InterestRateModel(
                 modelName: modelName,
                 blocksPerYear: blocksPerYear,
-                baseRatePerYear: baseRatePerYear,
-                baseSlope: baseSlope,
-                jumpSlope: jumpSlope,
-                criticalUtilRate: criticalUtilRate
+                zeroUtilInterestRatePerYear: zeroUtilInterestRatePerYear,
+                criticalUtilInterestRatePerYear: criticalUtilInterestRatePerYear,
+                fullUtilInterestRatePerYear: fullUtilInterestRatePerYear,
+                criticalUtilPoint: criticalUtilPoint
             )
         }
 
         pub fun updateInterestRateModelParams(
             updateCapability: Capability<&InterestRateModel>,
             newBlocksPerYear: UInt64,
-            newBaseRatePerYear: UFix64,
-            newBaseSlope: UFix64,
-            newJumpSlope: UFix64,
-            newCriticalUtilRate: UFix64
+            newZeroUtilInterestRatePerYear: UFix64,
+            newCriticalUtilInterestRatePerYear: UFix64,
+            newFullUtilInterestRatePerYear: UFix64,
+            newCriticalUtilPoint: UFix64
         ) {
             updateCapability.borrow()!.setInterestRateModelParams(
-                newBlocksPerYear, newBaseRatePerYear, newBaseSlope, newJumpSlope, newCriticalUtilRate
+                newBlocksPerYear,
+                newZeroUtilInterestRatePerYear,
+                newCriticalUtilInterestRatePerYear,
+                newFullUtilInterestRatePerYear,
+                newCriticalUtilPoint
             )
         }
     }
