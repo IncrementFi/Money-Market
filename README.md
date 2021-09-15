@@ -30,7 +30,7 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 * Docs: https://docs.onflow.org/flow-js-testing/
 * Testsuite setup: Check examples under ./tests/setup/setup_<testsuite>.js
 * Testsuite development: Check examples under ./tests/test/<testsuite>.test.js
-
+* **Note**: To get unittest framework work properly, do NOT break transaction & script arguments into multiple lines, until [this issue](https://github.com/onflow/flow-cadut/issues/15) gets fixed.
 
 ### Run tests:
 * `npm test`
