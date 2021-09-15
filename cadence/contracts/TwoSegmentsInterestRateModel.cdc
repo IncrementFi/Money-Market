@@ -113,7 +113,7 @@ pub contract TwoSegmentsInterestRateModel: InterestRateModelInterface {
         * @param {string} modelName - e.g. "TwoSegmentsInterestRateModel"
         * @param {UInt64} blocksPerYear - 1s avg blocktime for testnet (31536000 blocks / year), 2.5s avg blocktime for mainnet (12614400 blocks / year).
         * @param {UFix64} zeroUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 0%, e.g. 0.0 (0%)
-        * @param {UFix64} criticalUtilInterestRatePerYear - Borrow interest rate per year when utilization rate hits the critical point, e.g. 0.0 (0%) e.g. 0.05 (5%)
+        * @param {UFix64} criticalUtilInterestRatePerYear - Borrow interest rate per year when utilization rate hits the critical point, e.g. 0.05 (5%)
         * @param {UFix64} fullUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 100%, e.g. 0.35 (35%)
         * @param {UFix64} criticalUtilPoint - The critical utilization point beyond which the interest rate jumps (i.e. two-segments interest model), e.g. 0.8 (80%)
         */

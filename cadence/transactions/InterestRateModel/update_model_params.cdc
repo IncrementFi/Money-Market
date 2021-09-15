@@ -1,12 +1,8 @@
 import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRateModel.cdc"
 
-transaction(
-    newBlocksPerYear: UInt64,
-    newZeroUtilInterestRatePerYear: UFix64, 
-    newCriticalUtilInterestRatePerYear: UFix64,
-    newFullUtilInterestRatePerYear: UFix64,
-    newCriticalUtilPoint: UFix64
-) {
+// TODO: Do not break arguments into multi-lines unless this bug has been fixed: https://github.com/onflow/flow-cadut/issues/15
+
+transaction(newBlocksPerYear: UInt64, newZeroUtilInterestRatePerYear: UFix64, newCriticalUtilInterestRatePerYear: UFix64, newFullUtilInterestRatePerYear: UFix64, newCriticalUtilPoint: UFix64) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
             .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.AdminStoragePath)
