@@ -1,4 +1,4 @@
-# lending
+# Money Market
 
 ### Dev environment setup (Once):
 * [Install flow-cli tool with emulator environment](https://docs.onflow.org/flow-cli/install/)
