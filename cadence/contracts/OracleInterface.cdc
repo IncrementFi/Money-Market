@@ -6,5 +6,8 @@ pub contract interface OracleInterface {
 
         // Return latest reported data in [timestamp, priceData]
         pub fun latestResult(yToken: Address): [UFix64; 2]
+
+        // Return supported yToken markets
+        pub fun getSupportedFeeds(): [Address]
     }
 }

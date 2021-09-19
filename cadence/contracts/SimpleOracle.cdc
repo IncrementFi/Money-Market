@@ -112,6 +112,10 @@ pub contract SimpleOracle: OracleInterface {
             ]
         }
 
+        pub fun getSupportedFeeds(): [Address] {
+            return self.feeds
+        }
+
         access(contract) fun addPriceFeed(for newYToken: Address, maxCapacity: Int) {
             if (!self.feeds.contains(newYToken)) {
                 // 1. Append new feed
@@ -165,7 +169,7 @@ pub contract SimpleOracle: OracleInterface {
     }
 
     pub resource interface OracleUpdateProxyPublic {
-        pub fun isUpdaterCapabilitySet(): Bool
+        pub fun isUpdaterCapabilityGranted(): Bool
         pub fun setUpdaterCapability(cap: Capability<&Oracle{DataUpdater}>)
     }
 
@@ -174,8 +178,8 @@ pub contract SimpleOracle: OracleInterface {
         // Nobody else can copy the capability and use it.
         access(self) var updateCapability: Capability<&Oracle{DataUpdater}>?
 
-        pub fun isUpdaterCapabilitySet(): Bool {
-            return self.updateCapability != nil
+        pub fun isUpdaterCapabilityGranted(): Bool {
+            return self.updateCapability != nil && self.updateCapability!.borrow() != nil
         }
 
         // Only Admin can grant oracle DataUpdater capability so the type system guarantees it to be called only by Admin.

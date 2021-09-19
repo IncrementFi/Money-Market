@@ -8,8 +8,8 @@
     "flow-js-testing": "^0.1.13",
     "jest": "^27.2.0"
   },
-  "name": "lending",
-  "description": "Money market on Flow",
+  "name": "Incremental.fi",
+  "description": "Money Market on Flow",
   "version": "1.0.0",
   "main": "index.js",
   "directories": {
@@ -20,12 +20,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pacmoon/lending.git"
+    "url": "git+https://github.com/IncrementalFi/Money-Market.git"
   },
-  "author": "pacmoon team",
+  "author": "Team Incremental",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/pacmoon/lending/issues"
+    "url": "https://github.com/IncrementalFi/Money-Market/issues"
   },
-  "homepage": "https://github.com/pacmoon/lending#readme"
+  "homepage": "https://github.com/IncrementalFi/Money-Market/blob/main/README.md"
 }
