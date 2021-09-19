@@ -15,6 +15,7 @@ jest.setTimeout(100000);
 describe("InterestRateModel Testsuites", () => {
     beforeEach(async () => {
         const basePath = path.resolve(__dirname, "../../cadence");
+        // Note: Use different port for different testsuites to run test simultaneously.
         const port = 7001;
         await init(basePath, { port });
         return emulator.start(port, false);

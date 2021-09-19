@@ -5,7 +5,7 @@ pub fun main(updater: Address): Bool {
     let updateCapability = getAccount(updater)
         .getCapability<&SimpleOracle.OracleUpdateProxy{SimpleOracle.OracleUpdateProxyPublic}>(SimpleOracle.UpdaterPublicPath)
         .borrow()
-    if (updateCapability != nil && updateCapability!.isUpdaterCapabilitySet()) {
+    if (updateCapability != nil && updateCapability!.isUpdaterCapabilityGranted()) {
         return true
     } else {
         return false

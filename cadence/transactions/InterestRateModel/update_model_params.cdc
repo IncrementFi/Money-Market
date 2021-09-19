@@ -20,4 +20,3 @@ transaction(newBlocksPerYear: UInt64, newZeroUtilInterestRatePerYear: UFix64, ne
         )
     }
 }
- 
