@@ -87,8 +87,9 @@ pub contract CDToken: FungibleToken, LedgerToken {
         }
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
-            self.updateBalance()
-            
+            pre {
+                self.balance == self.getLedgerBalance(): "This vault lost PrivateCertificate capability, please call the updateBalance and re-connect the capability."
+            }
 
             let originalOwner = self.getInfo().originalOwner
             // 如果此vault是作为用户的开户ctoken vault存在
@@ -122,7 +123,10 @@ pub contract CDToken: FungibleToken, LedgerToken {
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
-            self.updateBalance()
+            pre {
+                self.balance == self.getLedgerBalance(): "This vault lost PrivateCertificate capability, please call the updateBalance and re-connect the capability."
+            }
+
             let fromVault <- from as! @CDToken.Vault
             assert( self.underlyingTokenType == fromVault.underlyingTokenType, message: "Different CDToken type in deposit.")
             
@@ -140,7 +144,6 @@ pub contract CDToken: FungibleToken, LedgerToken {
             fromVault.balance = 0.0
 
             destroy fromVault
-            // TODO 这里有个很严重的问题: 如果ledger动了balance, 但却无法更新resource的balance, 那么会中FungibleToken的post检测, 无法再使用...
         }
 
         destroy() {
@@ -166,7 +169,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
             }
             
             (CDToken.ledger[fromUuid]! as! CDToken.VaultInfo).subBalance(amount)
-
+            log("中央账本withdraw ".concat(amount.toString()))
             let withdrawVault <- create Vault(balance: amount)
 
             // TODO event

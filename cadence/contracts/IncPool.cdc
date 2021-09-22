@@ -241,16 +241,13 @@ pub contract IncPool: IncPoolInterface {
             let amount_underlying = inUnderlyingVault.balance
 
             // transfer underlying in
-            log("111")
             self.underlyingVault.deposit(from: <-inUnderlyingVault)
-            log("222")
             //
             let amount_overlying = self.data.exchangeUnderlyingToOverlying(amount_underlying)
             let tmpOverlyingVault <- self.overlyingMinter.mintTokens(amount: amount_overlying)
             // transfer overlying out
             outOverlyingVaultCap.borrow()!.deposit(from: <-tmpOverlyingVault)
-            log("333")
-
+            
             let newVaultId = outOverlyingVaultCap.borrow()!.uuid
             // 如果是首次存款, 本地的ctoken收款vault也应该是干净的
             // 保存user -> vault关系, 并锁定vault的最初始拥有者
