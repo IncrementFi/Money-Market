@@ -7,7 +7,7 @@ pub contract IncConfig {
     pub var Comptroller_PrivatePath: PrivatePath
     init() {
         self.ComptrollerAddr = 0xf8d6e0586b0a20c7
-        self.FUSDPoolAddr = 0xf8d6e0586b0a20c7
+        self.FUSDPoolAddr = 0x01cf0e2f2f715450
         self.Comptroller_PublicPath = /public/comptroller
         self.Comptroller_PrivatePath = /private/comptroller
     }
