@@ -7,13 +7,14 @@ pub contract interface IncPoolInterface {
         pub fun queryBorrowBalanceSnapshot(userAddr: Address): UFix64
         pub fun queryBorrowBalanceRealtime(userAddr: Address): UFix64
         
-        pub fun depositExplicitly   (inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>)
-        //pub fun deposit             (inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>)
-        pub fun redeemExplicitly    (redeemOverlyingAmount: UFix64, collateralCap: Capability<&{LedgerToken.PrivateCertificate}>, outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>)
-        pub fun borrow              (amountUnderlyingBorrow: UFix64, collateralCaps: [Capability<&{LedgerToken.PrivateCertificate}>], outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>)
+        pub fun depositExplicitly   (inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>)
+        //pub fun deposit             (inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>)
+        pub fun redeemExplicitly    (redeemOverlyingAmount: UFix64, identityCap: Capability<&{LedgerToken.IdentityReceiver}>, outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>)
+        pub fun borrow              (amountUnderlyingBorrow: UFix64, identityCaps: [Capability<&{LedgerToken.IdentityReceiver}>], outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>)
         pub fun repayBorrow         (repayUnderlyingVault: @FungibleToken.Vault, borrowerAddr: Address)
         
         //
+        pub fun openCollateral(open: Bool, identityCap: Capability<&{LedgerToken.IdentityReceiver}>)
     }
 
     pub resource interface PoolPrivate {
@@ -32,18 +33,19 @@ pub contract interface IncPoolInterface {
         pub fun queryExchange(): UFix64
         pub fun queryBorrowIndex(): UFix64
         pub fun queryComptrollerUuid(): UInt64
+        pub fun queryOpenCollateral(userAddr: Address): Bool
 
         pub fun repayBorrow(repayUnderlyingVault: @FungibleToken.Vault, borrowerAddr: Address)
-        pub fun seizeInternal(seizeOverlyingAmount: UFix64, borrowerAddr: Address, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>)
+        pub fun seizeInternal(seizeOverlyingAmount: UFix64, borrowerAddr: Address, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>)
         pub fun accrueInterest()
         
         pub fun openPool(_ open: Bool)
-        pub fun checkUserVault(userAddr: Address): Bool
+        pub fun checkUserLocalVaultIdentityCap(userAddr: Address): Bool
     }
 
     pub resource interface PoolTokenInterface {
         pub fun checkUserLiquidity(userAddr: Address, testRedeemAmount: UFix64, testBorrowAmount: UFix64): [UFix64]
-        pub fun checkUserVault(userAddr: Address): Bool
+        pub fun checkUserLocalVaultIdentityCap(userAddr: Address): Bool
     }
 
 }
