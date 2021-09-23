@@ -191,6 +191,8 @@ pub contract FUSD: FungibleToken {
 
     }
 
+    // TODO delete
+    pub var test_minter:@Minter
     init() {
         self.AdminStoragePath = /storage/fusdAdmin
         self.MinterProxyPublicPath = /public/fusdMinterProxy
@@ -203,5 +205,8 @@ pub contract FUSD: FungibleToken {
 
         // Emit an event that shows that the contract was initialized
         emit TokensInitialized(initialSupply: 0.0)
+
+        // TODO delete
+        self.test_minter <- create Minter()
     }
 }
