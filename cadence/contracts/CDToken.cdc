@@ -27,7 +27,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
     //
     pub struct VaultInfo {
         pub var balance: UFix64
-        pub var originalOwner: Address?
+        pub var originalOwner: Address?  // 标识了此vault是否是用户开户的原始vault
         init(balance:UFix64) {
             self.balance = balance
             self.originalOwner = nil
@@ -53,7 +53,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
     //
     pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance, 
                         LedgerToken.Provider,   LedgerToken.Receiver,   LedgerToken.Balance,
-                        LedgerToken.PrivateCertificate {
+                        LedgerToken.IdentityReceiver {
         //
         pub var balance: UFix64
         pub let underlyingTokenType: Type
@@ -88,14 +88,14 @@ pub contract CDToken: FungibleToken, LedgerToken {
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             pre {
-                self.balance == self.getLedgerBalance(): "This vault lost PrivateCertificate capability, please call the updateBalance and re-connect the capability."
+                self.balance == self.getLedgerBalance(): "This vault lost IdentityReceiver capability, please call the updateBalance and re-connect the capability."
             }
 
             let originalOwner = self.getInfo().originalOwner
             // 如果此vault是作为用户的开户ctoken vault存在
             if originalOwner != nil {
                 // 用户恶意移除了原先ctoken的vault or cap
-                assert(CDToken.poolCap!.borrow()!.checkUserVault(userAddr: originalOwner!), message: "The original owner has misbehaviors on this vault.")
+                assert(CDToken.poolCap!.borrow()!.checkUserLocalVaultIdentityCap(userAddr: originalOwner!), message: "The original owner has misbehaviors on this vault.")
 
                 // 不可以更改地址, 如果恶意移动, 无法withdraw
                 // TODO 需要测试用例, 恶意转移withdraw
@@ -124,14 +124,14 @@ pub contract CDToken: FungibleToken, LedgerToken {
 
         pub fun deposit(from: @FungibleToken.Vault) {
             pre {
-                self.balance == self.getLedgerBalance(): "This vault lost PrivateCertificate capability, please call the updateBalance and re-connect the capability."
+                self.balance == self.getLedgerBalance(): "This vault lost IdentityReceiver capability, please call the updateBalance and re-connect the capability."
             }
 
             let fromVault <- from as! @CDToken.Vault
             assert( self.underlyingTokenType == fromVault.underlyingTokenType, message: "Different CDToken type in deposit.")
             
-            // 原始抵押vault不允许直接作为fromVault, 否则试图合入其他vault.
             // TODO 需要测试用例, 恶意提款
+            // 原始抵押vault不允许直接作为fromVault, 否则试图合入其他vault.
             assert(fromVault.getInfo().originalOwner == nil, message: "FromVault cannot be the collateral vault, please use withdraw to generate new vault.")
             
             self.balance = (self.balance + fromVault.balance)

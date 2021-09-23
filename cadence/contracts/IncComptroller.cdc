@@ -8,6 +8,9 @@ pub contract IncComptroller: IncComptrollerInterface {
     // 对内审计接口
 
     // TODO 恶意用户 cap失效的处理
+    // 如果剩余抵押正常: 提示用户1. 重新建立cap连接 2.放弃该cap token
+    // 如果剩余抵押在清算范围: 给用户一个缓冲时间?? 走清算流程
+    // 如果资不抵债, 十分恶意 连带移走的vault强制平仓
 
     //
     pub resource Comptroller: IncComptrollerInterface.ComptrollerPublic, IncComptrollerInterface.ComptrollerPrivate {
@@ -91,13 +94,13 @@ pub contract IncComptroller: IncComptrollerInterface {
 
         }
         // TODO 用户加入市场
-        pub fun userEnterPool() {
+        pub fun userOpenCollateral() {
             // TODO 主动长传在本地创建的该市场ctoken
             // TODO pool -> user1 user2 user3
             // TODO user -> pool1 pool2 pool3 
         }
 
-        pub fun minterAllowed(poolAddr: Address, inUnderlyingVault: &FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>) {
+        pub fun minterAllowed(poolAddr: Address, inUnderlyingVault: &FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>) {
             pre {
                 self.poolCaps.containsKey(poolAddr): "Unknow pool."
             }
@@ -186,7 +189,7 @@ pub contract IncComptroller: IncComptrollerInterface {
             borrower: Address,
             repayPoolAddr: Address,
             seizePoolAddr: Address,
-            outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>,
+            outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>,
             repayUnderlyingVault: @FungibleToken.Vault
         ) {
             pre {
@@ -259,7 +262,9 @@ pub contract IncComptroller: IncComptrollerInterface {
 
             for poolAddr in self.poolCaps.keys {
                 let pool = self.poolCaps[poolAddr]!.borrow()!
-
+                if pool.queryOpenCollateral(userAddr: userAddr) == false {
+                    continue
+                }
                 let overlyingBalance    = pool.queryOverlyingBalance(userAddr: userAddr)
                 let borrowBalance       = pool.queryBorrowBalanceSnapshot(userAddr: userAddr)
                 let exchangeRate        = pool.queryExchange()
@@ -293,7 +298,7 @@ pub contract IncComptroller: IncComptrollerInterface {
         pub fun checkUserBehavior(userAddr: Address) {
             for poolAddr in self.poolCaps.keys {
                 let pool = self.poolCaps[poolAddr]!.borrow()!
-                assert(pool.checkUserVault(userAddr: userAddr), message: "User has misbehaviror, waiting for audit.")
+                assert(pool.checkUserLocalVaultIdentityCap(userAddr: userAddr), message: "User has misbehaviror, waiting for audit.")
             }
         }
 

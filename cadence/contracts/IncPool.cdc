@@ -22,17 +22,20 @@ pub contract IncPool: IncPoolInterface {
             self.interestIndex = interestIndex
         }
     }
+    
     pub struct VaultSnapshot {
         pub var uuid: UInt64
-        pub var receiverCap: Capability<&{LedgerToken.PrivateCertificate}>
-        init(vaultId: UInt64, receiverCap: Capability<&{LedgerToken.PrivateCertificate}>) {
+        pub var receiverCap: Capability<&{LedgerToken.IdentityReceiver}>
+        pub var ifCollateral: Bool
+        init(vaultId: UInt64, receiverCap: Capability<&{LedgerToken.IdentityReceiver}>) {
             self.uuid = vaultId
             self.receiverCap = receiverCap
+            self.ifCollateral = false
         }
-        access(contract) fun setReceiverCap(receiverCap: Capability<&{LedgerToken.PrivateCertificate}>) {
-            self.receiverCap = receiverCap
-        }
+        access(contract) fun setReceiverCap(receiverCap: Capability<&{LedgerToken.IdentityReceiver}>) { self.receiverCap = receiverCap }
+        access(contract) fun openCollateral(_ on: Bool) { self.ifCollateral = on }
     }
+
     pub struct PoolData {
         pub var totalSupply: UFix64
         pub var totalCash: UFix64
@@ -199,7 +202,7 @@ pub contract IncPool: IncPoolInterface {
         }
 
         // 存款, 以明确认证vault的方式, 如果vault有一丝异常直接失败
-        pub fun depositExplicitly(inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>) {
+        pub fun depositExplicitly(inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>) {
             let userAddr = outOverlyingVaultCap.borrow()!.owner!.address
             // 此次vault是否与服务器记录一致
             let newVaultId = outOverlyingVaultCap.borrow()!.uuid
@@ -217,7 +220,7 @@ pub contract IncPool: IncPoolInterface {
 
         // 强行存款, vault无意或者恶意的被覆盖, 可能会引发清算
         // 客户端需要检测vault, 帮助正常用户
-        pub fun deposit(inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>) {
+        pub fun deposit(inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>) {
             pre {
                 inUnderlyingVault.balance > 0.0: "Deposit nothing."
                 outOverlyingVaultCap.check(): "Invalid overlying receiver vault cap."
@@ -268,19 +271,19 @@ pub contract IncPool: IncPoolInterface {
             // TODO event
         }
         
-        pub fun redeemExplicitly(redeemOverlyingAmount: UFix64, collateralCap: Capability<&{LedgerToken.PrivateCertificate}>, outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>) {
+        pub fun redeemExplicitly(redeemOverlyingAmount: UFix64, identityCap: Capability<&{LedgerToken.IdentityReceiver}>, outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>) {
             pre {
                 self.comptrollerCap != nil && self.comptrollerCap!.check(): "Should register comptroller."
                 redeemOverlyingAmount > 0.0: "Redeem amount = 0."
                 outUnderlyingVaultCap.check(): "Invalid overlying receiver vault cap."
                 outUnderlyingVaultCap.borrow()!.owner != nil: "Receiver vault must have owner."
-                collateralCap.check(): "Must have user certificate."
-                collateralCap.borrow()!.owner != nil: "Must have user certificate."
-                collateralCap.borrow()!.owner!.address == outUnderlyingVaultCap.borrow()!.owner!.address: "User of certificate and receiver must be the same."
+                identityCap.check(): "Must have user certificate."
+                identityCap.borrow()!.owner != nil: "Must have user certificate."
+                identityCap.borrow()!.owner!.address == outUnderlyingVaultCap.borrow()!.owner!.address: "User of certificate and receiver must be the same."
                 self.isOpen == true: "Pool closed."
                 self.canRedeem == true: "Redeem is pause."
             }
-            let userAddr = outUnderlyingVaultCap.borrow()!.owner!.address
+            let userAddr = identityCap.borrow()!.owner!.address
             //
             self.data.accrueInterest()
 
@@ -346,26 +349,26 @@ pub contract IncPool: IncPoolInterface {
         }
 
         // 用户需要上传private抵押物cap证明来做身份验证
-        pub fun borrow(amountUnderlyingBorrow: UFix64, collateralCaps: [Capability<&{LedgerToken.PrivateCertificate}>], outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>) {
+        pub fun borrow(amountUnderlyingBorrow: UFix64, identityCaps: [Capability<&{LedgerToken.IdentityReceiver}>], outUnderlyingVaultCap: Capability<&{FungibleToken.Receiver}>) {
             pre {
                 self.data.totalCash >= amountUnderlyingBorrow: "No enough pool cash."
                 outUnderlyingVaultCap.check() && outUnderlyingVaultCap.borrow()!.owner != nil: "Receiver vault must have owner."
                 self.comptrollerCap != nil && self.comptrollerCap!.check(): "Should register comptroller."
-                collateralCaps.length > 0: "Must upload at least one collateral certification."
+                identityCaps.length > 0: "Must upload at least one collateral certification."
                 self.isOpen: "Pool closed."
                 self.canBorrow: "Borrow is pause."
             }
             
             // 这里强制约束: 所有的抵押vaults和收款vaults必须由owner, 且为同一address, 该address作为用户判定
             let userAddr = outUnderlyingVaultCap.borrow()!.owner!.address
-            for cap in collateralCaps {
+            for cap in identityCaps {
                 assert(cap.borrow()!.owner!.address == userAddr, message: "Collaterals should have the same owner")
             }
-            // 用户行为是否异常
-            assert( self.checkUserVault(userAddr: userAddr), message: "Misbehavior user, waiting for audit.")
-            
             //
             self.data.accrueInterest()
+
+            // 如果用户为开启抵押, 自动打开
+            self.data.accountVaults[userAddr]!.openCollateral(true)
             
             // 借钱能力审计
             self.comptrollerCap!.borrow()!.borrowAllowed(poolAddr: self.owner!.address, userAddr: userAddr, borrowAmount: amountUnderlyingBorrow)
@@ -419,13 +422,14 @@ pub contract IncPool: IncPoolInterface {
             // TODO event
         }
 
-        pub fun seizeInternal(seizeOverlyingAmount: UFix64, borrowerAddr: Address, outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>) {
+        pub fun seizeInternal(seizeOverlyingAmount: UFix64, borrowerAddr: Address, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>) {
             pre {
                 self.isOpen == true: "Pool closed."
-                outOverlyingVaultCap.check(): "Invalid receiver vault."
-                outOverlyingVaultCap.borrow()!.owner != nil: "Receiver vault must have owner."
                 self.data.accountVaults.containsKey(borrowerAddr): "No collateral."
             }
+            // 检查ctoken接受cap必须是原始的那个
+            self.checkUserUploadVaultIdentityCap(identity: outOverlyingVaultCap)
+
             let seizer = outOverlyingVaultCap.borrow()!.owner!.address
             // comptroller审计
             self.comptrollerCap!.borrow()!.seizeAllowed(
@@ -435,8 +439,6 @@ pub contract IncPool: IncPoolInterface {
                 seizeOverlyingAmount: seizeOverlyingAmount
             )
 
-            // 该collateral vault行为检测
-            assert( self.checkUserVault(userAddr: borrowerAddr), message: "Misbehavior borrower, waiting for audit.")
             let collateralVaultId: UInt64 = self.data.accountVaults[borrowerAddr]!.uuid
 
             // 协议拿走2.8%
@@ -486,7 +488,7 @@ pub contract IncPool: IncPoolInterface {
         pub fun queryOverlyingBalance(userAddr: Address): UFix64 {
             pre {
                 // 用户恶意失效了cap, 或者冒充了其他vault
-                self.checkUserVault(userAddr: userAddr): "Misbehavior user, waiting for audit."
+                self.checkUserLocalVaultIdentityCap(userAddr: userAddr): "Misbehavior user, waiting for audit."
             }
             // 一个用户在一个pool只会存在一个vault
             if self.data.accountVaults.containsKey(userAddr) == false {
@@ -501,9 +503,34 @@ pub contract IncPool: IncPoolInterface {
         pub fun queryCollateralFactor(): UFix64 { return self.data.collateralFactor }
         pub fun queryBorrowIndex(): UFix64 { return self.data.borrowIndex }
         pub fun queryComptrollerUuid(): UInt64 { return self.comptrollerCap!.borrow()!.uuid }
+        pub fun queryOpenCollateral(userAddr: Address): Bool {
+            pre {
+                self.data.accountVaults.containsKey(userAddr): "Unknow user."
+            }
+            return self.data.accountVaults[userAddr]!.ifCollateral
+        }
 
 
         pub fun openPool(_ open: Bool) { self.isOpen = open }
+        // 是否开启作为抵押物
+        pub fun openCollateral(open: Bool, identityCap: Capability<&{LedgerToken.IdentityReceiver}>) {
+            pre {
+                self.isOpen: "Pool is close."
+            }
+            self.checkUserUploadVaultIdentityCap(identity: identityCap)
+            let userAddr = identityCap.borrow()!.owner!.address
+            assert(self.data.accountVaults[userAddr]!.ifCollateral != open, message: "Parameter error.")
+            if open == false {
+                // TODO 测试用例
+                let overlyingBalance = self.queryOverlyingBalance(userAddr: userAddr)
+                let borrowBalance = self.queryBorrowBalanceRealtime(userAddr: userAddr)
+                // 有欠款不让退市
+                assert(borrowBalance == 0.0, message: "Close collateral reject, still have borrows.")
+                // 如果是关闭, 需要做流动性检测
+                self.checkUserLiquidity(userAddr: userAddr, testRedeemAmount: overlyingBalance, testBorrowAmount: 0.0)
+            }
+            self.data.accountVaults[userAddr]!.openCollateral(open)
+        }
 
         // TODO 此处使用类型来确定来者的正确性, 但如果Comptroller具有扩展性, 要如何判断来人呢?
         pub fun setComptroller(comptrollerCap: Capability<&IncComptroller.Comptroller>) {
@@ -516,17 +543,29 @@ pub contract IncPool: IncPoolInterface {
         }
 
         // 检查用户当前的抵押vault cap是否正常, cap是否失效, 本地vault是否被移走
-        pub fun checkUserVault(userAddr: Address): Bool {
+        pub fun checkUserLocalVaultIdentityCap(userAddr: Address): Bool {
             if self.data.accountVaults.containsKey(userAddr) == false { return true }
             let vaultId = self.data.accountVaults[userAddr]!.uuid
             let receiverCap = self.data.accountVaults[userAddr]!.receiverCap
             if receiverCap.check() == false { return false }
+            // TODO 这一步是否多余? check能检测borrow吗
             if receiverCap.borrow() == nil { return false }
             if receiverCap.borrow()!.uuid != vaultId { return false }
 
             return true
         }
 
+        // 检查用户上传的身份认证cap是否正常
+        pub fun checkUserUploadVaultIdentityCap(identity: Capability<&{LedgerToken.IdentityReceiver}>) {
+            pre {
+                identity.check(): "Lost identity cap."
+                identity.borrow()!.owner != nil: "Identity cap must have the owner."
+            }
+            let userAddr = identity.borrow()!.owner!.address
+            assert(self.data.accountVaults.containsKey(userAddr) == true, message: "Unknow user.")
+            assert(self.checkUserLocalVaultIdentityCap(userAddr: userAddr), message: "The original identity cap is abnormal.")
+            assert(self.data.accountVaults[userAddr]!.uuid == identity.borrow()!.uuid, message: "Upload identity must be the original one.")
+        }
         pub fun accrueInterest() {
             self.data.accrueInterest()
         }
