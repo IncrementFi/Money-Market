@@ -28,7 +28,9 @@
         "testnet": "0xe223d8a629e49c68",
         "mainnet": "0x3c5959b568896393"
       }
-    }
+    },
+    "OracleInterface": "./cadence/contracts/OracleInterface.cdc",
+    "SimpleOracle": "./cadence/contracts/SimpleOracle.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -89,12 +91,38 @@
         "hashAlgorithm": "SHA3_256",
         "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
       }
+    },
+    "testnet-oracle-deployer": {
+      "address": "0x3e1c9476cfe21394",
+      "key":{
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_secp256k1",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
+      }
+    },
+    "testnet-oracle-updater": {
+      "address": "0x8c1293886c086b0c",
+      "key":{
+        "type": "hex",
+        "index": 0,
+        "signatureAlgorithm": "ECDSA_secp256k1",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
+      }
     }
   },
   "deployments": {
     "emulator": {
       "emulator-account": [
         "FUSD"
+      ]
+    },
+    "testnet": {
+      "testnet-oracle-deployer": [
+        "OracleInterface",
+        "SimpleOracle"
       ]
     }
   }

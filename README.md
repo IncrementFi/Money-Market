@@ -37,3 +37,9 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 
 ### Run tests:
 * `npm test`
+
+
+### Testnet Deployment Address:
+| Name | Address |
+| -------- | ------- |
+| SimpleOracle | [0x3e1c9476cfe21394](https://testnet.flowscan.org/account/0x3e1c9476cfe21394) |

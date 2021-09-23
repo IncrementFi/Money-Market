@@ -1,0 +1,27 @@
+{
+    "testnet": {
+        "oracleContract": "0x3e1c9476cfe21394",
+        "updaterAccount": "0x8c1293886c086b0c",
+        "updaterKeyIndex": 0,
+        "feeds": [
+            {
+                "id": "bitcoin",
+                "address": "0x9a0766d93b6608b7",
+                "windowSize": 1200,
+                "deviation": 0.005
+            },
+            {
+                "id": "ethereum",
+                "address": "0xe223d8a629e49c68",
+                "windowSize": 1200,
+                "deviation": 0.005
+            },
+            {
+                "id": "flow",
+                "address": "0x7e60df042a9c0868",
+                "windowSize": 1200,
+                "deviation": 0.005
+            }
+        ]
+    }
+}

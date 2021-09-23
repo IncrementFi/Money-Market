@@ -185,7 +185,7 @@ pub contract TwoSegmentsInterestRateModel: InterestRateModelInterface {
     }
 
     init() {
-        self.AdminStoragePath = /storage/admin
+        self.AdminStoragePath = /storage/InterestRateModelAdmin
         self.InterestRateModelStoragePath = /storage/InterestRateModel
         self.InterestRateModelPrivatePath = /private/InterestRateModel
         self.InterestRateModelPublicPath = /public/InterestRateModel
