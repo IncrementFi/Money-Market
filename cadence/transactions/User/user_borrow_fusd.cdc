@@ -27,7 +27,7 @@ transaction(borrowAmount: UFix64) {
     let tokenVault = signer.borrow<&CDToken.Vault>(from: CDToken.VaultPath_Storage)
     assert(tokenVault != nil, message: "Lost local CDToken vault.")
 
-    let tokenCertificate = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)    
+    let tokenCertificate = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)    
 
     log("尝试借款 FUSD ".concat(borrowAmount.toString()))
     let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr
@@ -35,7 +35,7 @@ transaction(borrowAmount: UFix64) {
     // 抵押品:
     let collaterals = [tokenCertificate]
     //
-    poolPublic.borrow()!.borrow(amountUnderlyingBorrow: borrowAmount, collateralCaps: collaterals, outUnderlyingVaultCap: fusdReceiver)
+    poolPublic.borrow()!.borrow(amountUnderlyingBorrow: borrowAmount, identityCaps: collaterals, outUnderlyingVaultCap: fusdReceiver)
     //
 
     log("---------------------")

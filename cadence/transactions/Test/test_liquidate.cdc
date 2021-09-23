@@ -25,7 +25,7 @@ transaction(borrower: Address, repayAmount: UFix64) {
     let fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)!
     let repayVault <- fusdVault.withdraw(amount: repayAmount)
 
-    let outOverlyingVaultCap = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)
+    let outOverlyingVaultCap = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
 
     comptrollerPublicCap.borrow()!.liquidate(
       borrower: borrower,
