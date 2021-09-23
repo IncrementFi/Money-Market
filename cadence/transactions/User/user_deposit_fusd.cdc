@@ -30,10 +30,10 @@ transaction(amountDeposit: UFix64) {
     if overlyingVault == nil {
       signer.save(<-CDToken.createEmptyVault(), to: CDToken.VaultPath_Storage)
       signer.link <&CDToken.Vault{FungibleToken.Receiver}>  (CDToken.VaultReceiverPath_Pub,    target: CDToken.VaultPath_Storage)
-      signer.link <&{LedgerToken.PrivateCertificate}>          (CDToken.VaultCollateralPath_Priv, target: CDToken.VaultPath_Storage) 
+      signer.link <&{LedgerToken.IdentityReceiver}>          (CDToken.VaultCollateralPath_Priv, target: CDToken.VaultPath_Storage) 
     }
     overlyingVault = signer.borrow<&CDToken.Vault>(from: CDToken.VaultPath_Storage)
-    let outOverlyingVaultCap = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)
+    let outOverlyingVaultCap = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
     
 
     let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr

@@ -11,4 +11,3 @@ flow transactions send ./cadence/transactions/Comptroller/add_pool.cdc --arg Add
 # +FUSD
 flow transactions send ./cadence/transactions/Test/test_mint_fusd.cdc --signer emulatorA
 
-
