@@ -23,7 +23,7 @@ transaction {
     }
     // 这抵押interface必须放在private，作为用户抵押认证使用, 这个cap非常重要
     signer.link <&CDToken.Vault{FungibleToken.Receiver}>  (CDToken.VaultReceiverPath_Pub,    target: CDToken.VaultPath_Storage)
-    signer.link <&{LedgerToken.PrivateCertificate}>               (CDToken.VaultCollateralPath_Priv, target: CDToken.VaultPath_Storage) 
+    signer.link <&{LedgerToken.IdentityReceiver}>               (CDToken.VaultCollateralPath_Priv, target: CDToken.VaultPath_Storage) 
 
     log("---------------------")
   }

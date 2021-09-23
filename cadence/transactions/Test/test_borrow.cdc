@@ -25,7 +25,7 @@ transaction {
     let fusdPoolAddress: Address = 0xf8d6e0586b0a20c7
     let poolPublic = getAccount(fusdPoolAddress).getCapability<&{IncPoolInterface.PoolPublic}>(IncPool.PoolPath_Public)
     // 抵押品:
-    let collateral1 = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)
+    let collateral1 = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
     let collaterals = [collateral1]
     //
     poolPublic.borrow()!.borrow(amountUnderlyingBorrow: 1.0, collateralCaps: collaterals, outUnderlyingVaultCap: fusdReceiver)

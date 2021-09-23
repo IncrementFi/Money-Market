@@ -52,7 +52,7 @@ pub contract interface LedgerToken {
     }
 
 
-    pub resource interface PrivateCertificate {
+    pub resource interface IdentityReceiver {
         pub var balance: UFix64
         pub let underlyingTokenType: Type
 

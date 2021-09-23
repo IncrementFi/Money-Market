@@ -13,17 +13,17 @@ transaction(redeemAmount: UFix64) {
     log("====================")
     let fusdReceiver = signer.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
     //
-    let CDTokenPrivateCertificateCap = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)
+    let CDTokenIdentityReceiverCap = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
 
-    log("当前ctoken数量 ".concat(CDTokenPrivateCertificateCap.borrow()!.balance.toString()))
+    log("当前ctoken数量 ".concat(CDTokenIdentityReceiverCap.borrow()!.balance.toString()))
 
     log("尝试取款 ".concat(redeemAmount.toString()))
     let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr
     let poolPublic = getAccount(fusdPoolAddress).getCapability<&{IncPoolInterface.PoolPublic}>(IncPool.PoolPath_Public)
-    poolPublic.borrow()!.redeemExplicitly(redeemOverlyingAmount: redeemAmount, collateralCap: CDTokenPrivateCertificateCap, outUnderlyingVaultCap: fusdReceiver) 
+    poolPublic.borrow()!.redeemExplicitly(redeemOverlyingAmount: redeemAmount, identityCap: CDTokenIdentityReceiverCap, outUnderlyingVaultCap: fusdReceiver) 
     //
 
-    log("当前ctoken数量 ".concat(CDTokenPrivateCertificateCap.borrow()!.balance.toString()))
+    log("当前ctoken数量 ".concat(CDTokenIdentityReceiverCap.borrow()!.balance.toString()))
 
     log("---------------------")
   }
