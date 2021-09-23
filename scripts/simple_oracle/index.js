@@ -8,7 +8,7 @@ const t = require('@onflow/types');
 const config = require('./config');
 const utils = require('./utils');
 
-/// [CODE start] - Related cadence transactions/scripts used in this script.
+/// [Imported code start] - Related cadence transactions/scripts used in this script.
 const simpleOracleImportPath = '"../../contracts/SimpleOracle.cdc"';
 const oracleInterfaceImportPath = '"../../contracts/OracleInterface.cdc"';
 const uploadFeedDataFile = '../../cadence/transactions/Oracle/updater_upload_feed_data.cdc';
@@ -20,7 +20,7 @@ const getFeedLatestResultScriptCode = fs
   .readFileSync(path.resolve(__dirname, getFeedLatestResultFile), "utf8")
   .replace(oracleInterfaceImportPath, config.oracleContract)
   .replace(simpleOracleImportPath, config.oracleContract);
-/// [CODE end]
+/// [Imported code end]
 
 /// [DATA STRUCTURE start] - Local data structure used in this script.
 // yToken feeds' latest blockchain state, initialized on start or synced per heartbeat.
