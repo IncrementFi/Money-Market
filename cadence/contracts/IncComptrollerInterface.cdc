@@ -21,7 +21,7 @@ pub contract interface IncComptrollerInterface {
             borrower: Address,
             repayPoolAddr: Address,
             seizePoolAddr: Address,
-            outOverlyingVaultCap: Capability<&{LedgerToken.PrivateCertificate}>,
+            outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>,
             repayUnderlyingVault: @FungibleToken.Vault
         )
     }

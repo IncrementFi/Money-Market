@@ -17,7 +17,7 @@ transaction {
     fusdVault.deposit(from: <-FUSD.test_minter.mintTokens(amount: 100.0))
     
     let gtokenVault = signer.borrow<&CDToken.Vault>(from: CDToken.VaultPath_Storage)!
-    let gtokenReceiver = signer.getCapability<&{LedgerToken.PrivateCertificate}>(CDToken.VaultCollateralPath_Priv)
+    let gtokenReceiver = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
     
 
     log("尝试存款5.0")
