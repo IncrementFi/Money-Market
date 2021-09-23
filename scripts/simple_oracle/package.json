@@ -1,0 +1,20 @@
+{
+  "name": "simple_oracle",
+  "version": "1.0.0",
+  "description": "Simple oracle node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@onflow/fcl": "^0.0.76",
+    "@onflow/types": "^0.0.5",
+    "assert": "^2.0.0",
+    "elliptic": "^6.5.4",
+    "jsonpath": "^1.1.1",
+    "node-fetch": "^2.6.2",
+    "sha3": "^2.1.4"
+  }
+}
