@@ -145,29 +145,7 @@
     "emulator": {
       "emulator-account": [
         "FUSD",
-        "Kibble",
-        "LedgerToken",
-        "IncPoolInterface",
-        "IncComptrollerInterface",
-        "IncConfig",
-        "IncQueryInterface",
-        "InterestRateModelInterface",
-        "TwoSegmentsInterestRateModel",
-        "IncComptroller"
-      ],
-      "emulator-pool-fusd": [
-        "CDToken",
-        {
-          "name": "IncPool",
-          "args": [
-            {"type": "String", "value": "incFUSD"},
-            {"type": "String", "value": "FUSD"}
-          ]
-        }
-      ],
-      "emulator-oracle-deployer": [
-        "OracleInterface",
-        "SimpleOracle"
+        "Kibble"
       ]
     },
     "testnet": {

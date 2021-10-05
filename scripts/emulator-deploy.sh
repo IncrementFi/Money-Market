@@ -33,5 +33,8 @@ do
     flow transactions send ./cadence/Transactions/Test/emulator_transfer.cdc --arg Address:$addr  --signer emulator-account
 done
 
+flow project deploy --update -f flow_env.json
 
-flow project deploy --update
+flow transactions send ./cadence/Transactions/Pool/create_fusd_vault.cdc --signer emulator-pool-fusd
+
+flow project deploy --update -f flow.json

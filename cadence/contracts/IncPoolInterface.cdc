@@ -18,15 +18,6 @@ pub contract interface IncPoolInterface {
     }
 
     pub resource interface PoolPrivate {
-        pub let overlyingType:  Type
-        pub let underlyingType: Type
-        pub let overlyingName:  String
-        pub let underlyingName: String
-        pub var isOpen:         Bool
-        pub var canDeposit:     Bool
-        pub var canRedeem:    Bool
-        pub var canBorrow:      Bool
-        
         pub fun queryBorrowBalanceSnapshot(userAddr: Address): UFix64
         pub fun queryCollateralFactor(): UFix64
         pub fun queryOverlyingBalance(userAddr: Address): UFix64
@@ -37,10 +28,20 @@ pub contract interface IncPoolInterface {
 
         pub fun repayBorrow(repayUnderlyingVault: @FungibleToken.Vault, borrowerAddr: Address)
         pub fun seizeInternal(seizeOverlyingAmount: UFix64, borrowerAddr: Address, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>)
-        pub fun accrueInterest()
+        pub fun accrueInterestExternal()
         
-        pub fun openPool(_ open: Bool)
         pub fun checkUserLocalVaultIdentityCap(userAddr: Address): Bool
+
+        pub fun openPool(_ open: Bool)
+
+        //pub fun overlyingType(): Type
+        //pub fun underlyingType(): Type
+        pub fun overlyingName(): String
+        pub fun underlyingName(): String
+        pub fun canBorrow(): Bool
+        pub fun canRedeem(): Bool
+        pub fun canDeposit(): Bool
+        pub fun isOpen(): Bool   
     }
 
     pub resource interface PoolTokenInterface {
