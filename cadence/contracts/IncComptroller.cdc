@@ -199,8 +199,8 @@ pub contract IncComptroller: IncComptrollerInterface {
                 outOverlyingVaultCap.borrow()!.owner!.address != borrower: "Cannot liquidate self."
                 self.poolCaps.containsKey(repayPoolAddr): "Unkonw pool."
                 self.poolCaps.containsKey(seizePoolAddr): "Unkonw pool."
-                self.poolCaps[repayPoolAddr]!.borrow()!.isOpen: "Repay pool is close."
-                self.poolCaps[seizePoolAddr]!.borrow()!.isOpen: "Collateral pool is close."
+                self.poolCaps[repayPoolAddr]!.borrow()!.isOpen(): "Repay pool is close."
+                self.poolCaps[seizePoolAddr]!.borrow()!.isOpen(): "Collateral pool is close."
 
             }
             let repayAmount = repayUnderlyingVault.balance
@@ -218,7 +218,7 @@ pub contract IncComptroller: IncComptrollerInterface {
 
             assert(repayPool.queryComptrollerUuid() == seizePool.queryComptrollerUuid(), message: "Mismatch comptroller.")
             
-            repayPool.accrueInterest()
+            repayPool.accrueInterestExternal()
 
             // borrowBalance 50% limit
             let borrowBalance = repayPool.queryBorrowBalanceSnapshot(userAddr: borrower)
@@ -269,7 +269,6 @@ pub contract IncComptroller: IncComptrollerInterface {
                 let borrowBalance       = pool.queryBorrowBalanceSnapshot(userAddr: userAddr)
                 let exchangeRate        = pool.queryExchange()
                 let collateralFactor    = pool.queryCollateralFactor()
-                let underlyingType      = pool.underlyingType
                 if overlyingBalance == 0.0 && borrowBalance == 0.0 {
                     continue
                 }
@@ -280,7 +279,7 @@ pub contract IncComptroller: IncComptrollerInterface {
                 
                 sumCollateral = tokensToDenom * overlyingBalance + sumCollateral
                 sumBorrowPlusEffects = oraclePrice * borrowBalance + sumBorrowPlusEffects
-                log("已有欠款 ".concat(pool.underlyingName).concat(borrowBalance.toString()))
+                log("已有欠款 ".concat(pool.underlyingName()).concat(borrowBalance.toString()))
 
                 if targetPoolAddr == poolAddr {
                     sumBorrowPlusEffects = tokensToDenom * testRedeemAmount + sumBorrowPlusEffects
@@ -323,13 +322,13 @@ pub contract IncComptroller: IncComptrollerInterface {
             let pool = self.poolCaps[poolAddr]!.borrow()!
             // TODO total supply
             let info = IncQueryInterface.PoolInfo(
-                overlyingName: pool.overlyingName,
-                underlyingName: pool.underlyingName,
+                overlyingName: pool.overlyingName(),
+                underlyingName: pool.underlyingName(),
                 poolAddr: poolAddr,
-                isOpen: pool.isOpen,
-                canDeposit: pool.canDeposit,
-                canWithdra: pool.canRedeem,
-                canBorrow: pool.canBorrow,
+                isOpen: pool.isOpen(),
+                canDeposit: pool.canDeposit(),
+                canRedeem: pool.canRedeem(),
+                canBorrow: pool.canBorrow(),
                 totalSupply: 0.0,
                 totalBorrow: 0.0,
                 totalSupplyUSD: 0.0,

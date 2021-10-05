@@ -16,6 +16,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
     pub let Admin_StoragePath: StoragePath
     pub let Minter_StoragePath: StoragePath
     pub let Minter_PrivatePath: PrivatePath
+    pub let LedgerManager_StoragePath: StoragePath
 
     pub var MinterProxyFull_StoragePath: StoragePath
     pub var MinterProxyReceiver_PublicPath: PublicPath
@@ -228,6 +229,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
         return <- create MinterProxy()
     }
 
+    // TODO 如果该ctoken只用于借贷池, 它的Minter应该之存在于用户存款之时, 这里不需要额外的minter
     pub resource Administrator {
         pub fun createNewMinter(): @Minter {
             emit MinterCreated()
@@ -246,9 +248,10 @@ pub contract CDToken: FungibleToken, LedgerToken {
     // TODO delete
     pub var minter_test: @Minter
     init() {
-        self.Admin_StoragePath      = /storage/gtokenAdmin
-        self.Minter_StoragePath     = /storage/gtokenMinter
-        self.Minter_PrivatePath     = /private/gtokenMinter
+        self.Admin_StoragePath      = /storage/tokenAdmin
+        self.Minter_StoragePath     = /storage/overlyingMinter
+        self.Minter_PrivatePath     = /private/overlyingMinter
+        self.LedgerManager_StoragePath = /storage/ledgerManager
         
         self.MinterProxyFull_StoragePath        = /storage/minterProxyFull
         self.MinterProxyReceiver_PublicPath     = /public/minterProxyReceiver
@@ -263,9 +266,11 @@ pub contract CDToken: FungibleToken, LedgerToken {
 
         self.poolCap                    = nil
         
-        // local minter
-        //self.account.save(<-create Minter(), to: self.Minter_StoragePath)
-        //self.account.link<&Minter>(self.Minter_PrivatePath, target: self.Minter_StoragePath)
+        //
+        self.account.save(<-create Minter(), to: self.Minter_StoragePath)
+        self.account.save(<-create LedgerManager(), to: self.LedgerManager_StoragePath)
+        self.poolCap = self.account.getCapability<&{IncPoolInterface.PoolTokenInterface}>(/private/pooltokeninterface)
+
         // local admin
         let admin <- create Administrator()
         self.account.save(<-admin, to: self.Admin_StoragePath)
