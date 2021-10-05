@@ -230,6 +230,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
     }
 
     // TODO 如果该ctoken只用于借贷池, 它的Minter应该之存在于用户存款之时, 这里不需要额外的minter
+    /*
     pub resource Administrator {
         pub fun createNewMinter(): @Minter {
             emit MinterCreated()
@@ -243,6 +244,7 @@ pub contract CDToken: FungibleToken, LedgerToken {
             CDToken.poolCap = poolCap
         }
     }
+    */
 
 
     // TODO delete
@@ -272,8 +274,8 @@ pub contract CDToken: FungibleToken, LedgerToken {
         self.poolCap = self.account.getCapability<&{IncPoolInterface.PoolTokenInterface}>(/private/pooltokeninterface)
 
         // local admin
-        let admin <- create Administrator()
-        self.account.save(<-admin, to: self.Admin_StoragePath)
+        //let admin <- create Administrator()
+        //self.account.save(<-admin, to: self.Admin_StoragePath)
 
         // Emit an event that shows that the contract was initialized
         emit TokensInitialized(initialSupply: 0.0)
