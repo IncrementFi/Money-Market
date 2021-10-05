@@ -159,7 +159,7 @@ pub contract IncPool: IncPoolInterface {
 
 
 
-    pub resource Pool: IncPoolInterface.PoolPublic, IncPoolInterface.PoolPrivate, PoolSetup, IncPoolInterface.PoolTokenInterface {
+    pub resource PoolBehaviour: IncPoolInterface.PoolPublic, IncPoolInterface.PoolPrivate, PoolSetup, IncPoolInterface.PoolTokenInterface {
         
         // 存款, 以明确认证vault的方式, 如果vault有一丝异常直接失败
         pub fun depositExplicitly(inUnderlyingVault: @FungibleToken.Vault, outOverlyingVaultCap: Capability<&{LedgerToken.IdentityReceiver}>) {
@@ -578,7 +578,7 @@ pub contract IncPool: IncPoolInterface {
         //
         self.ledgerManager <- self.account.load<@LedgerToken.LedgerManager>(from: /storage/ledgerManager) ?? panic("Lost local ledger manager.")
         //
-        self.account.save(<- create Pool(), to: self.PoolPath_Storage)
+        self.account.save(<- create PoolBehaviour(), to: self.PoolPath_Storage)
 
         //
         self.account.link <&{IncPoolInterface.PoolPublic}>          (IncPool.PoolPath_Public,                target: IncPool.PoolPath_Storage)
