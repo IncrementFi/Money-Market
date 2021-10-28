@@ -179,7 +179,7 @@ pub contract SimpleOracle: OracleInterface {
         access(self) var updateCapability: Capability<&Oracle{DataUpdater}>?
 
         pub fun isUpdaterCapabilityGranted(): Bool {
-            return self.updateCapability != nil && self.updateCapability!.borrow() != nil
+            return self.updateCapability != nil && self.updateCapability!.check() == true
         }
 
         // Only Admin can grant oracle DataUpdater capability so the type system guarantees it to be called only by Admin.
