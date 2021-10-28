@@ -13,6 +13,8 @@ pub contract ComptrollerV1 {
 
     pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
+    pub event NewCloseFactor(_ oldCloseFactor: UFix64, _ newCloseFactor: UFix64)
+    pub event NewLiquidationIncentive(_ oldLiquidationIncentive: UFix64, _ newLiquidationIncentive: UFix64)
     pub event ConfigMarketParameters(
         market: Address,
         oldIsOpen: Bool?, newIsOpen: Bool?,
@@ -24,15 +26,18 @@ pub contract ComptrollerV1 {
     pub enum Error: UInt8 {
         pub case NO_ERROR
         pub case MARKET_NOT_OPEN
-        pub case INSUFFICIENT_LIQUIDITY
-        pub case EXCEED_MARKET_BORROW_CAP
+        pub case COLLATERAL_LIST_EMPTY
         pub case COLLATERAL_OWNER_AND_ACCOUNT_NOT_MATCH
         pub case COLLATERAL_TYPE_UNRECOGNIZED
+        pub case INSUFFICIENT_REDEEM_LIQUIDITY
+        pub case INSUFFICIENT_BORROW_LIQUIDITY
+        pub case EXCEED_MARKET_BORROW_CAP
+        pub case LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED
+        pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
+        pub case SET_VALUE_OUT_OF_RANGE
     }
 
     pub struct Market {
-        // Pool's type in String format
-        pub let poolType: String
         // Contains functions to query public market data
         pub let poolPublic: &{Interfaces.PoolPublic}
         pub var isOpen: Bool
@@ -45,8 +50,6 @@ pub contract ComptrollerV1 {
         // Any borrow request that makes totalBorrows greater than borrowCap would be rejected
         // Note: value of 0.0 represents unlimited cap when market.isOpen is set
         pub var borrowCap: UFix64
-        // Record of user accounts that have unpaid borrowBalance in this market
-        pub let borrowerMembership: {Address: Bool}
         
         pub fun setMarketStatus(isOpen: Bool) {
             if (self.isOpen != isOpen) {
@@ -72,7 +75,6 @@ pub contract ComptrollerV1 {
             }
         }
         init(
-            poolType: String,
             poolPublic: &{Interfaces.PoolPublic},
             isOpen: Bool,
             isMining: Bool,
@@ -82,50 +84,41 @@ pub contract ComptrollerV1 {
             pre {
                 collateralFactor <= 1.0: "collateralFactor out of range 1.0"
             }
-            self.poolType = poolType
             self.poolPublic = poolPublic
             self.isOpen = isOpen
             self.isMining = isMining
             self.collateralFactor = collateralFactor
             self.borrowCap = borrowCap
-            self.borrowerMembership = {}
         }
     }
 
     pub resource Comptroller: Interfaces.ComptrollerPublic {
         access(self) var oracle: &{Interfaces.OraclePublic}?
+        // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0]
+        access(self) var closeFactor: UFix64
+        // Multiplier representing the discount on collateral that a liquidator receives. [0.0, 1.0]
+        access(self) var liquidationIncentive: UFix64
         // { poolAddress => Market States }
         access(self) let markets: {Address: Market}
-        // { poolTypeString => poolAddress }
-        access(self) let typeToMarketAddress: {String: Address}
-        // { userAddress => [market address array] the user has ever borrowed }. It's ok if the user has zero unpaid borrowBalance
-        access(self) let accountBorrowMarkets: {Address: [Address]}
+        // { accountAddress => markets the account has either provided liquidity to or borrowed from }
+        access(self) let accountMarketsIn: {Address: [Address]}
 
-        // Add markets to be included in account liquidity calculation
-        // pub fun joinMarket(markets: [Address]) {}
+        // Add market to be included in account liquidity calculation
+        // pub fun joinMarket(market: Address): @{Interfaces.Certificate} {}
 
         // pub fun exitMarket(market: Address) {}
 
-        // Check passed-in collateral vault types and ownerAddress to ensure security
-        access(self) fun collateralSafetyCheck(account: Address, collaterals: [&FungibleToken.Vault]): Error {
-            for collateral in collaterals {
-                // Checked collaterals must be owned by the specified account
-                if (collateral.owner!.address != account) {
-                    return Error.COLLATERAL_OWNER_AND_ACCOUNT_NOT_MATCH
-                }
-                let collateralType = collateral.getType().identifier
-                if (self.typeToMarketAddress.containsKey(collateralType) == false) {
-                    return Error.COLLATERAL_TYPE_UNRECOGNIZED
-                }
-            }
-            return Error.NO_ERROR
-        }
-
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
-        pub fun supplyAllowed(poolAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
+        pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN as! UInt8
             }
+
+            // Add to user markets list
+            if (self.accountMarketsIn[supplierAddress]?.contains(poolAddress) != true) {
+                self.accountMarketsIn[supplierAddress]!.append(poolAddress)
+            }
+
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cToken);
             ///// distributeSupplierComp(cToken, minter);
@@ -136,31 +129,31 @@ pub contract ComptrollerV1 {
         pub fun redeemAllowed(
             poolAddress: Address,
             redeemerAddress: Address,
-            redeemerCollaterals: [&FungibleToken.Vault],
-            redeemPoolTokenAmount: UFix64
+            redeemLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN as! UInt8
             }
-            // 1. Passed-in collaterals safety check
-            let err = self.collateralSafetyCheck(account: redeemerAddress, collaterals: redeemerCollaterals)
-            if (err != Error.NO_ERROR) {
-                return err as! UInt8
-            }
 
-            // 2. Hypothetical account liquidity check after PoolToken was redeemed
+            // Hypothetical account liquidity check after PoolToken was redeemed
             // liquidity[1] - shortage if any
             let liquidity: [UFix64;2] = self.getHypotheticalAccountLiquidity(
                 account: redeemerAddress,
-                accountCollaterals: redeemerCollaterals,
                 poolToModify: poolAddress,
-                amountLPTokenToRedeem: redeemPoolTokenAmount,
+                amountLPTokenToRedeem: redeemLpTokenAmount,
                 amountUnderlyingToBorrow: 0.0
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_REDEEM_LIQUIDITY as! UInt8
             }
     
+            // Remove pool out of user markets list if necessary
+            self.removePoolFromAccountMarketsOnCondition(
+                poolAddress: poolAddress,
+                account: redeemerAddress,
+                redeemOrRepayAmount: redeemLpTokenAmount
+            )
+
             ///// 3. TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cToken);
             ///// distributeSupplierComp(cToken, redeemer);
@@ -170,7 +163,6 @@ pub contract ComptrollerV1 {
         pub fun borrowAllowed(
             poolAddress: Address,
             borrowerAddress: Address,
-            borrowerCollaterals: [&FungibleToken.Vault],
             borrowUnderlyingAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
@@ -185,33 +177,21 @@ pub contract ComptrollerV1 {
                 }
             }
 
-            // 2. Passed-in collaterals safety check
-            let err = self.collateralSafetyCheck(account: borrowerAddress, collaterals: borrowerCollaterals)
-            if (err != Error.NO_ERROR) {
-                return err as! UInt8
-            }
-
-            // 3. Hypothetical account liquidity check after underlying was borrowed
+            // 2. Hypothetical account liquidity check after underlying was borrowed
             // liquidity[1] - shortage if any
             let liquidity: [UFix64;2] = self.getHypotheticalAccountLiquidity(
                 account: borrowerAddress,
-                accountCollaterals: borrowerCollaterals,
                 poolToModify: poolAddress,
                 amountLPTokenToRedeem: 0.0,
                 amountUnderlyingToBorrow: borrowUnderlyingAmount
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_BORROW_LIQUIDITY as! UInt8
             }
 
-            // 4. 
-            // Add to market borrower list
-            if (self.markets[poolAddress]!.borrowerMembership[borrowerAddress] != true) {
-                self.markets[poolAddress]!.borrowerMembership.insert(key: borrowerAddress, true)
-            }
-            // Add to user borrowed markets list
-            if (self.accountBorrowMarkets[borrowerAddress]?.contains(poolAddress) != true) {
-                self.accountBorrowMarkets[borrowerAddress]!.append(poolAddress)
+            // 3. Add to user markets list
+            if (self.accountMarketsIn[borrowerAddress]?.contains(poolAddress) != true) {
+                self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
             }
 
             ///// 5. TODO: Keep the flywheel moving
@@ -221,10 +201,18 @@ pub contract ComptrollerV1 {
             return Error.NO_ERROR as! UInt8
         }
 
-        pub fun repayAllowed(poolAddress: Address, repayUnderlyingAmount: UFix64): UInt8 {
+        pub fun repayAllowed(poolAddress: Address, borrowerAddress: Address, repayUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN as! UInt8
             }
+
+            // Remove pool out of user markets list if necessary
+            self.removePoolFromAccountMarketsOnCondition(
+                poolAddress: poolAddress,
+                account: borrowerAddress,
+                redeemOrRepayAmount: repayUnderlyingAmount
+            )
+
             ///// TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
             ///// updateCompBorrowIndex(cToken, borrowIndex);
@@ -232,8 +220,107 @@ pub contract ComptrollerV1 {
             return Error.NO_ERROR as! UInt8
         }
 
+        pub fun liquidateAllowed(poolBorrowed: Address, poolCollateralized: Address, borrower: Address, repayUnderlyingAmount: UFix64): UInt8 {
+            if (self.markets[poolBorrowed]?.isOpen != true || self.markets[poolCollateralized]?.isOpen != true) {
+                return Error.MARKET_NOT_OPEN as! UInt8
+            }
+            let liquidity = self.getAccountLiquiditySnapshot(account: borrower)
+            if liquidity[0] > 0.0 {
+                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED as! UInt8
+            }
+            let borrowBalance = self.markets[poolBorrowed]!.poolPublic.getAccountBorrowBalance(account: borrower)
+            // liquidator cannot repay more than closeFactor * borrow
+            if (repayUnderlyingAmount > borrowBalance * self.closeFactor) {
+                return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY as! UInt8
+            }
+            return Error.NO_ERROR as! UInt8
+        }
+
+        pub fun seizeAllowed(
+            borrowPool: Address,
+            collateralPool: Address,
+            liquidator: Address,
+            borrower: Address,
+            collateralPoolLpTokenToSeize: UFix64
+        ): UInt8 {
+            if (self.markets[borrowPool]?.isOpen != true || self.markets[collateralPool]?.isOpen != true) {
+                return Error.MARKET_NOT_OPEN as! UInt8
+            }
+
+            ///// TODO: Keep the flywheel moving
+            ///// updateCompSupplyIndex(cTokenCollateral);
+            ///// distributeSupplierComp(cTokenCollateral, borrower);
+            ///// distributeSupplierComp(cTokenCollateral, liquidator);
+            return Error.NO_ERROR as! UInt8
+        }
+
+        // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
+        // Called in LendingPool.liquidate()
+        pub fun collateralPoolLpTokenToSeize(
+            borrower: Address
+            borrowPool: Address,
+            collateralPool: Address,
+            actualRepaidBorrowAmount: UFix64
+        ): UFix64 {
+            let borrowPoolUnderlyingPriceUSD = self.oracle!.getUnderlyingPrice(pool: borrowPool)
+            let collateralPoolUnderlyingPriceUSD = self.oracle!.getUnderlyingPrice(pool: collateralPool)
+            assert(
+                borrowPoolUnderlyingPriceUSD != 0.0 && collateralPoolUnderlyingPriceUSD != 0.0,
+                message: "price feed for market not available, abort"
+            )
+            // 1. Accrue interests first
+            if (self.markets[borrowPool]!.poolPublic.accruedAndSynced() == false) {
+                self.markets[borrowPool]!.poolPublic.accrueInterest()
+            }
+            if (self.markets[collateralPool]!.poolPublic.accruedAndSynced() == false) {
+                self.markets[collateralPool]!.poolPublic.accrueInterest()
+            }
+            // 2. Calculate collateralPool lpTokenSeizedAmount
+            let collateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublic.getUnderlyingToLpTokenRate()
+            let actualRepaidBorrowWithIncentiveInUSD = (1.0 + self.liquidationIncentive) * borrowPoolUnderlyingPriceUSD * actualRepaidBorrowAmount
+            let collateralPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD * collateralUnderlyingToLpTokenRate
+            let collateralLpTokenSeizedAmount = actualRepaidBorrowWithIncentiveInUSD / collateralPoolLpTokenPriceUSD
+            // 3. borrower collateralPool lpToken balance check
+            let collateralPoolBorrowerSnapshot = self.markets[collateralPool]!.poolPublic.getAccountSnapshot(account: borrower)
+            let lpTokenAmount = collateralPoolBorrowerSnapshot[1]
+            assert(collateralLpTokenSeizedAmount <= lpTokenAmount, message: "liquidate: borrower's collateralPoolLpToken seized too much")
+            return collateralLpTokenSeizedAmount
+        }
+
+        // Return the current account liquidity snapshot:
+        // [liquidity redundance more than collateral requirement, liquidity shortage below collateral requirement]
+        pub fun getAccountLiquiditySnapshot(account: Address): [UFix64; 2] {
+            return self.getHypotheticalAccountLiquidity(
+                account: account,
+                poolToModify: (0 as! Address),
+                amountLPTokenToRedeem: 0.0,
+                amountUnderlyingToBorrow: 0.0
+            )
+        }
+
+        // Remove pool out of user markets list if necessary
+        access(self) fun removePoolFromAccountMarketsOnCondition(
+            poolAddress: Address,
+            account: Address,
+            redeemOrRepayAmount: UFix64
+        ): Bool {
+            // snapshot[1] - lpTokenBalance; snapshot[2] - borrowBalance
+            let snapshot = self.markets[poolAddress]!.poolPublic.getAccountSnapshot(account: account)
+            if (snapshot[1] == 0.0 && snapshot[2] == redeemOrRepayAmount || (snapshot[1] == redeemOrRepayAmount && snapshot[2] == 0.0)) {
+                var id = 0
+                let marketsIn: &[Address] = &(self.accountMarketsIn[account]!) as &[Address]
+                while (id < marketsIn.length) {
+                    if (marketsIn[id] == poolAddress) {
+                        marketsIn.remove(at: id)
+                        return true
+                    }
+                    id = id + 1
+                }
+            }
+            return false
+        }
+
         // Calculate what the account liquidity would be if the given amounts were redeemed / borrowed
-        // accountCollaterals - redeemer / borrower must provide reference to their collateral Vaults to do calculation
         // poolToModify - The market to hypothetically redeem/borrow from
         // amountLPTokenToRedeem - The number of LPTokens to hypothetically redeem
         // amountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
@@ -241,7 +328,6 @@ pub contract ComptrollerV1 {
         //         1. hypothetical liquidity shortage below collateral requirements
         access(self) fun getHypotheticalAccountLiquidity(
             account: Address,
-            accountCollaterals: [&FungibleToken.Vault],
             poolToModify: Address,
             amountLPTokenToRedeem: UFix64,
             amountUnderlyingToBorrow: UFix64
@@ -253,33 +339,31 @@ pub contract ComptrollerV1 {
             var sumCollateralNormalized = 0.0
             // Total borrow value with side-effects normalized in usd
             var sumBorrowWithEffectsNormalized = 0.0
-            for collateral in accountCollaterals {
-                let collateralType = collateral.getType().identifier
-                let poolAddress = self.typeToMarketAddress[collateralType]!
+            for poolAddress in self.accountMarketsIn[account]! {
                 let collateralFactor = self.markets[poolAddress]!.collateralFactor
-                let lpTokenAmount = self.markets[poolAddress]!.poolPublic.getContractBasedVaultBalance(vaultId: collateral.uuid)
-                let underlyingToLpTokenRate = self.markets[poolAddress]!.poolPublic.getUnderlyingToPoolTokenRateCurrent()
+                let accountSnapshot = self.markets[poolAddress]!.poolPublic.getAccountSnapshot(account: account)
+                let underlyingToLpTokenRate = accountSnapshot[0]
+                let lpTokenAmount = accountSnapshot[1]
+                let borrowBalance = accountSnapshot[2]
                 let underlyingPriceInUSD = self.oracle!.getUnderlyingPrice(pool: poolAddress)
-                sumCollateralNormalized =
-                    sumCollateralNormalized + collateralFactor * underlyingPriceInUSD * underlyingToLpTokenRate * lpTokenAmount
-            }
-            for poolAddress in self.accountBorrowMarkets[account]! {
-                let poolPublic = self.markets[poolAddress]!.poolPublic
-                let borrowBalance = poolPublic.getAccountBorrowsCurrent(account: account)
-                let underlyingPriceInUSD = self.oracle!.getUnderlyingPrice(pool: poolAddress)
-                sumBorrowWithEffectsNormalized = sumBorrowWithEffectsNormalized + borrowBalance * underlyingPriceInUSD
-                // Apply hypothetical side-effect
+                if (lpTokenAmount > 0.0) {
+                    sumCollateralNormalized =
+                        sumCollateralNormalized + collateralFactor * underlyingPriceInUSD * underlyingToLpTokenRate * lpTokenAmount
+                }
+                if (borrowBalance > 0.0) {
+                    sumBorrowWithEffectsNormalized = sumBorrowWithEffectsNormalized + borrowBalance * underlyingPriceInUSD
+                }
                 if (poolAddress == poolToModify) {
+                    // Apply hypothetical redeem side-effect
                     if (amountLPTokenToRedeem > 0.0) {
-                        let underlyingToLpTokenRate = poolPublic.getUnderlyingToPoolTokenRateCurrent()
-                        let collateralFactor = self.markets[poolAddress]!.collateralFactor
-                        sumBorrowWithEffectsNormalized =
-                            sumBorrowWithEffectsNormalized + collateralFactor * underlyingPriceInUSD * underlyingToLpTokenRate * amountLPTokenToRedeem
+                        sumCollateralNormalized =
+                            sumCollateralNormalized - collateralFactor * underlyingPriceInUSD * underlyingToLpTokenRate * amountLPTokenToRedeem
                     }
+                    // Apply hypothetical borrow side-effect
                     if (amountUnderlyingToBorrow > 0.0) {
                         sumBorrowWithEffectsNormalized = sumBorrowWithEffectsNormalized + amountUnderlyingToBorrow * underlyingPriceInUSD
                     }
-                }             
+                }
             }
             if (sumCollateralNormalized > sumBorrowWithEffectsNormalized) {
                 return [sumCollateralNormalized - sumBorrowWithEffectsNormalized, 0.0]
@@ -297,11 +381,9 @@ pub contract ComptrollerV1 {
             // TODO: fix hardcode path
             let poolPublic = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(/public/poolPublic).borrow()
                 ?? panic("cannot borrow reference to PoolPublic")
-            let poolType = poolPublic.getType().identifier
             self.markets[poolAddress] =
-                Market(poolType: poolType, poolPublic: poolPublic, isOpen: false, isMining: false, collateralFactor: 0.0, borrowCap: 0.0)
-            self.typeToMarketAddress[poolType] = poolAddress
-            emit MarketAdded(market: poolAddress, marketType: poolType, collateralFactor: collateralFactor)
+                Market(poolPublic: poolPublic, isOpen: false, isMining: false, collateralFactor: 0.0, borrowCap: 0.0)
+            emit MarketAdded(market: poolAddress, marketType: poolPublic.getUnderlyingTypeString(), collateralFactor: collateralFactor)
         }
 
         // Tune parameters of an already-listed market
@@ -342,11 +424,30 @@ pub contract ComptrollerV1 {
             emit NewOracle(oldOracleAddress, self.oracle!.owner!.address)
         }
 
+        access(contract) fun setCloseFactor(newCloseFactor: UFix64) {
+            pre {
+                newCloseFactor <= 1.0: "value out of range 1.0"
+            }
+            let oldCloseFactor = self.closeFactor
+            self.closeFactor = newCloseFactor
+            emit NewCloseFactor(oldCloseFactor, newCloseFactor)
+        }
+
+        access(contract) fun setLiquidationIncentive(newLiquidationIncentive: UFix64) {
+            pre {
+                newLiquidationIncentive <= 1.0: "value out of range 1.0"
+            }
+            let oldLiquidationIncentive = self.liquidationIncentive
+            self.liquidationIncentive = newLiquidationIncentive
+            emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
+        }
+
         init() {
             self.oracle = nil
+            self.closeFactor = 0.0
+            self.liquidationIncentive = 0.0
             self.markets = {}
-            self.typeToMarketAddress = {}
-            self.accountBorrowMarkets = {}
+            self.accountMarketsIn = {}
         }
     }
 
@@ -371,6 +472,14 @@ pub contract ComptrollerV1 {
         // Admin function to set a new oracle
         pub fun configOracle(comptroller: Capability<&Comptroller>, oracleAddress: Address) {
             comptroller.borrow()!.configOracle(oracleAddress: oracleAddress)
+        }
+        // Admin function to set closeFactor
+        pub fun setCloseFactor(comptroller: Capability<&Comptroller>, closeFactor: UFix64) {
+            comptroller.borrow()!.setCloseFactor(newCloseFactor: closeFactor)
+        }
+        // Admin function to set liquidationIncentive
+        pub fun setLiquidationIncentive(comptroller: Capability<&Comptroller>, liquidationIncentive: UFix64) {
+            comptroller.borrow()!.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
         }
     }
 
