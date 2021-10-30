@@ -14,6 +14,9 @@ pub contract interface Interfaces {
         pub let certType: Type
     }
 
+    // Authentication mechanism for composability (Contract intereations with priviledge / safety reuqirements) 
+    pub resource interface Auth {}
+
     // TODO: Remove file `PoolInterface.cdc`
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
@@ -27,7 +30,16 @@ pub contract interface Interfaces {
         pub fun getPoolTotalBorrows(): UFix64
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
-        pub fun accruedAndSynced(): Bool
+        pub fun getAuthType(): Type
+        // Note: Check to ensure auth's run-time type is ComptrollerV1.Auth,
+        // so that this public seize function can only called by Comptroller
+        pub fun seize(
+            comptrollerAuth: @{Interfaces.Auth},
+            borrowPool: Address,
+            liquidator: Address,
+            borrower: Address,
+            borrowerCollateralLpTokenToSeize: UFix64
+        )
     }
 
     // TODO: Remove file `OracleInterface.cdc`
@@ -69,8 +81,8 @@ pub contract interface Interfaces {
         pub fun repayAllowed(
             poolAddress: Address,
             borrowerAddress: Address,
-            repayUnderlyingAmount: UFix64)
-        : UInt8
+            repayUnderlyingAmount: UFix64
+        ): UInt8
 
         pub fun liquidateAllowed(
             poolBorrowed: Address,
@@ -84,14 +96,28 @@ pub contract interface Interfaces {
             collateralPool: Address,
             liquidator: Address,
             borrower: Address,
-            collateralPoolLpTokenToSeize: UFix64
+            seizeCollateralPoolLpTokenAmount: UFix64
         ): UInt8
 
-        pub fun collateralPoolLpTokenToSeize(
+        pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address
             borrowPool: Address,
             collateralPool: Address,
             actualRepaidBorrowAmount: UFix64
         ): UFix64
+
+        pub fun getAuthType(): Type
+
+        // Process an seize request delegated from LendingPool contract.
+        // Check to ensure the auth is minted by one of the LendingPools (auth's run-time type is LendingPool.Auth),
+        // so that this public function cannot be called by other accounts arbitrarily.
+        pub fun seizeExternal(
+            poolAuth: @{Interfaces.Auth},
+            borrowPool: Address,
+            collateralPoolToSeize: Address,
+            liquidator: Address,
+            borrower: Address,
+            borrowerCollateralLpTokenToSeize: UFix64
+        )
     }
 }

@@ -102,7 +102,7 @@ pub contract LendingPool {
 
     // Calculates interest accrued from the last checkpointed block to the current block and 
     // applies to total borrows, total reserves, borrow index.
-    pub fun accrueInterest(): Error {
+    access(self) fun accrueInterest(): Error {
         let currentBlockNumber = getCurrentBlock().height
         let accrualBlockNumberPrior = self.accrualBlockNumber
         // Return early if accrue 0 interest
@@ -196,7 +196,8 @@ pub contract LendingPool {
     ): @FungibleToken.Vault {
         pre {
             numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0: "numLpTokenToRedeem or numUnderlyingToRedeem must be 0.0"
-            certificate.certType == self.underlyingAssetType: "certificate type and lendingPool type mismatch, revert"
+            certificate.isInstance(Type<@LendingPool.Certificate>()): "certificate not an instance of this LendingPool.Certificate, redeem revert"
+            certificate.certType == self.getType(): "certificate type and lendingPool type mismatch, revert"
         }
 
         // 1. Accrues interests and checkpoints latest states
@@ -273,6 +274,7 @@ pub contract LendingPool {
         )
     }
 
+    // TODO: Cerficicate shouldn't be used in this way!
     // User borrows underlying asset from the pool.
     // borrower is inferred from the reference to the deposit Certificate, which can only be provided by the Certificate owner,
     // thus preventing passing in a fake borrower
@@ -282,7 +284,8 @@ pub contract LendingPool {
         borrowAmount: UFix64,
     ): @FungibleToken.Vault {
         pre {
-            certificate.certType == self.underlyingAssetType: " borrow certificate and lendingPool type mismatch, revert"
+            certificate.isInstance(Type<@LendingPool.Certificate>()): "certificate is not issued by this LendingPool, borrow revert"
+            certificate.certType == self.getType(): " provided certificate type and this LendingPool type mismatch, borrow revert"
             borrowAmount > 0.0: "borrowAmount zero"
             borrowAmount <= self.getPoolCash(): "Pool not enough underlying balance for borrow"
         }
@@ -350,13 +353,13 @@ pub contract LendingPool {
     }
 
     pub fun liquidate(
-        certificate: &{Interfaces.Certificate},
+        liquidator: Address,
         borrower: Address,
         poolCollateralizedToSeize: Address
         repayUnderlyingVault: @FungibleToken.Vault
     ): @FungibleToken.Vault? {
         pre {
-            certificate.certType == self.underlyingAssetType: "liquidator certificate and lendingPool type mismatch, revert"
+            repayUnderlyingVault.isInstance(self.underlyingAssetType): "liquidator repayed vault and pool underlying type mismatch, revert"
         }
 
         // 1. Accrues interests and checkpoints latest states
@@ -374,29 +377,36 @@ pub contract LendingPool {
         assert(ret == 0, message: "liquidate not allowed, error reason: ".concat(ret.toString()))
 
         // 3. Liquidator repays on behave of borrower
-        let liquidator = certificate.certOwner
         assert(liquidator != borrower, message: "LIQUIDATE_LIQUIDATOR_IS_BORROWER")
         let remainingVault <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
         let remainingAmount = remainingVault?.balance ?? 0.0
         let actualRepayAmount = underlyingAmountToRepay - remainingAmount
-        // Calculate collateralLpTokenAmountToSeize based on actualRepayAmount
-        let collateralLpTokenSeizedAmount = self.comptrollerRef!.borrow()!.collateralPoolLpTokenToSeize(
+        // Calculate collateralLpTokenSeizedAmount based on actualRepayAmount
+        let collateralLpTokenSeizedAmount = self.comptrollerRef!.borrow()!.calculateCollateralPoolLpTokenToSeize(
             borrower: borrower,
             borrowPool: self.poolAddress,
             collateralPool: poolCollateralizedToSeize,
             actualRepaidBorrowAmount: actualRepayAmount
         )
 
-        // 4. seizeInternal or delegate to comptroller to seize an external collateralPool
+        // 4. seizeInternal if current pool is also borrower's collateralPool;
+        // otherwise delegate to comptroller to seize another external collateralPool
         if (poolCollateralizedToSeize == self.poolAddress) {
             self.seizeInternal(
                 borrowPool: self.poolAddress,
-                collateralPool: poolCollateralizedToSeize,
                 liquidator: liquidator,
                 borrower: borrower,
-                collateralPoolLpTokenToSeize: collateralLpTokenSeizedAmount)
+                borrowerLpTokenToSeize: collateralLpTokenSeizedAmount
+            )
         } else {
-            // self.comptrollerRef!.borrow()!.seize()
+            self.comptrollerRef!.borrow()!.seizeExternal(
+                poolAuth: <- create LendingPool.Auth(),
+                borrowPool: self.poolAddress,
+                collateralPoolToSeize: poolCollateralizedToSeize,
+                liquidator: liquidator,
+                borrower: borrower,
+                borrowerCollateralLpTokenToSeize: collateralLpTokenSeizedAmount
+            )
         }
 
         emit LiquidateBorrow(
@@ -409,37 +419,63 @@ pub contract LendingPool {
         return <-remainingVault
     }
 
+    // Used for "external" called seize. Run-time type check of auth ensures it can only be called by Comptroller
+    pub fun seize(
+        comptrollerAuth: @{Interfaces.Auth},
+        borrowPool: Address,
+        liquidator: Address,
+        borrower: Address,
+        borrowerCollateralLpTokenToSeize: UFix64
+    ) {
+        pre {
+            // ComptrollerV1.Auth resouce can only be created by comptroller, which ensures seize() cannot be called by other accounts
+            comptrollerAuth.isInstance(self.comptrollerRef!.borrow()!.getAuthType()): "not called by Comptroller, seize revert"
+        }
+        destroy comptrollerAuth
+
+        // 1. Accrues interests and checkpoints latest states
+        let err = self.accrueInterest()
+        assert(err == Error.NO_ERROR, message: "SEIZE_ACCRUE_INTEREST_FAILED")
+
+        // 2. seizeInternal
+        self.seizeInternal(
+            borrowPool: borrowPool,
+            liquidator: liquidator,
+            borrower: borrower,
+            borrowerLpTokenToSeize: borrowerCollateralLpTokenToSeize
+        )
+    }
+
     // Caller ensures accrueInterest() has been called
     access(self) fun seizeInternal(
         borrowPool: Address,
-        collateralPool: Address,
         liquidator: Address,
         borrower: Address,
-        collateralPoolLpTokenToSeize: UFix64
+        borrowerLpTokenToSeize: UFix64
     ) {
         pre {
             liquidator != borrower: "seize: liquidator is borrower, revert"
         }
         let ret = self.comptrollerRef!.borrow()!.seizeAllowed(
             borrowPool: borrowPool,
-            collateralPool: collateralPool,
+            collateralPool: self.poolAddress,
             liquidator: liquidator,
             borrower: borrower,
-            collateralPoolLpTokenToSeize: collateralPoolLpTokenToSeize
+            seizeCollateralPoolLpTokenAmount: borrowerLpTokenToSeize
         )
         assert(ret == 0, message: "seize not allowed, error reason: ".concat(ret.toString()))
 
         // accountLpTokens[borrower] -= collateralPoolLpTokenToSeize
         // LendingPool.totalReserves += collateralPoolLpTokenToSeize * LendingPool.poolSeizeShare
         // accountLpTokens[liquidator] += (collateralPoolLpTokenToSeize * (1 - LendingPool.poolSeizeShare))
-        let protocolSeizedLpTokens = collateralPoolLpTokenToSeize * self.poolSeizeShare
-        let liquidatorSeizedLpTokens = collateralPoolLpTokenToSeize - protocolSeizedLpTokens
+        let protocolSeizedLpTokens = borrowerLpTokenToSeize * self.poolSeizeShare
+        let liquidatorSeizedLpTokens = borrowerLpTokenToSeize - protocolSeizedLpTokens
         let underlyingToLpTokenRate = self.underlyingToLpTokenRateSnapshot()
         let addedUnderlyingReserves = underlyingToLpTokenRate * protocolSeizedLpTokens
         self.totalReserves = self.totalReserves + addedUnderlyingReserves
         self.totalSupply = self.totalSupply - protocolSeizedLpTokens
         // in-place liquidation: only virtual lpToken records get updated, no token deposit / withdraw needs to happen
-        self.accountLpTokens[borrower] = self.accountLpTokens[borrower]! - collateralPoolLpTokenToSeize
+        self.accountLpTokens[borrower] = self.accountLpTokens[borrower]! - borrowerLpTokenToSeize
         self.accountLpTokens[liquidator] = self.accountLpTokens[liquidator]! + liquidatorSeizedLpTokens
 
         emit ReserveAdded(donator: self.poolAddress, addedUnderlyingAmount: addedUnderlyingReserves, newTotalReserves: self.totalReserves)
@@ -452,9 +488,11 @@ pub contract LendingPool {
 
         init(owner: Address) {
             self.certOwner = owner
-            self.certType = LendingPool.underlyingVault.getType()
+            self.certType = LendingPool.getType()
         }
     }
+
+    pub resource Auth: Interfaces.Auth {}
 
     pub resource PoolPublic: Interfaces.PoolPublic {
         pub fun getPoolAddress(): Address {
@@ -489,8 +527,23 @@ pub contract LendingPool {
             let ret = LendingPool.accrueInterest()
             return ret as! UInt8
         }
-        pub fun accruedAndSynced(): Bool {
-            return LendingPool.accrualBlockNumber == getCurrentBlock().height
+        pub fun getAuthType(): Type {
+            return Type<@LendingPool.Auth>()
+        }
+        pub fun seize(
+            comptrollerAuth: @{Interfaces.Auth},
+            borrowPool: Address,
+            liquidator: Address,
+            borrower: Address,
+            borrowerCollateralLpTokenToSeize: UFix64
+        ) {
+            LendingPool.seize(
+                comptrollerAuth: <-comptrollerAuth,
+                borrowPool: borrowPool,
+                liquidator: liquidator,
+                borrower: borrower,
+                borrowerCollateralLpTokenToSeize: borrowerCollateralLpTokenToSeize
+            )
         }
     }
 

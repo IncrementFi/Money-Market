@@ -10,6 +10,8 @@ pub contract ComptrollerV1 {
     pub let ComptrollerPrivatePath: PrivatePath
     // The public path for the capability to restricted to &{Interfaces.ComptrollerPublic}
     pub let ComptrollerPublicPath: PublicPath
+    // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
+    pub let comptrollerAddress: Address
 
     pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
@@ -92,6 +94,8 @@ pub contract ComptrollerV1 {
         }
     }
 
+    pub resource Auth: Interfaces.Auth {}
+
     pub resource Comptroller: Interfaces.ComptrollerPublic {
         access(self) var oracle: &{Interfaces.OraclePublic}?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0]
@@ -107,6 +111,10 @@ pub contract ComptrollerV1 {
         // pub fun joinMarket(market: Address): @{Interfaces.Certificate} {}
 
         // pub fun exitMarket(market: Address) {}
+
+        pub fun getAuthType(): Type {
+            return Type<@ComptrollerV1.Auth>()
+        }
 
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
         pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
@@ -241,7 +249,7 @@ pub contract ComptrollerV1 {
             collateralPool: Address,
             liquidator: Address,
             borrower: Address,
-            collateralPoolLpTokenToSeize: UFix64
+            seizeCollateralPoolLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[borrowPool]?.isOpen != true || self.markets[collateralPool]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN as! UInt8
@@ -256,7 +264,7 @@ pub contract ComptrollerV1 {
 
         // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
         // Called in LendingPool.liquidate()
-        pub fun collateralPoolLpTokenToSeize(
+        pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address
             borrowPool: Address,
             collateralPool: Address,
@@ -268,23 +276,43 @@ pub contract ComptrollerV1 {
                 borrowPoolUnderlyingPriceUSD != 0.0 && collateralPoolUnderlyingPriceUSD != 0.0,
                 message: "price feed for market not available, abort"
             )
-            // 1. Accrue interests first
-            if (self.markets[borrowPool]!.poolPublic.accruedAndSynced() == false) {
-                self.markets[borrowPool]!.poolPublic.accrueInterest()
-            }
-            if (self.markets[collateralPool]!.poolPublic.accruedAndSynced() == false) {
-                self.markets[collateralPool]!.poolPublic.accrueInterest()
-            }
+            // 1. Accrue interests first to use latest collateralPool states to do calculation
+            self.markets[collateralPool]!.poolPublic.accrueInterest()
+
             // 2. Calculate collateralPool lpTokenSeizedAmount
             let collateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublic.getUnderlyingToLpTokenRate()
             let actualRepaidBorrowWithIncentiveInUSD = (1.0 + self.liquidationIncentive) * borrowPoolUnderlyingPriceUSD * actualRepaidBorrowAmount
             let collateralPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD * collateralUnderlyingToLpTokenRate
             let collateralLpTokenSeizedAmount = actualRepaidBorrowWithIncentiveInUSD / collateralPoolLpTokenPriceUSD
             // 3. borrower collateralPool lpToken balance check
-            let collateralPoolBorrowerSnapshot = self.markets[collateralPool]!.poolPublic.getAccountSnapshot(account: borrower)
-            let lpTokenAmount = collateralPoolBorrowerSnapshot[1]
+            let lpTokenAmount = self.markets[collateralPool]!.poolPublic.getAccountLpTokenBalance(account: borrower)
             assert(collateralLpTokenSeizedAmount <= lpTokenAmount, message: "liquidate: borrower's collateralPoolLpToken seized too much")
             return collateralLpTokenSeizedAmount
+        }
+
+        // Process an seize request delegated from LendingPool contract.
+        // Check to ensure the auth is minted by one of the LendingPools (auth's run-time type is LendingPool.Certificate),
+        // so that this public function cannot be called by other accounts arbitrarily.
+        pub fun seizeExternal(
+            poolAuth: @{Interfaces.Auth},
+            borrowPool: Address,
+            collateralPoolToSeize: Address,
+            liquidator: Address,
+            borrower: Address,
+            borrowerCollateralLpTokenToSeize: UFix64
+        ) {
+            pre {
+                poolAuth.isInstance(self.markets[borrowPool]!.poolPublic.getAuthType()): "not called by LendingPool, seizeExternal revert"
+            }
+            destroy poolAuth
+
+            self.markets[collateralPoolToSeize]!.poolPublic.seize(
+                comptrollerAuth: <- create ComptrollerV1.Auth(),
+                borrowPool: borrowPool,
+                liquidator: liquidator,
+                borrower: borrower,
+                borrowerCollateralLpTokenToSeize: borrowerCollateralLpTokenToSeize
+            )
         }
 
         // Return the current account liquidity snapshot:
@@ -489,6 +517,7 @@ pub contract ComptrollerV1 {
         self.ComptrollerPrivatePath = /private/comptrollerModule
         self.ComptrollerPublicPath = /public/comptrollerModule
 
+        self.comptrollerAddress = self.account.address
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
     }
 }
