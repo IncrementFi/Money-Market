@@ -1,14 +1,14 @@
-import OracleInterface from "./OracleInterface.cdc"
+import Interfaces from "./Interfaces.cdc"
 
 // A simple centralized oracle maintained by the team. Admin can grant updateData role to other managed accounts.
-pub contract SimpleOracle: OracleInterface {
+pub contract SimpleOracle {
     // The storage path for the Admin resource
     pub let AdminStoragePath: StoragePath
     // The storage path for the Oracle resource
     pub let OracleStoragePath: StoragePath
     // The private path for the capability to Oracle resource for admin to modify feeds
     pub let OraclePrivatePath: PrivatePath
-    // The public path for the capability to restricted to &{OracleInterface.Getter}
+    // The public path for the capability to restricted to &{Interfaces.OraclePublic}
     pub let OraclePublicPath: PublicPath
 
     // The storage path for updater's OracleUpdateProxy resource
@@ -85,23 +85,23 @@ pub contract SimpleOracle: OracleInterface {
         access(contract) fun updatePrice(yToken: Address, data: UFix64)
     }
 
-    pub resource Oracle: OracleInterface.Getter, DataUpdater {
+    pub resource Oracle: Interfaces.OraclePublic, DataUpdater {
         access(self) let feeds: [Address]
         // { yToken : Oracle data for yToken }
         access(self) let observations: @{Address: RingBuffer}
 
         // Return the underlying asset price denominated in USD.
         // Return 0.0 means price feed for the given yToken is not available.  
-        pub fun getUnderlyingPrice(yToken: Address): UFix64 {
-            if (!self.feeds.contains(yToken)) {
+        pub fun getUnderlyingPrice(pool: Address): UFix64 {
+            if (!self.feeds.contains(pool)) {
                 return 0.0
             }
-            return self.latestResult(yToken: yToken)[1]
+            return self.latestResult(pool: pool)[1]
         }
 
         // Return yToken's latest data point in form of (timestamp, data)
-        pub fun latestResult(yToken: Address): [UFix64; 2] {
-            let dataRef: &RingBuffer = &self.observations[yToken] as &RingBuffer
+        pub fun latestResult(pool: Address): [UFix64; 2] {
+            let dataRef: &RingBuffer = &self.observations[pool] as &RingBuffer
             if (dataRef == nil || dataRef.isEmpty()) {
                 return [0.0, 0.0]
             }

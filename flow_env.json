@@ -28,16 +28,11 @@
     },
     "Kibble":                         "./cadence/contracts/Kibble.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "OracleInterface":                "./cadence/contracts/OracleInterface.cdc",
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-    "LedgerToken":                    "./cadence/contracts/LedgerToken.cdc",
-    "CDToken":                        "./cadence/contracts/CDToken.cdc",
-    "IncConfig":                      "./cadence/contracts/IncConfig.cdc",
-    "IncPoolInterface":               "./cadence/contracts/IncPoolInterface.cdc",
-    "IncPool":                        "./cadence/contracts/IncPool.cdc",
-    "IncComptrollerInterface":        "./cadence/contracts/IncComptrollerInterface.cdc",
-    "IncComptroller":                 "./cadence/contracts/IncComptroller.cdc",
-    "IncQueryInterface":              "./cadence/contracts/IncQueryInterface.cdc"
+    "LendingPool":                    "./cadence/contracts/LendingPool.cdc",
+    "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
+    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
+    "Config":                         "./cadence/contracts/Config.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -149,7 +144,6 @@
     },
     "testnet": {
       "testnet-oracle-deployer": [
-        "OracleInterface",
         "SimpleOracle"
       ]
     }

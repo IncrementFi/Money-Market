@@ -4,12 +4,12 @@ import Config from "../../contracts/Config.cdc"
 
 transaction() {
     prepare(comptrollerAccount: AuthAccount) {
-        log("Transaction Start ---------------")
+        log("Transaction Start --------------- init_comptroller")
         
-        log("create comptroller:")
-        let adminRef = comptrollerAccount.borrow<&ComptrollerV1.Admin>(from: ComptrollerV1.AdminStoragePath) ?? panic("Lost comptroller admin.")
+        log("Init comptroller ")
+        let comptrollerAdminRef = comptrollerAccount.borrow<&ComptrollerV1.Admin>(from: ComptrollerV1.AdminStoragePath) ?? panic("Lost comptroller admin.")
+        comptrollerAdminRef.configOracle(oracleAddress: Config.OracleAddr)
 
-        
         log("End -----------------------------")
     }
 }

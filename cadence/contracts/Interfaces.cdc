@@ -41,7 +41,6 @@ pub contract interface Interfaces {
         )
     }
 
-    // TODO: Remove file `OracleInterface.cdc`
     pub resource interface OraclePublic {
         // Get the given pool's underlying asset price denominated in USD.
         // Note: Return value of 0.0 means the given yToken price feed is not available.

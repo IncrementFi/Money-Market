@@ -38,11 +38,18 @@ echo "---- 3// Check specified pool's underlying asset's latest price data,Expec
 flow scripts execute cadence/scripts/Oracle/get_pool_underlying_price.cdc --args-json '[{"type": "Address", "value": "0xf3fcd2c1a78f5eee"}, {"type": "Address", "value": "0x01cf0e2f2f715450"}]'
 
 #### Init FUSD Pool
-echo "---- init FUSD pool"
+echo "---- Init pool of FUSD"
 flow transactions send ./cadence/transactions/Pool/init_pool_fusd.cdc --signer emulator-pool-fusd
 
+### Init Comptroller
+echo "---- Init Comptroller"
+flow transactions send ./cadence/transactions/Comptroller/init_comptroller.cdc --signer emulator-account
+
+### Add FUSD Pool in comptroller
+echo "---- Add market of FUSD to comptroller"
+flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:0x01cf0e2f2f715450 --arg UFix64:0.75 --arg UFix64:100.0 --arg Bool:true --arg Bool:true --signer emulator-account
 
 #### Test Account Preparations
-echo '---- mint fusd for userA'
+echo '---- Mint fusd for userA'
 flow transactions send ./cadence/transactions/Test/test_mint_fusd.cdc --signer emulator-user-A
 

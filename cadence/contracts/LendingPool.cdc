@@ -2,10 +2,12 @@ import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
 import TwoSegmentsInterestRateModel from "./TwoSegmentsInterestRateModel.cdc"
 import ComptrollerV1 from "./ComptrollerV1.cdc"
+import Config from "./Config.cdc"
 
 pub contract LendingPool {
     pub let PoolAdminStoragePath: StoragePath
     pub let UnderlyingAssetVaultStoragePath: StoragePath
+    pub let PoolPublicStoragePath: StoragePath
 
     pub enum Error: UInt8 {
         pub case NO_ERROR
@@ -633,6 +635,7 @@ pub contract LendingPool {
     init() {
         self.PoolAdminStoragePath = /storage/poolAdmin
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
+        self.PoolPublicStoragePath = /storage/poolPublic
 
         self.poolAddress = self.account.address
         self.initialExchangeRate = 1.0
@@ -654,6 +657,8 @@ pub contract LendingPool {
         assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
         //
         self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
+        self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
+        self.account.link<&{Interfaces.PoolPublic}>(Config.PoolPublicPath, target: self.PoolPublicStoragePath)
 
         emit TokensInitialized(initialSupply: 0.0)
     }
