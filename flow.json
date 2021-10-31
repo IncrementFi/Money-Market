@@ -28,7 +28,6 @@
     },
     "Kibble":                         "./cadence/contracts/Kibble.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "OracleInterface":                "./cadence/contracts/OracleInterface.cdc",
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
     "LendingPool":                    "./cadence/contracts/LendingPool.cdc",
     "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
@@ -150,13 +149,11 @@
         "LendingPool"
       ],
       "emulator-oracle-deployer": [
-        "OracleInterface",
         "SimpleOracle"
       ]
     },
     "testnet": {
       "testnet-oracle-deployer": [
-        "OracleInterface",
         "SimpleOracle"
       ]
     }
