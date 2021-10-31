@@ -41,7 +41,7 @@ pub contract ComptrollerV1 {
 
     pub struct Market {
         // Contains functions to query public market data
-        pub let poolPublic: &{Interfaces.PoolPublic}
+        pub let poolPublicCap: Capability<&{Interfaces.PoolPublic}>
         pub var isOpen: Bool
         // Whether or not liquidity mining is enabled for this market
         pub var isMining: Bool
@@ -77,7 +77,7 @@ pub contract ComptrollerV1 {
             }
         }
         init(
-            poolPublic: &{Interfaces.PoolPublic},
+            poolPublicCap: Capability<&{Interfaces.PoolPublic}>,
             isOpen: Bool,
             isMining: Bool,
             collateralFactor: UFix64,
@@ -86,7 +86,7 @@ pub contract ComptrollerV1 {
             pre {
                 collateralFactor <= 1.0: "collateralFactor out of range 1.0"
             }
-            self.poolPublic = poolPublic
+            self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
             self.isMining = isMining
             self.collateralFactor = collateralFactor
@@ -97,7 +97,7 @@ pub contract ComptrollerV1 {
     pub resource Auth: Interfaces.Auth {}
 
     pub resource Comptroller: Interfaces.ComptrollerPublic {
-        access(self) var oracle: &{Interfaces.OraclePublic}?
+        access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0]
         access(self) var closeFactor: UFix64
         // Multiplier representing the discount on collateral that a liquidator receives. [0.0, 1.0]
@@ -179,7 +179,7 @@ pub contract ComptrollerV1 {
             // 1. totalBorrows limit check if not unlimited borrowCap
             let borrowCap = self.markets[poolAddress]!.borrowCap
             if (borrowCap != 0.0) {
-                let totalBorrowsNew = self.markets[poolAddress]!.poolPublic.getPoolTotalBorrows() + borrowUnderlyingAmount
+                let totalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrows() + borrowUnderlyingAmount
                 if (totalBorrowsNew > borrowCap) {
                     return Error.EXCEED_MARKET_BORROW_CAP as! UInt8
                 }
@@ -236,7 +236,7 @@ pub contract ComptrollerV1 {
             if liquidity[0] > 0.0 {
                 return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED as! UInt8
             }
-            let borrowBalance = self.markets[poolBorrowed]!.poolPublic.getAccountBorrowBalance(account: borrower)
+            let borrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalance(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
             if (repayUnderlyingAmount > borrowBalance * self.closeFactor) {
                 return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY as! UInt8
@@ -270,22 +270,22 @@ pub contract ComptrollerV1 {
             collateralPool: Address,
             actualRepaidBorrowAmount: UFix64
         ): UFix64 {
-            let borrowPoolUnderlyingPriceUSD = self.oracle!.getUnderlyingPrice(pool: borrowPool)
-            let collateralPoolUnderlyingPriceUSD = self.oracle!.getUnderlyingPrice(pool: collateralPool)
+            let borrowPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: borrowPool)
+            let collateralPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: collateralPool)
             assert(
                 borrowPoolUnderlyingPriceUSD != 0.0 && collateralPoolUnderlyingPriceUSD != 0.0,
                 message: "price feed for market not available, abort"
             )
             // 1. Accrue interests first to use latest collateralPool states to do calculation
-            self.markets[collateralPool]!.poolPublic.accrueInterest()
+            self.markets[collateralPool]!.poolPublicCap.borrow()!.accrueInterest()
 
             // 2. Calculate collateralPool lpTokenSeizedAmount
-            let collateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublic.getUnderlyingToLpTokenRate()
+            let collateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublicCap.borrow()!.getUnderlyingToLpTokenRate()
             let actualRepaidBorrowWithIncentiveInUSD = (1.0 + self.liquidationIncentive) * borrowPoolUnderlyingPriceUSD * actualRepaidBorrowAmount
             let collateralPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD * collateralUnderlyingToLpTokenRate
             let collateralLpTokenSeizedAmount = actualRepaidBorrowWithIncentiveInUSD / collateralPoolLpTokenPriceUSD
             // 3. borrower collateralPool lpToken balance check
-            let lpTokenAmount = self.markets[collateralPool]!.poolPublic.getAccountLpTokenBalance(account: borrower)
+            let lpTokenAmount = self.markets[collateralPool]!.poolPublicCap.borrow()!.getAccountLpTokenBalance(account: borrower)
             assert(collateralLpTokenSeizedAmount <= lpTokenAmount, message: "liquidate: borrower's collateralPoolLpToken seized too much")
             return collateralLpTokenSeizedAmount
         }
@@ -302,11 +302,12 @@ pub contract ComptrollerV1 {
             borrowerCollateralLpTokenToSeize: UFix64
         ) {
             pre {
-                poolAuth.isInstance(self.markets[borrowPool]!.poolPublic.getAuthType()): "not called by LendingPool, seizeExternal revert"
+                poolAuth.isInstance(self.markets[borrowPool]!.poolPublicCap.borrow()!.getAuthType()):
+                "not called by LendingPool, seizeExternal revert"
             }
             destroy poolAuth
 
-            self.markets[collateralPoolToSeize]!.poolPublic.seize(
+            self.markets[collateralPoolToSeize]!.poolPublicCap.borrow()!.seize(
                 comptrollerAuth: <- create ComptrollerV1.Auth(),
                 borrowPool: borrowPool,
                 liquidator: liquidator,
@@ -333,7 +334,7 @@ pub contract ComptrollerV1 {
             redeemOrRepayAmount: UFix64
         ): Bool {
             // snapshot[1] - lpTokenBalance; snapshot[2] - borrowBalance
-            let snapshot = self.markets[poolAddress]!.poolPublic.getAccountSnapshot(account: account)
+            let snapshot = self.markets[poolAddress]!.poolPublicCap.borrow()!.getAccountSnapshot(account: account)
             if (snapshot[1] == 0.0 && snapshot[2] == redeemOrRepayAmount || (snapshot[1] == redeemOrRepayAmount && snapshot[2] == 0.0)) {
                 var id = 0
                 let marketsIn: &[Address] = &(self.accountMarketsIn[account]!) as &[Address]
@@ -369,11 +370,11 @@ pub contract ComptrollerV1 {
             var sumBorrowWithEffectsNormalized = 0.0
             for poolAddress in self.accountMarketsIn[account]! {
                 let collateralFactor = self.markets[poolAddress]!.collateralFactor
-                let accountSnapshot = self.markets[poolAddress]!.poolPublic.getAccountSnapshot(account: account)
+                let accountSnapshot = self.markets[poolAddress]!.poolPublicCap.borrow()!.getAccountSnapshot(account: account)
                 let underlyingToLpTokenRate = accountSnapshot[0]
                 let lpTokenAmount = accountSnapshot[1]
                 let borrowBalance = accountSnapshot[2]
-                let underlyingPriceInUSD = self.oracle!.getUnderlyingPrice(pool: poolAddress)
+                let underlyingPriceInUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress)
                 if (lpTokenAmount > 0.0) {
                     sumCollateralNormalized =
                         sumCollateralNormalized + collateralFactor * underlyingPriceInUSD * underlyingToLpTokenRate * lpTokenAmount
@@ -402,16 +403,23 @@ pub contract ComptrollerV1 {
 
         access(contract) fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
             pre {
-                self.markets.containsKey(poolAddress) == false: "pool has already been added"
-                self.oracle!.getUnderlyingPrice(pool: poolAddress) != 0.0: "price feed for the market is not available yet, abort listing"
+                self.markets.containsKey(poolAddress) == false:
+                    "pool has already been added"
+                self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress) != 0.0:
+                    "price feed for the market is not available yet, abort listing"
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
             // TODO: fix hardcode path
-            let poolPublic = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(/public/poolPublic).borrow()
-                ?? panic("cannot borrow reference to PoolPublic")
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(/public/poolPublic)
+            assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
+
             self.markets[poolAddress] =
-                Market(poolPublic: poolPublic, isOpen: false, isMining: false, collateralFactor: 0.0, borrowCap: 0.0)
-            emit MarketAdded(market: poolAddress, marketType: poolPublic.getUnderlyingTypeString(), collateralFactor: collateralFactor)
+                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, collateralFactor: 0.0, borrowCap: 0.0)
+            emit MarketAdded(
+                market: poolAddress,
+                marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
+                collateralFactor: collateralFactor
+            )
         }
 
         // Tune parameters of an already-listed market
@@ -445,11 +453,10 @@ pub contract ComptrollerV1 {
         }
 
         access(contract) fun configOracle(oracleAddress: Address) {
-            let oldOracleAddress = self.oracle?.owner?.address
+            let oldOracleAddress = (self.oracleCap?.borrow()! ?? nil)?.owner?.address
             // TODO: fix hardcode path
-            self.oracle = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(/public/oracleModule)
-                .borrow() ?? panic("Could not borrow reference to OraclePublic")
-            emit NewOracle(oldOracleAddress, self.oracle!.owner!.address)
+            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(/public/oracleModule)
+            emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
         }
 
         access(contract) fun setCloseFactor(newCloseFactor: UFix64) {
@@ -471,7 +478,7 @@ pub contract ComptrollerV1 {
         }
 
         init() {
-            self.oracle = nil
+            self.oracleCap = nil
             self.closeFactor = 0.0
             self.liquidationIncentive = 0.0
             self.markets = {}
