@@ -55,12 +55,12 @@ pub contract LendingPool {
 
     // Model used to calculate underlying asset's borrow interest rate
     pub var interestRateModelAddress: Address?
-    pub var interestRateModelRef: Capability<&{Interfaces.InterestRateModelPublic}>?
+    pub var interestRateModelCap: Capability<&{Interfaces.InterestRateModelPublic}>?
     pub var comptrollerAddress: Address?
-    pub var comptrollerRef: Capability<&{Interfaces.ComptrollerPublic}>?
-    access(self) var underlyingAssetType: Type
+    pub var comptrollerCap: Capability<&{Interfaces.ComptrollerPublic}>?
+    access(self) let underlyingAssetType: Type
     // Save underlying asset deposited into this pool
-    access(self) var underlyingVault: @FungibleToken.Vault
+    access(self) let underlyingVault: @FungibleToken.Vault
 
     // TokensInitialized
     // The event that is emitted when the contract is created
@@ -114,12 +114,12 @@ pub contract LendingPool {
         let reservesPrior = self.totalReserves
         let borrowIndexPrior = self.borrowIndex
 
-        if (self.interestRateModelRef?.check() != true) {
+        if (self.interestRateModelCap?.check() != true) {
             return Error.CURRENT_INTEREST_RATE_MODEL_NULL
         }
         // Get the borrow interest rate per block
         let borrowRatePerBlock =
-            self.interestRateModelRef!.borrow()!.getBorrowRate(cash: cashPrior, borrows: borrowPrior, reserves: reservesPrior)
+            self.interestRateModelCap!.borrow()!.getBorrowRate(cash: cashPrior, borrows: borrowPrior, reserves: reservesPrior)
         let blockDelta = currentBlockNumber - accrualBlockNumberPrior
         let simpleInterestFactor = borrowRatePerBlock * UFix64(blockDelta)
         let interestAccumulated = simpleInterestFactor * borrowPrior
@@ -171,7 +171,7 @@ pub contract LendingPool {
 
         // 2. Check whether or not supplyAllowed()
         let amount = inUnderlyingVault.balance
-        let ret = self.comptrollerRef!.borrow()!.supplyAllowed(
+        let ret = self.comptrollerCap!.borrow()!.supplyAllowed(
             poolAddress: self.poolAddress,
             supplierAddress: supplier,
             supplyUnderlyingAmount: amount
@@ -218,7 +218,7 @@ pub contract LendingPool {
         let redeemer = certificate.certOwner
         assert(lpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
 
-        let ret = self.comptrollerRef!.borrow()!.redeemAllowed(
+        let ret = self.comptrollerCap!.borrow()!.redeemAllowed(
             poolAddress: self.poolAddress,
             redeemerAddress: redeemer,
             redeemLpTokenAmount: lpTokenToRedeem,
@@ -295,7 +295,7 @@ pub contract LendingPool {
 
         // 2. Check whether or not borrowAllowed()
         let borrower = certificate.certOwner
-        let ret = self.comptrollerRef!.borrow()!.borrowAllowed(
+        let ret = self.comptrollerCap!.borrow()!.borrowAllowed(
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             borrowUnderlyingAmount: borrowAmount
@@ -316,7 +316,7 @@ pub contract LendingPool {
         let repayAmount = repayUnderlyingVault.balance
         let accountTotalBorrows = self.borrowBalanceSnapshot(borrowerAddress: borrower)
         let actualRepayAmount = accountTotalBorrows > repayAmount ? repayAmount : accountTotalBorrows
-        let ret = self.comptrollerRef!.borrow()!.repayAllowed(
+        let ret = self.comptrollerCap!.borrow()!.repayAllowed(
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             repayUnderlyingAmount: actualRepayAmount
@@ -368,7 +368,7 @@ pub contract LendingPool {
 
         // 2. Check whether or not liquidateAllowed()
         let underlyingAmountToRepay = repayUnderlyingVault.balance
-        let ret = self.comptrollerRef!.borrow()!.liquidateAllowed(
+        let ret = self.comptrollerCap!.borrow()!.liquidateAllowed(
             poolBorrowed: self.poolAddress,
             poolCollateralized: poolCollateralizedToSeize,
             borrower: borrower,
@@ -382,7 +382,7 @@ pub contract LendingPool {
         let remainingAmount = remainingVault?.balance ?? 0.0
         let actualRepayAmount = underlyingAmountToRepay - remainingAmount
         // Calculate collateralLpTokenSeizedAmount based on actualRepayAmount
-        let collateralLpTokenSeizedAmount = self.comptrollerRef!.borrow()!.calculateCollateralPoolLpTokenToSeize(
+        let collateralLpTokenSeizedAmount = self.comptrollerCap!.borrow()!.calculateCollateralPoolLpTokenToSeize(
             borrower: borrower,
             borrowPool: self.poolAddress,
             collateralPool: poolCollateralizedToSeize,
@@ -399,7 +399,7 @@ pub contract LendingPool {
                 borrowerLpTokenToSeize: collateralLpTokenSeizedAmount
             )
         } else {
-            self.comptrollerRef!.borrow()!.seizeExternal(
+            self.comptrollerCap!.borrow()!.seizeExternal(
                 poolAuth: <- create LendingPool.Auth(),
                 borrowPool: self.poolAddress,
                 collateralPoolToSeize: poolCollateralizedToSeize,
@@ -429,7 +429,7 @@ pub contract LendingPool {
     ) {
         pre {
             // ComptrollerV1.Auth resouce can only be created by comptroller, which ensures seize() cannot be called by other accounts
-            comptrollerAuth.isInstance(self.comptrollerRef!.borrow()!.getAuthType()): "not called by Comptroller, seize revert"
+            comptrollerAuth.isInstance(self.comptrollerCap!.borrow()!.getAuthType()): "not called by Comptroller, seize revert"
         }
         destroy comptrollerAuth
 
@@ -456,7 +456,7 @@ pub contract LendingPool {
         pre {
             liquidator != borrower: "seize: liquidator is borrower, revert"
         }
-        let ret = self.comptrollerRef!.borrow()!.seizeAllowed(
+        let ret = self.comptrollerCap!.borrow()!.seizeAllowed(
             borrowPool: borrowPool,
             collateralPool: self.poolAddress,
             liquidator: liquidator,
@@ -557,7 +557,7 @@ pub contract LendingPool {
             if (newInterestRateModelAddress != LendingPool.interestRateModelAddress) {
                 let oldInterestRateModelAddress = LendingPool.interestRateModelAddress
                 LendingPool.interestRateModelAddress = newInterestRateModelAddress
-                LendingPool.interestRateModelRef = getAccount(newInterestRateModelAddress)
+                LendingPool.interestRateModelCap = getAccount(newInterestRateModelAddress)
                     .getCapability<&{Interfaces.InterestRateModelPublic}>(TwoSegmentsInterestRateModel.InterestRateModelPublicPath)
                 emit NewInterestRateModel(oldInterestRateModelAddress, newInterestRateModelAddress)
             }
@@ -592,10 +592,14 @@ pub contract LendingPool {
 
         // Admin function to set comptroller
         pub fun setComptroller(newComptrollerAddress: Address) {
+            post {
+                LendingPool.comptrollerCap != nil && LendingPool.comptrollerCap!.check() == true: "Set new Comptroller fail."
+            }
+            
             if (newComptrollerAddress != LendingPool.comptrollerAddress) {
                 let oldComptrollerAddress = LendingPool.comptrollerAddress
                 LendingPool.comptrollerAddress = newComptrollerAddress
-                LendingPool.comptrollerRef = getAccount(newComptrollerAddress)
+                LendingPool.comptrollerCap = getAccount(newComptrollerAddress)
                     .getCapability<&{Interfaces.ComptrollerPublic}>(ComptrollerV1.ComptrollerPublicPath)
                 emit NewComptroller(oldComptrollerAddress, newComptrollerAddress)
             }
@@ -606,33 +610,27 @@ pub contract LendingPool {
         pub fun initializePool(
             reserveFactor: UFix64,
             poolSeizeShare: UFix64,
-            interestRateModelAddress: Address,
-            underlyingAssetType: Type,
-            underlyingAssetVault: @FungibleToken.Vault
+            interestRateModelAddress: Address
         ) {
             pre {
                 LendingPool.accrualBlockNumber == 0 && LendingPool.borrowIndex == 0.0: "Pool can only be initialized once"
                 reserveFactor <= 1.0 && poolSeizeShare <= 1.0: "reserveFactor | poolSeizeShare out of range 1.0"
-                underlyingAssetVault.isInstance(underlyingAssetType): "cannot initialize pool with incompatible underlying type"
-                underlyingAssetVault.balance == 0.0: "must initialize pool with zero-balanced underlying asset vault"
             }
             post {
-                LendingPool.interestRateModelRef != nil && LendingPool.interestRateModelRef!.check() == true: "InterestRateModel not properly initialized"
+                LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true: "InterestRateModel not properly initialized"
             }
             LendingPool.accrualBlockNumber = getCurrentBlock().height
             LendingPool.borrowIndex = 1.0
             LendingPool.reserveFactor = reserveFactor
             LendingPool.poolSeizeShare = poolSeizeShare
             LendingPool.interestRateModelAddress = interestRateModelAddress
-            LendingPool.interestRateModelRef = getAccount(interestRateModelAddress)
+            LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
                 .getCapability<&{Interfaces.InterestRateModelPublic}>(TwoSegmentsInterestRateModel.InterestRateModelPublicPath)
-            LendingPool.underlyingAssetType = underlyingAssetType
-            let tempVault <- LendingPool.underlyingVault <- underlyingAssetVault
-            destroy tempVault
         }
     }
 
-    init(anyFungibleVault: @FungibleToken.Vault) {
+    //init(anyFungibleVault: @FungibleToken.Vault) {
+    init() {
         self.PoolAdminStoragePath = /storage/poolAdmin
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
 
@@ -648,11 +646,13 @@ pub contract LendingPool {
         self.accountLpTokens = {}
         self.accountBorrows = {}
         self.interestRateModelAddress = nil
-        self.interestRateModelRef = nil
+        self.interestRateModelCap = nil
         self.comptrollerAddress = nil
-        self.comptrollerRef = nil
-        self.underlyingAssetType = Type<Never>()
-        self.underlyingVault <- anyFungibleVault
+        self.comptrollerCap = nil
+        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: /storage/underlyingVault) ?? panic("Lost local overlying vault.")
+        self.underlyingAssetType = self.underlyingVault.getType()
+        assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
+        //
         self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
 
         emit TokensInitialized(initialSupply: 0.0)

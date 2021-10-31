@@ -1,4 +1,4 @@
-import InterestRateModelInterface from "../../contracts/InterestRateModelInterface.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
 import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRateModel.cdc"
 
 // TODO: Do not break arguments into multi-lines unless this bug has been fixed: https://github.com/onflow/flow-cadut/issues/15
@@ -31,7 +31,7 @@ transaction(modelName: String, blocksPerYear: UInt64, zeroUtilInterestRatePerYea
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
         // Create a public capability to InterestRateModel resource that only exposes ModelPublic
-        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{InterestRateModelInterface.ModelPublic}>(
+        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{Interfaces.InterestRateModelPublic}>(
             TwoSegmentsInterestRateModel.InterestRateModelPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )

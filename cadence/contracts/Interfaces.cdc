@@ -2,7 +2,6 @@ import FungibleToken from "./FungibleToken.cdc"
 
 // Interface definitions all-in-one
 pub contract interface Interfaces {
-    // TODO: Remove file `InterestRateModelInterface.cdc`
     pub resource interface InterestRateModelPublic {
         pub fun getUtilizationRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
         pub fun getBorrowRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
@@ -100,7 +99,7 @@ pub contract interface Interfaces {
         ): UInt8
 
         pub fun calculateCollateralPoolLpTokenToSeize(
-            borrower: Address
+            borrower: Address,
             borrowPool: Address,
             collateralPool: Address,
             actualRepaidBorrowAmount: UFix64
