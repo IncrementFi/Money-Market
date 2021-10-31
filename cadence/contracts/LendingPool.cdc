@@ -355,7 +355,7 @@ pub contract LendingPool {
     pub fun liquidate(
         liquidator: Address,
         borrower: Address,
-        poolCollateralizedToSeize: Address
+        poolCollateralizedToSeize: Address,
         repayUnderlyingVault: @FungibleToken.Vault
     ): @FungibleToken.Vault? {
         pre {
@@ -607,7 +607,7 @@ pub contract LendingPool {
             reserveFactor: UFix64,
             poolSeizeShare: UFix64,
             interestRateModelAddress: Address,
-            underlyingAssetType: Type
+            underlyingAssetType: Type,
             underlyingAssetVault: @FungibleToken.Vault
         ) {
             pre {
