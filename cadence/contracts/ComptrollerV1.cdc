@@ -1,5 +1,6 @@
 import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
+import Config from "./Config.cdc"
 
 pub contract ComptrollerV1 {
     // The storage path for the Admin resource
@@ -123,14 +124,23 @@ pub contract ComptrollerV1 {
             }
 
             // Add to user markets list
+            /* TODO: delete
             if (self.accountMarketsIn[supplierAddress]?.contains(poolAddress) != true) {
                 self.accountMarketsIn[supplierAddress]!.append(poolAddress)
             }
+            */
+            if (self.accountMarketsIn.containsKey(supplierAddress) == false) {
+                self.accountMarketsIn[supplierAddress] = []
+            }
+            if (self.accountMarketsIn[supplierAddress]!.contains(poolAddress) == false) {
+                self.accountMarketsIn[supplierAddress]!.append(poolAddress)
+            }
+             
 
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cToken);
             ///// distributeSupplierComp(cToken, minter);
-            return Error.NO_ERROR as! UInt8
+            return UInt8(Error.NO_ERROR as! UInt8)
         }
 
         // Return 0 for Error.NO_ERROR, i.e. redeem allowed
@@ -410,7 +420,7 @@ pub contract ComptrollerV1 {
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
             // TODO: fix hardcode path
-            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(/public/poolPublic)
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath)
             assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
 
             self.markets[poolAddress] =
@@ -453,7 +463,9 @@ pub contract ComptrollerV1 {
         }
 
         access(contract) fun configOracle(oracleAddress: Address) {
-            let oldOracleAddress = (self.oracleCap?.borrow()! ?? nil)?.owner?.address
+            // TODO: delete
+            //let oldOracleAddress = (self.oracleCap?.borrow()! ?? nil)?.owner?.address
+            let oldOracleAddress = (self.oracleCap!=nil)? self.oracleCap!.borrow()!.owner!.address : Address(0x00)
             // TODO: fix hardcode path
             self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(/public/oracleModule)
             emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
@@ -487,34 +499,37 @@ pub contract ComptrollerV1 {
     }
 
     pub resource Admin {
-        // Admin funciton to create an Comptroller resource
-        pub fun createComptrollerResource(): @Comptroller {
-            return <- create Comptroller()
-        }
         // Admin function to list a new asset pool to the lending market
         // Note: Do not list a new asset pool before the oracle feed is ready
-        pub fun addMarket(comptroller: Capability<&Comptroller>, poolAddress: Address, collateralFactor: UFix64) {
-             comptroller.borrow()!.addMarket(poolAddress: poolAddress, collateralFactor: collateralFactor)
+        pub fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.addMarket(poolAddress: poolAddress, collateralFactor: collateralFactor)
         }
         // Admin function to config parameters of a listed-market
-        pub fun configMarket(
-            comptroller: Capability<&Comptroller>,
-            pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?)
-        {
-            comptroller.borrow()!.configMarket(
-                pool: pool, isOpen: isOpen, isMining: isMining, collateralFactor: collateralFactor, borrowCap: borrowCap)
+        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.configMarket(
+                pool: pool,
+                isOpen: isOpen,
+                isMining: isMining,
+                collateralFactor: collateralFactor,
+                borrowCap: borrowCap
+            )
         }
         // Admin function to set a new oracle
-        pub fun configOracle(comptroller: Capability<&Comptroller>, oracleAddress: Address) {
-            comptroller.borrow()!.configOracle(oracleAddress: oracleAddress)
+        pub fun configOracle(oracleAddress: Address) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.configOracle(oracleAddress: oracleAddress)
         }
         // Admin function to set closeFactor
-        pub fun setCloseFactor(comptroller: Capability<&Comptroller>, closeFactor: UFix64) {
-            comptroller.borrow()!.setCloseFactor(newCloseFactor: closeFactor)
+        pub fun setCloseFactor(closeFactor: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)
         }
         // Admin function to set liquidationIncentive
-        pub fun setLiquidationIncentive(comptroller: Capability<&Comptroller>, liquidationIncentive: UFix64) {
-            comptroller.borrow()!.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
+        pub fun setLiquidationIncentive(liquidationIncentive: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
         }
     }
 
