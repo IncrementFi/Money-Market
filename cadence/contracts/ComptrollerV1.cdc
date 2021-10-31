@@ -120,7 +120,7 @@ pub contract ComptrollerV1 {
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
         pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Add to user markets list
@@ -140,7 +140,7 @@ pub contract ComptrollerV1 {
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cToken);
             ///// distributeSupplierComp(cToken, minter);
-            return UInt8(Error.NO_ERROR as! UInt8)
+            return Error.NO_ERROR.rawValue
         }
 
         // Return 0 for Error.NO_ERROR, i.e. redeem allowed
@@ -150,7 +150,7 @@ pub contract ComptrollerV1 {
             redeemLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Hypothetical account liquidity check after PoolToken was redeemed
@@ -162,7 +162,7 @@ pub contract ComptrollerV1 {
                 amountUnderlyingToBorrow: 0.0
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_REDEEM_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_REDEEM_LIQUIDITY.rawValue
             }
     
             // Remove pool out of user markets list if necessary
@@ -175,7 +175,7 @@ pub contract ComptrollerV1 {
             ///// 3. TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cToken);
             ///// distributeSupplierComp(cToken, redeemer);
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun borrowAllowed(
@@ -184,14 +184,14 @@ pub contract ComptrollerV1 {
             borrowUnderlyingAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
             // 1. totalBorrows limit check if not unlimited borrowCap
             let borrowCap = self.markets[poolAddress]!.borrowCap
             if (borrowCap != 0.0) {
                 let totalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrows() + borrowUnderlyingAmount
                 if (totalBorrowsNew > borrowCap) {
-                    return Error.EXCEED_MARKET_BORROW_CAP as! UInt8
+                    return Error.EXCEED_MARKET_BORROW_CAP.rawValue
                 }
             }
 
@@ -204,7 +204,7 @@ pub contract ComptrollerV1 {
                 amountUnderlyingToBorrow: borrowUnderlyingAmount
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_BORROW_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_BORROW_LIQUIDITY.rawValue
             }
 
             // 3. Add to user markets list
@@ -216,12 +216,12 @@ pub contract ComptrollerV1 {
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
             ///// updateCompBorrowIndex(cToken, borrowIndex);
             ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun repayAllowed(poolAddress: Address, borrowerAddress: Address, repayUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Remove pool out of user markets list if necessary
@@ -235,23 +235,23 @@ pub contract ComptrollerV1 {
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
             ///// updateCompBorrowIndex(cToken, borrowIndex);
             ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun liquidateAllowed(poolBorrowed: Address, poolCollateralized: Address, borrower: Address, repayUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolBorrowed]?.isOpen != true || self.markets[poolCollateralized]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
             let liquidity = self.getAccountLiquiditySnapshot(account: borrower)
             if liquidity[0] > 0.0 {
-                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED as! UInt8
+                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED.rawValue
             }
             let borrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalance(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
             if (repayUnderlyingAmount > borrowBalance * self.closeFactor) {
-                return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY as! UInt8
+                return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY.rawValue
             }
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun seizeAllowed(
@@ -262,14 +262,14 @@ pub contract ComptrollerV1 {
             seizeCollateralPoolLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[borrowPool]?.isOpen != true || self.markets[collateralPool]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(cTokenCollateral);
             ///// distributeSupplierComp(cTokenCollateral, borrower);
             ///// distributeSupplierComp(cTokenCollateral, liquidator);
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
