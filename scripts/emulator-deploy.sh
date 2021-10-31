@@ -30,11 +30,12 @@ do
 done
 for addr in ${accounts[@]}
 do
-    flow transactions send ./cadence/Transactions/Test/emulator_transfer.cdc --arg Address:$addr  --signer emulator-account
+    echo "transfer flow token."
+    flow transactions send ./cadence/Transactions/Test/emulator_flow_transfer.cdc --arg Address:$addr  --signer emulator-account
 done
 
 flow project deploy --update -f flow_env.json
 
-flow transactions send ./cadence/Transactions/Pool/create_fusd_vault.cdc --signer emulator-pool-fusd
+flow transactions send ./cadence/Transactions/Pool/create_fusdvault_of_pool.cdc --signer emulator-pool-fusd
 
 flow project deploy --update -f flow.json

@@ -1,6 +1,6 @@
-import InterestRateModelInterface from "./InterestRateModelInterface.cdc"
+import Interfaces from "./Interfaces.cdc"
 
-pub contract TwoSegmentsInterestRateModel: InterestRateModelInterface {
+pub contract TwoSegmentsInterestRateModel {
     // The storage path for the Admin resource
     pub let AdminStoragePath: StoragePath
     // The storage path for the InterestRateModel resource
@@ -26,7 +26,7 @@ pub contract TwoSegmentsInterestRateModel: InterestRateModelInterface {
         pub fun getInterestRateModelParams(): {String: AnyStruct}
     }
 
-    pub resource InterestRateModel: InterestRateModelInterface.ModelPublic, ModelParamsGetter {
+    pub resource InterestRateModel: Interfaces.InterestRateModelPublic, ModelParamsGetter {
         access(self) let modelName: String
         // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt64

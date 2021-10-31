@@ -27,7 +27,6 @@
       }
     },
     "Kibble":                         "./cadence/contracts/Kibble.cdc",
-    "InterestRateModelInterface":     "./cadence/contracts/InterestRateModelInterface.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
     "OracleInterface":                "./cadence/contracts/OracleInterface.cdc",
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",

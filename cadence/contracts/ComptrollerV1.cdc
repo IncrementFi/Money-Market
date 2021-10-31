@@ -265,7 +265,7 @@ pub contract ComptrollerV1 {
         // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
         // Called in LendingPool.liquidate()
         pub fun calculateCollateralPoolLpTokenToSeize(
-            borrower: Address
+            borrower: Address,
             borrowPool: Address,
             collateralPool: Address,
             actualRepaidBorrowAmount: UFix64
@@ -526,5 +526,8 @@ pub contract ComptrollerV1 {
 
         self.comptrollerAddress = self.account.address
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
+        
+        self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
+        self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }
