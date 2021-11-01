@@ -1,10 +1,12 @@
 import FUSD from "../../contracts/FUSD.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
+import Config from "../../contracts/Config.cdc"
 
-transaction(amountRepay: UFix64) {
+transaction(amount: UFix64) {
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_deposit_fusd")
+        log("Transaction Start --------------- user_repay_fusd")
         
         let fusdStoragePath = /storage/fusdVault
         var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
@@ -16,12 +18,17 @@ transaction(amountRepay: UFix64) {
         }
         fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
         log("User left fusd ".concat(fusdVault!.balance.toString()))
-        log("Test repay fusd ".concat(amountRepay.toString()))
 
+        var amountRepay = amount
+        if amountRepay == UFix64.max {
+            let poolPublicRef = getAccount(Config.FUSDPoolAddr).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath).borrow()!
+            amountRepay = poolPublicRef.getAccountBorrowBalance(account: signer.address)
+        }
+        log("Test repay fusd ".concat(amountRepay.toString()))
         assert(fusdVault!.balance >= amountRepay, message: "No enough FUSD balance.")
         let inUnderlyingVault <-fusdVault!.withdraw(amount: amountRepay)
 
-        // deposit
+        // repay
         let leftVault <- LendingPool.repayBorrow(borrower: signer.address, repayUnderlyingVault: <-inUnderlyingVault)
         if leftVault != nil {
             fusdVault!.deposit(from: <-leftVault!)
