@@ -6,6 +6,9 @@ pub contract Config {
     pub var OracleAddr: Address
 
     pub var PoolPublicPath: PublicPath
+
+    pub var PoolCertificateStoragePath: StoragePath
+    pub var PoolCertificatePrivatePath: PrivatePath
     pub var UserCertificateStoragePath: StoragePath
     pub var UserCertificatePrivatePath: PrivatePath
     init() {
@@ -15,6 +18,8 @@ pub contract Config {
         self.OracleAddr         = 0xf3fcd2c1a78f5eee
 
         self.PoolPublicPath     = /public/poolPublic
+        self.PoolCertificateStoragePath = /storage/poolCertificate
+        self.PoolCertificatePrivatePath = /private/poolCertificate
         self.UserCertificateStoragePath = /storage/incrementalUserCertificate
         self.UserCertificatePrivatePath = /private/incrementalUserCertificate
 
