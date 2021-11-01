@@ -10,7 +10,7 @@ transaction(poolAddr: Address, collateralFactor: UFix64, borrowCap: UFix64, isOp
         
         log("config market")
         comptrollerAdminRef.configMarket(pool: poolAddr, isOpen: isOpen, isMining: isMining, collateralFactor: collateralFactor, borrowCap: borrowCap)
-
+        
         log("End -----------------------------")
     }
 }

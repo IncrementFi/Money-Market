@@ -8,15 +8,15 @@ pub contract interface Interfaces {
         pub fun getSupplyRate(cash: UFix64, borrows: UFix64, reserves: UFix64, reserveFactor: UFix64): UFix64
     }
 
-    pub resource interface Certificate {
-        pub let certOwner: Address
-        pub let certType: Type
+    // This is the interface of identity certificate which can identiy the user's or pool's address.
+    pub resource interface IdentityCertificate {
+        // The distributor's type of this certificate
+        pub let authorityType: Type
     }
 
     // Authentication mechanism for composability (Contract intereations with priviledge / safety reuqirements) 
     pub resource interface Auth {}
 
-    // TODO: Remove file `PoolInterface.cdc`
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
         pub fun getPoolTypeString(): String
