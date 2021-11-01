@@ -162,7 +162,7 @@ pub contract LendingPool {
 
     // Supplier deposits underlying asset's Vault into the pool
     // TODO: Check fake currency deposit? 
-    pub fun supply(supplier: Address, inUnderlyingVault: @FungibleToken.Vault): @Certificate {
+    pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
         pre {
             inUnderlyingVault.balance > 0.0: "Supplied empty underlying Vault"
             inUnderlyingVault.isInstance(self.underlyingAssetType): "supplied vault and pool underlying type mismatch, revert"
@@ -175,7 +175,7 @@ pub contract LendingPool {
         let amount = inUnderlyingVault.balance
         let ret = self.comptrollerCap!.borrow()!.supplyAllowed(
             poolAddress: self.poolAddress,
-            supplierAddress: supplier,
+            supplierAddress: supplierAddr,
             supplyUnderlyingAmount: amount
         )
         assert(ret == 0, message: "supply not allowed, error reason: ".concat(ret.toString()))
@@ -183,41 +183,52 @@ pub contract LendingPool {
         // 3. Deposit into underlying vault and mint corresponding PoolTokens 
         let underlyingToken2LpTokenRate = self.underlyingToLpTokenRateSnapshot()
         let mintVirtualAmount = amount / underlyingToken2LpTokenRate
-        self.accountLpTokens[supplier] = mintVirtualAmount + (self.accountLpTokens[supplier] ?? 0.0)
+        self.accountLpTokens[supplierAddr] = mintVirtualAmount + (self.accountLpTokens[supplierAddr] ?? 0.0)
         self.totalSupply = self.totalSupply + mintVirtualAmount
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
         emit Supply(suppliedUnderlyingAmount: amount, mintedLpTokenAmount: mintVirtualAmount)
-        return <-create Certificate(owner: supplier)
     }
 
     access(self) fun redeemInternal(
-        certificate: &{Interfaces.Certificate},
+        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         numLpTokenToRedeem: UFix64,
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
             numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0: "numLpTokenToRedeem or numUnderlyingToRedeem must be 0.0"
-            certificate.isInstance(Type<@LendingPool.Certificate>()): "certificate not an instance of this LendingPool.Certificate, redeem revert"
-            certificate.certType == self.getType(): "certificate type and lendingPool type mismatch, revert"
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
         }
 
         // 1. Accrues interests and checkpoints latest states
         let err = self.accrueInterest()
         assert(err == Error.NO_ERROR, message: "REDEEM_ACCRUE_INTEREST_FAILED")
+        
+        let redeemer = userCertificateCap.borrow()!.owner!.address
+        assert(self.accountLpTokens.containsKey(redeemer), message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
 
         // 2. Check whether or not redeemAllowed()
         var lpTokenToRedeem = 0.0
         var underlyingToRedeem = 0.0
         let underlyingToLpRate = self.underlyingToLpTokenRateSnapshot()
         if (numLpTokenToRedeem == 0.0) {
-            lpTokenToRedeem = numUnderlyingToRedeem / underlyingToLpRate
-            underlyingToRedeem = numUnderlyingToRedeem
+            // redeem all
+            if numUnderlyingToRedeem == UFix64.max {
+                lpTokenToRedeem = self.accountLpTokens[redeemer]!
+                underlyingToRedeem = lpTokenToRedeem * underlyingToLpRate
+            } else {
+                lpTokenToRedeem = numUnderlyingToRedeem / underlyingToLpRate
+                underlyingToRedeem = numUnderlyingToRedeem
+            }
         } else {
-            lpTokenToRedeem = numLpTokenToRedeem
-            underlyingToRedeem = numLpTokenToRedeem * underlyingToLpRate
+            if numLpTokenToRedeem == UFix64.max {
+                lpTokenToRedeem = self.accountLpTokens[redeemer]!
+            } else {
+                lpTokenToRedeem = numLpTokenToRedeem
+            }
+            underlyingToRedeem = lpTokenToRedeem * underlyingToLpRate
         }
-        let redeemer = certificate.certOwner
+        
         assert(lpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
 
         let ret = self.comptrollerCap!.borrow()!.redeemAllowed(
@@ -249,45 +260,45 @@ pub contract LendingPool {
     // thus preventing passing in a fake redeemer
     // Since redeemer decreases his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun redeem(
-        certificate: &{Interfaces.Certificate},
+        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         numLpTokenToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
             numLpTokenToRedeem > 0.0: "Redeemed zero-balanced lpToken"
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
         }
         return <- self.redeemInternal(
-            certificate: certificate,
+            userCertificateCap: userCertificateCap,
             numLpTokenToRedeem: numLpTokenToRedeem,
             numUnderlyingToRedeem: 0.0
         )
     }
 
     pub fun redeemUnderlying(
-        certificate: &{Interfaces.Certificate},
+        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault? {
         pre {
             numUnderlyingToRedeem > 0.0: "Redeemed zero-balanced underlying"
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
         }
         return <- self.redeemInternal(
-            certificate: certificate,
+            userCertificateCap: userCertificateCap,
             numLpTokenToRedeem: 0.0,
             numUnderlyingToRedeem: numUnderlyingToRedeem
         )
     }
 
-    // TODO: Cerficicate shouldn't be used in this way!
     // User borrows underlying asset from the pool.
     // borrower is inferred from the reference to the deposit Certificate, which can only be provided by the Certificate owner,
     // thus preventing passing in a fake borrower
     // Since borrower would decrease his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun borrow(
-        certificate: &{Interfaces.Certificate},
+        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         borrowAmount: UFix64,
     ): @FungibleToken.Vault {
         pre {
-            certificate.isInstance(Type<@LendingPool.Certificate>()): "certificate is not issued by this LendingPool, borrow revert"
-            certificate.certType == self.getType(): " provided certificate type and this LendingPool type mismatch, borrow revert"
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
             borrowAmount > 0.0: "borrowAmount zero"
             borrowAmount <= self.getPoolCash(): "Pool not enough underlying balance for borrow"
         }
@@ -296,7 +307,7 @@ pub contract LendingPool {
         assert(err == Error.NO_ERROR, message: "BORROW_ACCRUE_INTEREST_FAILED")
 
         // 2. Check whether or not borrowAllowed()
-        let borrower = certificate.certOwner
+        let borrower = userCertificateCap.borrow()!.owner!.address
         let ret = self.comptrollerCap!.borrow()!.borrowAllowed(
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
@@ -483,15 +494,17 @@ pub contract LendingPool {
         emit ReserveAdded(donator: self.poolAddress, addedUnderlyingAmount: addedUnderlyingReserves, newTotalReserves: self.totalReserves)
     }
 
-    // TODO: commment
-    pub resource Certificate: Interfaces.Certificate {
-        pub let certOwner: Address
-        pub let certType: Type
-
-        init(owner: Address) {
-            self.certOwner = owner
-            self.certType = LendingPool.getType()
+    // This certificate identify the address and needs to be stored in storage path locally.
+    // User should keep it safe and never give this resource's capability to others
+    pub resource UserCertificate: Interfaces.IdentityCertificate {
+        // The distributor's type of this certificate
+        pub let authorityType: Type
+        init() {
+            self.authorityType = LendingPool.getType()
         }
+    }
+    pub fun IssueUserCertificate(): @UserCertificate {
+        return <- create UserCertificate()
     }
 
     pub resource Auth: Interfaces.Auth {}
