@@ -3,7 +3,7 @@
 flow transactions send ./cadence/transactions/User/user_deposit_fusd.cdc --arg UFix64:"10.0" --signer emulator-user-A
 
 # borrow
-flow transactions send ./cadence/transactions/User/user_borrow_fusd.cdc --arg UFix64:"5.0" --signer emulator-user-A
+flow transactions send ./cadence/transactions/User/user_borrow_fusd.cdc --arg UFix64:"10.0" --signer emulator-user-A
 
 # redeem
 # flow transactions send ./cadence/transactions/User/user_redeem_fusd.cdc --arg UFix64:"1.0" --signer emulator-user-A
