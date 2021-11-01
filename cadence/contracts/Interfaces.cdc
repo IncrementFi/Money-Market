@@ -14,9 +14,6 @@ pub contract interface Interfaces {
         pub let authorityType: Type
     }
 
-    // Authentication mechanism for composability (Contract intereations with priviledge / safety reuqirements) 
-    pub resource interface Auth {}
-
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
         pub fun getPoolTypeString(): String
@@ -29,11 +26,11 @@ pub contract interface Interfaces {
         pub fun getPoolTotalBorrows(): UFix64
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
-        pub fun getAuthType(): Type
+        pub fun getPoolCertificateType(): Type
         // Note: Check to ensure auth's run-time type is ComptrollerV1.Auth,
         // so that this public seize function can only called by Comptroller
         pub fun seize(
-            comptrollerAuth: @{Interfaces.Auth},
+            fromPoolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
             borrowPool: Address,
             liquidator: Address,
             borrower: Address,
@@ -53,7 +50,6 @@ pub contract interface Interfaces {
         pub fun getSupportedFeeds(): [Address]
     }
 
-    // TODO: Remove file `ComptrollerInterface.cdc`
     pub resource interface ComptrollerPublic {
         // pub fun joinMarket(markets: [Address])
         // pub fun exitMarket(market: Address)
@@ -104,18 +100,6 @@ pub contract interface Interfaces {
             actualRepaidBorrowAmount: UFix64
         ): UFix64
 
-        pub fun getAuthType(): Type
-
-        // Process an seize request delegated from LendingPool contract.
-        // Check to ensure the auth is minted by one of the LendingPools (auth's run-time type is LendingPool.Auth),
-        // so that this public function cannot be called by other accounts arbitrarily.
-        pub fun seizeExternal(
-            poolAuth: @{Interfaces.Auth},
-            borrowPool: Address,
-            collateralPoolToSeize: Address,
-            liquidator: Address,
-            borrower: Address,
-            borrowerCollateralLpTokenToSeize: UFix64
-        )
+        pub fun identifyPoolCertificate(poolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>): UInt8
     }
 }

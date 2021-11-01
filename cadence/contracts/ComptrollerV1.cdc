@@ -38,6 +38,7 @@ pub contract ComptrollerV1 {
         pub case LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SET_VALUE_OUT_OF_RANGE
+        pub case INVALID_POOL_CERTIFICATE
     }
 
     pub struct Market {
@@ -95,8 +96,6 @@ pub contract ComptrollerV1 {
         }
     }
 
-    pub resource Auth: Interfaces.Auth {}
-
     pub resource Comptroller: Interfaces.ComptrollerPublic {
         access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0]
@@ -112,10 +111,6 @@ pub contract ComptrollerV1 {
         // pub fun joinMarket(market: Address): @{Interfaces.Certificate} {}
 
         // pub fun exitMarket(market: Address) {}
-
-        pub fun getAuthType(): Type {
-            return Type<@ComptrollerV1.Auth>()
-        }
 
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
         pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
@@ -300,30 +295,22 @@ pub contract ComptrollerV1 {
             return collateralLpTokenSeizedAmount
         }
 
-        // Process an seize request delegated from LendingPool contract.
-        // Check to ensure the auth is minted by one of the LendingPools (auth's run-time type is LendingPool.Certificate),
-        // so that this public function cannot be called by other accounts arbitrarily.
-        pub fun seizeExternal(
-            poolAuth: @{Interfaces.Auth},
-            borrowPool: Address,
-            collateralPoolToSeize: Address,
-            liquidator: Address,
-            borrower: Address,
-            borrowerCollateralLpTokenToSeize: UFix64
-        ) {
+        pub fun identifyPoolCertificate(poolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>): UInt8 {
             pre {
-                poolAuth.isInstance(self.markets[borrowPool]!.poolPublicCap.borrow()!.getAuthType()):
-                "not called by LendingPool, seizeExternal revert"
+                poolCertificateCap.borrow()!.owner != nil: "Invaild pool certificate"
             }
-            destroy poolAuth
-
-            self.markets[collateralPoolToSeize]!.poolPublicCap.borrow()!.seize(
-                comptrollerAuth: <- create ComptrollerV1.Auth(),
-                borrowPool: borrowPool,
-                liquidator: liquidator,
-                borrower: borrower,
-                borrowerCollateralLpTokenToSeize: borrowerCollateralLpTokenToSeize
-            )
+            let poolAddr = poolCertificateCap.borrow()!.owner!.address
+            // if pool is in the markets
+            if self.markets.containsKey(poolAddr) == false {
+                return Error.INVALID_POOL_CERTIFICATE.rawValue
+            }
+            // double check the pools' type
+            let poolType   = poolCertificateCap.borrow()!.authorityType
+            let marketType = self.markets[poolAddr]!.poolPublicCap.borrow()!.getPoolCertificateType()
+            if poolType != marketType {
+                return Error.INVALID_POOL_CERTIFICATE.rawValue
+            }
+            return Error.NO_ERROR.rawValue
         }
 
         // Return the current account liquidity snapshot:
