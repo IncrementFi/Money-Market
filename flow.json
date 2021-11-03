@@ -140,20 +140,22 @@
       "emulator-account": [
         "FUSD",
         "Kibble",
-        "TwoSegmentsInterestRateModel",
-        "ComptrollerV1",
         "Interfaces",
-        "Config"
+        "Config",
+        "TwoSegmentsInterestRateModel",
+        "ComptrollerV1"
       ],
       "emulator-pool-fusd": [
         "LendingPool"
       ],
       "emulator-oracle-deployer": [
+        "Interfaces",
         "SimpleOracle"
       ]
     },
     "testnet": {
       "testnet-oracle-deployer": [
+        "Interfaces",
         "SimpleOracle"
       ]
     }

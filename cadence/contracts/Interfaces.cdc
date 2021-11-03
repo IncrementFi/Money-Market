@@ -3,6 +3,8 @@ import FungibleToken from "./FungibleToken.cdc"
 // Interface definitions all-in-one
 pub contract interface Interfaces {
     pub resource interface InterestRateModelPublic {
+        // exposing model specific fields, e.g.: modelName, model params.
+        pub fun getInterestRateModelParams(): {String: AnyStruct}
         pub fun getUtilizationRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
         pub fun getBorrowRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
         pub fun getSupplyRate(cash: UFix64, borrows: UFix64, reserves: UFix64, reserveFactor: UFix64): UFix64

@@ -3,7 +3,7 @@ import Interfaces from "./Interfaces.cdc"
 // A simple centralized oracle maintained by the team. Admin can grant updateData role to other managed accounts.
 pub contract SimpleOracle {
     // The storage path for the Admin resource
-    pub let AdminStoragePath: StoragePath
+    pub let OracleAdminStoragePath: StoragePath
     // The storage path for the Oracle resource
     pub let OracleStoragePath: StoragePath
     // The private path for the capability to Oracle resource for admin to modify feeds
@@ -221,13 +221,13 @@ pub contract SimpleOracle {
     }
 
     init() {
-        self.AdminStoragePath = /storage/oracleAdmin
+        self.OracleAdminStoragePath = /storage/oracleAdmin
         self.OracleStoragePath = /storage/oracleModule
         self.OraclePrivatePath = /private/oracleModule
         self.OraclePublicPath = /public/oracleModule
         self.UpdaterStoragePath = /storage/oracleUpdaterProxy
         self.UpdaterPublicPath = /public/oracleUpdaterProxy
 
-        self.account.save(<-create Admin(), to: self.AdminStoragePath)
+        self.account.save(<-create Admin(), to: self.OracleAdminStoragePath)
     }
 }

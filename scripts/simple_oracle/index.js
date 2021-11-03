@@ -10,7 +10,7 @@ const utils = require('./utils');
 
 /// [Imported code start] - Related cadence transactions/scripts used in this script.
 const simpleOracleImportPath = '"../../contracts/SimpleOracle.cdc"';
-const oracleInterfaceImportPath = '"../../contracts/OracleInterface.cdc"';
+const InterfacesImportPath = '"../../contracts/Interfaces.cdc"';
 const uploadFeedDataFile = '../../cadence/transactions/Oracle/updater_upload_feed_data.cdc';
 const getFeedLatestResultFile = '../../cadence/scripts/Oracle/get_feed_latest_result.cdc';
 const uploadFeedDataTxCode = fs
@@ -18,7 +18,7 @@ const uploadFeedDataTxCode = fs
   .replace(simpleOracleImportPath, config.oracleContract);
 const getFeedLatestResultScriptCode = fs
   .readFileSync(path.resolve(__dirname, getFeedLatestResultFile), "utf8")
-  .replace(oracleInterfaceImportPath, config.oracleContract)
+  .replace(InterfacesImportPath, config.oracleContract)
   .replace(simpleOracleImportPath, config.oracleContract);
 /// [Imported code end]
 

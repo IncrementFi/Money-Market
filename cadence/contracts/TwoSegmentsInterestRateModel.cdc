@@ -2,15 +2,13 @@ import Interfaces from "./Interfaces.cdc"
 
 pub contract TwoSegmentsInterestRateModel {
     // The storage path for the Admin resource
-    pub let AdminStoragePath: StoragePath
+    pub let InterestRateModelAdminStoragePath: StoragePath
     // The storage path for the InterestRateModel resource
     pub let InterestRateModelStoragePath: StoragePath
     // The private path for the capability to InterestRateModel which is for admin to update model parameters
     pub let InterestRateModelPrivatePath: PrivatePath
     // The public path for the capability restricted to InterestRateModelInterface
     pub let InterestRateModelPublicPath: PublicPath
-    // The public path for the capability restricted to InterestRateModelParamsGetter
-    pub let InterestRateModelParamsPublicPath: PublicPath
 
     // Event which is emitted when Interest Rate Model is created or model parameter gets updated
     pub event InterestRateModelUpdated(
@@ -21,12 +19,7 @@ pub contract TwoSegmentsInterestRateModel {
         _ oldCriticalUtilRate: UFix64, _ newCriticalUtilRate: UFix64
     )
 
-    // Interface exposing model specific fields, e.g.: modelName, model params.
-    pub resource interface ModelParamsGetter {
-        pub fun getInterestRateModelParams(): {String: AnyStruct}
-    }
-
-    pub resource InterestRateModel: Interfaces.InterestRateModelPublic, ModelParamsGetter {
+    pub resource InterestRateModel: Interfaces.InterestRateModelPublic {
         access(self) let modelName: String
         // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt64
@@ -185,13 +178,12 @@ pub contract TwoSegmentsInterestRateModel {
     }
 
     init() {
-        self.AdminStoragePath = /storage/InterestRateModelAdmin
+        self.InterestRateModelAdminStoragePath = /storage/InterestRateModelAdmin
         self.InterestRateModelStoragePath = /storage/InterestRateModel
         self.InterestRateModelPrivatePath = /private/InterestRateModel
         self.InterestRateModelPublicPath = /public/InterestRateModel
-        self.InterestRateModelParamsPublicPath = /public/InterestRateModelParams
 
         let admin <- create Admin()
-        self.account.save(<-admin, to: self.AdminStoragePath)
+        self.account.save(<-admin, to: self.InterestRateModelAdminStoragePath)
     }
 }
