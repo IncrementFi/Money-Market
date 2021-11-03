@@ -21,7 +21,7 @@ transaction(amount: UFix64) {
 
         var amountRepay = amount
         if amountRepay == UFix64.max {
-            let poolPublicRef = getAccount(Config.FUSDPoolAddr).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath).borrow()!
+            let poolPublicRef = getAccount(Config.FUSDPoolAddr).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow()!
             amountRepay = poolPublicRef.getAccountBorrowBalance(account: signer.address)
         }
         log("Test repay fusd ".concat(amountRepay.toString()))

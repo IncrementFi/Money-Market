@@ -1,6 +1,7 @@
 import FUSD from "../../contracts/FUSD.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
+import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
 import Config from "../../contracts/Config.cdc"
 import Interfaces from "../../contracts/Interfaces.cdc"
 
@@ -27,7 +28,7 @@ transaction(amountBorrow: UFix64) {
         if userCertificateCap.check() == false {
             if signer.borrow<&{Interfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil {
                 // Create new user certificate
-                let userCertificate <- LendingPool.IssueUserCertificate()
+                let userCertificate <- ComptrollerV1.IssueUserCertificate()
                 signer.save(<-userCertificate, to: Config.UserCertificateStoragePath)
                 signer.link<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath, target: Config.UserCertificateStoragePath)
             }
