@@ -10,11 +10,8 @@ pub contract interface Interfaces {
         pub fun getSupplyRate(cash: UFix64, borrows: UFix64, reserves: UFix64, reserveFactor: UFix64): UFix64
     }
 
-    // This is the interface of identity certificate which can identiy the user's or pool's address.
-    pub resource interface IdentityCertificate {
-        // The distributor's type of this certificate
-        pub let authorityType: Type
-    }
+    // IdentityCertificate resource which is used to identify account address or perform caller authentication
+    pub resource interface IdentityCertificate {}
 
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
@@ -29,11 +26,11 @@ pub contract interface Interfaces {
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
         pub fun getPoolCertificateType(): Type
-        // Note: Check to ensure auth's run-time type is ComptrollerV1.Auth,
-        // so that this public seize function can only called by Comptroller
+        // Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
+        // so that this public seize function can only be invoked by another LendingPool contract
         pub fun seize(
-            fromPoolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
-            borrowPool: Address,
+            seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+            seizerPool: Address,
             liquidator: Address,
             borrower: Address,
             borrowerCollateralLpTokenToSeize: UFix64
@@ -42,7 +39,7 @@ pub contract interface Interfaces {
 
     pub resource interface OraclePublic {
         // Get the given pool's underlying asset price denominated in USD.
-        // Note: Return value of 0.0 means the given yToken price feed is not available.
+        // Note: Return value of 0.0 means the given pool's price feed is not available.
         pub fun getUnderlyingPrice(pool: Address): UFix64
 
         // Return latest reported data in [timestamp, priceData]
@@ -102,7 +99,7 @@ pub contract interface Interfaces {
         pub fun getUserCertificateType(): Type
 
         pub fun callerAllowed(
-            callerCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+            callerCertificate: @{Interfaces.IdentityCertificate},
             callerAddress: Address
         ): UInt8
     }

@@ -1,6 +1,6 @@
 import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 
-transaction(yToken: Address, maxCapacity: Int) {
+transaction(poolAddress: Address, maxCapacity: Int) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
             .borrow<&SimpleOracle.Admin>(from: SimpleOracle.OracleAdminStoragePath)
@@ -8,6 +8,6 @@ transaction(yToken: Address, maxCapacity: Int) {
         let oracleCap = adminAccount
             .getCapability<&SimpleOracle.Oracle>(SimpleOracle.OraclePrivatePath)
 
-        adminRef.addPriceFeed(oracleCap: oracleCap, yToken: yToken, capacity: maxCapacity)
+        adminRef.addPriceFeed(oracleCap: oracleCap, pool: poolAddress, capacity: maxCapacity)
     }
 }

@@ -7,8 +7,6 @@ pub contract LendingPool {
     pub let UnderlyingAssetVaultStoragePath: StoragePath
     pub let PoolPublicStoragePath: StoragePath
     pub let PoolPublicPublicPath: PublicPath
-    pub let PoolCertificateStoragePath: StoragePath
-    pub let PoolCertificatePrivatePath: PrivatePath
 
     pub enum Error: UInt8 {
         pub case NO_ERROR
@@ -417,14 +415,13 @@ pub contract LendingPool {
                 borrowerLpTokenToSeize: collateralLpTokenSeizedAmount
             )
         } else {
-            // Get private capability of local pool's certificate
-            let localPoolCertificateCap = self.account.getCapability<&{Interfaces.IdentityCertificate}>(self.PoolCertificatePrivatePath)
-            // Get public capability of remote pool
-            let remotePoolPublicCap = getAccount(poolCollateralizedToSeize).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
-            assert(remotePoolPublicCap.check(), message: "Cannot borrow reference to remote PoolPublic")
-            remotePoolPublicCap.borrow()!.seize(
-                fromPoolCertificateCap: localPoolCertificateCap,
-                borrowPool: self.poolAddress,
+            // Seize external
+            let externalPoolPublicRef = getAccount(poolCollateralizedToSeize)
+                .getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
+                .borrow() ?? panic("Cannot borrow reference to external PoolPublic")
+            externalPoolPublicRef.seize(
+                seizerPoolCertificate: <- create PoolCertificate(),
+                seizerPool: self.poolAddress,
                 liquidator: liquidator,
                 borrower: borrower,
                 borrowerCollateralLpTokenToSeize: collateralLpTokenSeizedAmount
@@ -441,18 +438,22 @@ pub contract LendingPool {
         return <-remainingVault
     }
 
-    // Only used for "external" called seize. Run-time type check of pool certificate ensures it can only be called by pools in comptroller's markets.
+    // Only used for "external" seize. Run-time type check of pool certificate ensures it can only be called by other pools of comptroller's markets.
+    // @seizerPool: The external pool seizing the current collateral pool (i.e. borrowPool)
     pub fun seize(
-        fromPoolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
-        borrowPool: Address,
+        seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+        seizerPool: Address,
         liquidator: Address,
         borrower: Address,
         borrowerCollateralLpTokenToSeize: UFix64
     ) {
+        pre {
+            seizerPool != self.poolAddress: "external seize only, seizerPool cannot be current"
+        }
         // Check and verify caller from another LendingPool contract
         let ret = self.comptrollerCap!.borrow()!.callerAllowed(
-            callerCertificateCap: fromPoolCertificateCap,
-            callerAddress: borrowPool
+            callerCertificate: <- seizerPoolCertificate,
+            callerAddress: seizerPool
         )
         assert(ret == 0, message: "external seize not allowed, error reason: ".concat(ret.toString()))
 
@@ -462,7 +463,7 @@ pub contract LendingPool {
 
         // 3. seizeInternal
         self.seizeInternal(
-            borrowPool: borrowPool,
+            borrowPool: seizerPool,
             liquidator: liquidator,
             borrower: borrower,
             borrowerLpTokenToSeize: borrowerCollateralLpTokenToSeize
@@ -508,13 +509,7 @@ pub contract LendingPool {
         emit ReserveAdded(donator: self.poolAddress, addedUnderlyingAmount: addedUnderlyingReserves, newTotalReserves: self.totalReserves)
     }
 
-    pub resource PoolCertificate: Interfaces.IdentityCertificate {
-        // The distributor's type of this certificate
-        pub let authorityType: Type
-        init() {
-            self.authorityType = LendingPool.getType()
-        }
-    }
+    pub resource PoolCertificate: Interfaces.IdentityCertificate {}
 
     pub resource PoolPublic: Interfaces.PoolPublic {
         pub fun getPoolAddress(): Address {
@@ -553,15 +548,15 @@ pub contract LendingPool {
             return Type<@LendingPool.PoolCertificate>()
         }
         pub fun seize(
-            fromPoolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
-            borrowPool: Address,
+            seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+            seizerPool: Address,
             liquidator: Address,
             borrower: Address,
             borrowerCollateralLpTokenToSeize: UFix64
         ) {
             LendingPool.seize(
-                fromPoolCertificateCap: fromPoolCertificateCap,
-                borrowPool: borrowPool,
+                seizerPoolCertificate: <- seizerPoolCertificate,
+                seizerPool: seizerPool,
                 liquidator: liquidator,
                 borrower: borrower,
                 borrowerCollateralLpTokenToSeize: borrowerCollateralLpTokenToSeize
@@ -657,8 +652,6 @@ pub contract LendingPool {
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
         self.PoolPublicStoragePath = /storage/poolPublic
         self.PoolPublicPublicPath = /public/poolPublic
-        self.PoolCertificateStoragePath = /storage/poolCertificate
-        self.PoolCertificatePrivatePath = /private/poolCertificate
 
         self.poolAddress = self.account.address
         self.initialExchangeRate = 1.0
@@ -675,7 +668,7 @@ pub contract LendingPool {
         self.interestRateModelCap = nil
         self.comptrollerAddress = nil
         self.comptrollerCap = nil
-        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: /storage/underlyingVault) ?? panic("Lost local overlying vault.")
+        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath) ?? panic("Lost local overlying vault.")
         self.underlyingAssetType = self.underlyingVault.getType()
         assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
         // save pool admin
@@ -683,8 +676,5 @@ pub contract LendingPool {
         // save pool public interface
         self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
         self.account.link<&{Interfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
-        // save pool certificate
-        self.account.save(<-create PoolCertificate(), to: self.PoolCertificateStoragePath)
-        self.account.link<&{Interfaces.IdentityCertificate}>(self.PoolCertificatePrivatePath, target: self.PoolCertificateStoragePath)
     }
 }
