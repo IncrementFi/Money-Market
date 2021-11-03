@@ -13,6 +13,10 @@ pub contract ComptrollerV1 {
     pub let ComptrollerPublicPath: PublicPath
     // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
+    // Storage path user account stores UserCertificate resource
+    pub let UserCertificateStoragePath: StoragePath
+    // Path for creating private capability of UserCertificate resource
+    pub let UserCertificatePrivatePath: PrivatePath
 
     pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
@@ -96,6 +100,19 @@ pub contract ComptrollerV1 {
         }
     }
 
+    // This certificate identifies account address and needs to be stored in storage path locally.
+    // User should keep it safe and never give this resource's capability to others
+    pub resource UserCertificate: Interfaces.IdentityCertificate {
+        // The distributor's type of this certificate
+        pub let authorityType: Type
+        init() {
+            self.authorityType = Type<@ComptrollerV1.UserCertificate>()
+        }
+    }
+    pub fun IssueUserCertificate(): @UserCertificate {
+        return <- create UserCertificate()
+    }
+
     pub resource Comptroller: Interfaces.ComptrollerPublic {
         access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0]
@@ -106,11 +123,6 @@ pub contract ComptrollerV1 {
         access(self) let markets: {Address: Market}
         // { accountAddress => markets the account has either provided liquidity to or borrowed from }
         access(self) let accountMarketsIn: {Address: [Address]}
-
-        // Add market to be included in account liquidity calculation
-        // pub fun joinMarket(market: Address): @{Interfaces.Certificate} {}
-
-        // pub fun exitMarket(market: Address) {}
 
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
         pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
@@ -124,7 +136,6 @@ pub contract ComptrollerV1 {
             } else if (self.accountMarketsIn[supplierAddress]!.contains(poolAddress) == false) {
                 self.accountMarketsIn[supplierAddress]!.append(poolAddress)
             }
-             
 
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(poolAddress);
@@ -291,18 +302,24 @@ pub contract ComptrollerV1 {
             return collateralLpTokenSeizedAmount
         }
 
-        pub fun identifyPoolCertificate(poolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>): UInt8 {
+        pub fun getUserCertificateType(): Type {
+            return Type<@ComptrollerV1.UserCertificate>()
+        }
+
+        pub fun callerAllowed(
+            callerCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+            callerAddress: Address
+        ): UInt8 {
             pre {
-                poolCertificateCap.borrow()!.owner != nil: "Invaild pool certificate"
+                callerCertificateCap.check() && callerCertificateCap.borrow()!.owner != nil: "cannot borrow reference to invalid callerPoolCertificateCap"
+                callerCertificateCap.borrow()!.owner!.address == callerAddress: "callerPool address mismatch"
             }
-            let poolAddr = poolCertificateCap.borrow()!.owner!.address
-            // if pool is in the markets
-            if self.markets.containsKey(poolAddr) == false {
-                return Error.INVALID_POOL_CERTIFICATE.rawValue
+            if (self.markets[callerAddress]?.isOpen != true) {
+                return Error.MARKET_NOT_OPEN.rawValue
             }
-            // double check the pools' type
-            let poolType   = poolCertificateCap.borrow()!.authorityType
-            let marketType = self.markets[poolAddr]!.poolPublicCap.borrow()!.getPoolCertificateType()
+            // Double check pool's type
+            let poolType   = callerCertificateCap.borrow()!.authorityType
+            let marketType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
             if poolType != marketType {
                 return Error.INVALID_POOL_CERTIFICATE.rawValue
             }
@@ -402,7 +419,7 @@ pub contract ComptrollerV1 {
                     "price feed for the market is not available yet, abort listing"
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
-            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath)
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
 
             self.markets[poolAddress] =
@@ -517,6 +534,8 @@ pub contract ComptrollerV1 {
         self.ComptrollerStoragePath = /storage/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
         self.ComptrollerPublicPath = /public/comptrollerModule
+        self.UserCertificateStoragePath = /storage/userCertificate
+        self.UserCertificatePrivatePath = /private/userCertificate
 
         self.comptrollerAddress = self.account.address
         self.account.save(<-create Admin(), to: self.AdminStoragePath)

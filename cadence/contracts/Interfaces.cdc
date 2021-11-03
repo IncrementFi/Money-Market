@@ -53,9 +53,6 @@ pub contract interface Interfaces {
     }
 
     pub resource interface ComptrollerPublic {
-        // pub fun joinMarket(markets: [Address])
-        // pub fun exitMarket(market: Address)
-
         pub fun supplyAllowed(
             poolAddress: Address,
             supplierAddress: Address,
@@ -102,6 +99,11 @@ pub contract interface Interfaces {
             actualRepaidBorrowAmount: UFix64
         ): UFix64
 
-        pub fun identifyPoolCertificate(poolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>): UInt8
+        pub fun getUserCertificateType(): Type
+
+        pub fun callerAllowed(
+            callerCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+            callerAddress: Address
+        ): UInt8
     }
 }
