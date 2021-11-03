@@ -1,6 +1,5 @@
 import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
-import TwoSegmentsInterestRateModel from "./TwoSegmentsInterestRateModel.cdc"
 import ComptrollerV1 from "./ComptrollerV1.cdc"
 import Config from "./Config.cdc"
 
@@ -64,11 +63,6 @@ pub contract LendingPool {
     // Save underlying asset deposited into this pool
     access(self) let underlyingVault: @FungibleToken.Vault
 
-    // TokensInitialized
-    // The event that is emitted when the contract is created
-    pub event TokensInitialized(initialSupply: UFix64)
-    // Event emitted when there's a difference between contract-based data and vault-based data
-    pub event TokensDiff(faultVaultId: UInt64, vaultData: UFix64, contractData: UFix64, owner: Address?)
     // Event emitted when interest is accrued
     pub event AccrueInterest(_ cashPrior: UFix64, _ interestAccumulated: UFix64, _ borrowIndexNew: UFix64, _ totalBorrowsNew: UFix64)
     // Event emitted when underlying asset is deposited into pool
@@ -116,7 +110,7 @@ pub contract LendingPool {
         let reservesPrior = self.totalReserves
         let borrowIndexPrior = self.borrowIndex
 
-        if (self.interestRateModelCap?.check() != true) {
+        if (self.interestRateModelCap == nil || self.interestRateModelCap!.check() == false) {
             return Error.CURRENT_INTEREST_RATE_MODEL_NULL
         }
         // Get the borrow interest rate per block
@@ -551,7 +545,7 @@ pub contract LendingPool {
         }
         pub fun accrueInterest(): UInt8 {
             let ret = LendingPool.accrueInterest()
-            return ret as! UInt8
+            return ret.rawValue
         }
         pub fun getPoolCertificateType(): Type {
             return Type<@LendingPool.PoolCertificate>()
@@ -584,7 +578,7 @@ pub contract LendingPool {
                 let oldInterestRateModelAddress = LendingPool.interestRateModelAddress
                 LendingPool.interestRateModelAddress = newInterestRateModelAddress
                 LendingPool.interestRateModelCap = getAccount(newInterestRateModelAddress)
-                    .getCapability<&{Interfaces.InterestRateModelPublic}>(TwoSegmentsInterestRateModel.InterestRateModelPublicPath)
+                    .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
                 emit NewInterestRateModel(oldInterestRateModelAddress, newInterestRateModelAddress)
             }
             return Error.NO_ERROR
@@ -651,7 +645,7 @@ pub contract LendingPool {
             LendingPool.poolSeizeShare = poolSeizeShare
             LendingPool.interestRateModelAddress = interestRateModelAddress
             LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
-                .getCapability<&{Interfaces.InterestRateModelPublic}>(TwoSegmentsInterestRateModel.InterestRateModelPublicPath)
+                .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
         }
     }
 
@@ -687,7 +681,5 @@ pub contract LendingPool {
         // save pool certificate
         self.account.save(<-create PoolCertificate(), to: Config.PoolCertificateStoragePath)
         self.account.link<&{Interfaces.IdentityCertificate}>(Config.PoolCertificatePrivatePath, target: Config.PoolCertificateStoragePath)
-
-        emit TokensInitialized(initialSupply: 0.0)
     }
 }

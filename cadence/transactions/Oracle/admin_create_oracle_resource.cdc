@@ -6,7 +6,7 @@ import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 transaction() {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
-            .borrow<&SimpleOracle.Admin>(from: SimpleOracle.AdminStoragePath)
+            .borrow<&SimpleOracle.Admin>(from: SimpleOracle.OracleAdminStoragePath)
             ?? panic("Could not borrow reference to Oracle Admin")
 
         // Discard any existing contents
