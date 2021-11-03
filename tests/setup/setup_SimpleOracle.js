@@ -39,23 +39,23 @@ export const createOracleResource = async () => {
 }
 
 /**
- * @param {Address} yToken - Price feed to add.
+ * @param {Address} pool - Price feed to add.
  * @param {Int} maxCapacity - RingBuffer size for the added feed.
  * @returns {Promise<*>}
  */
-export const adminAddPriceFeed = async (yToken, maxCapacity) => {
+export const adminAddPriceFeed = async (pool, maxCapacity) => {
     const admin = await getOracleDeployerAddress();
     const name = "Oracle/admin_add_price_feed";
     const signers = [admin];
-    const args = [yToken, maxCapacity];
+    const args = [pool, maxCapacity];
     return sendTransaction({ name, args, signers });
 }
 
-export const adminRemovePriceFeed = async (yToken) => {
+export const adminRemovePriceFeed = async (pool) => {
     const admin = await getOracleDeployerAddress();
     const name = "Oracle/admin_remove_price_feed";
     const signers = [admin];
-    const args = [yToken];
+    const args = [pool];
     return sendTransaction({ name, args, signers });
 }
 
@@ -86,7 +86,7 @@ export const adminRevokeUpdateRole = async () => {
 /**
  * 
  * @param {Address} oracleAddress - Deployment address of oracle contract
- * @returns {[Address]} - Supported yToken address array 
+ * @returns {[Address]} - pool address array of supported data feeds 
  */
 export const getSupportedDataFeeds = async (oracleAddress) => {
     const name = "Oracle/get_supported_data_feeds";
@@ -97,12 +97,12 @@ export const getSupportedDataFeeds = async (oracleAddress) => {
 /**
  * 
  * @param {Address} oracleAddress 
- * @param {Address} yToken 
- * @returns {[UFix64]} - yToken feed's latest result in form of [timestamp, data]
+ * @param {Address} pool 
+ * @returns {[UFix64]} - pool's data feed's latest result in form of [timestamp, data]
  */
-export const getFeedLatestResult = async (oracleAddress, yToken) => {
+export const getFeedLatestResult = async (oracleAddress, pool) => {
     const name = "Oracle/get_feed_latest_result";
-    const args = [oracleAddress, yToken];
+    const args = [oracleAddress, pool];
     return executeScript({ name, args });
 }
 
@@ -130,13 +130,13 @@ export const updaterSetupAccount = async (updater) => {
 
 /**
  * @param {Address} updater - The updater account with granted updateCapability to upload data point on-chain.
- * @param {Address} yToken - The data feed to upload data with.
+ * @param {Address} pool - The data feed to upload data with.
  * @param {UFix64} data - The raw priceData point.
  * @returns {Promise<*>}
  */
-export const updaterUpdateData = async (updater, yToken, data) => {
+export const updaterUpdateData = async (updater, pool, data) => {
     const name = "Oracle/updater_upload_feed_data";
     const signers = [updater];
-    const args = [yToken, data];
+    const args = [pool, data];
     return sendTransaction({ name, args, signers });
 }

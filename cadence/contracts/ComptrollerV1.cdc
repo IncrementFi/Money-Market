@@ -42,7 +42,7 @@ pub contract ComptrollerV1 {
         pub case LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SET_VALUE_OUT_OF_RANGE
-        pub case INVALID_POOL_CERTIFICATE
+        pub case INVALID_CALLER_CERTIFICATE
     }
 
     pub struct Market {
@@ -102,13 +102,8 @@ pub contract ComptrollerV1 {
 
     // This certificate identifies account address and needs to be stored in storage path locally.
     // User should keep it safe and never give this resource's capability to others
-    pub resource UserCertificate: Interfaces.IdentityCertificate {
-        // The distributor's type of this certificate
-        pub let authorityType: Type
-        init() {
-            self.authorityType = Type<@ComptrollerV1.UserCertificate>()
-        }
-    }
+    pub resource UserCertificate: Interfaces.IdentityCertificate {}
+
     pub fun IssueUserCertificate(): @UserCertificate {
         return <- create UserCertificate()
     }
@@ -307,23 +302,21 @@ pub contract ComptrollerV1 {
         }
 
         pub fun callerAllowed(
-            callerCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+            callerCertificate: @{Interfaces.IdentityCertificate},
             callerAddress: Address
         ): UInt8 {
-            pre {
-                callerCertificateCap.check() && callerCertificateCap.borrow()!.owner != nil: "cannot borrow reference to invalid callerPoolCertificateCap"
-                callerCertificateCap.borrow()!.owner!.address == callerAddress: "callerPool address mismatch"
-            }
             if (self.markets[callerAddress]?.isOpen != true) {
+                destroy callerCertificate
                 return Error.MARKET_NOT_OPEN.rawValue
             }
-            // Double check pool's type
-            let poolType   = callerCertificateCap.borrow()!.authorityType
-            let marketType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
-            if poolType != marketType {
-                return Error.INVALID_POOL_CERTIFICATE.rawValue
+            let callerPoolCertificateType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
+            let ret = callerCertificate.isInstance(callerPoolCertificateType)
+            destroy callerCertificate
+            if (ret == false) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            } else {
+                return Error.NO_ERROR.rawValue
             }
-            return Error.NO_ERROR.rawValue
         }
 
         // Return the current account liquidity snapshot:
