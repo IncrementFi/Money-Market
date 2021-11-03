@@ -1,12 +1,14 @@
 import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
-import ComptrollerV1 from "./ComptrollerV1.cdc"
 import Config from "./Config.cdc"
 
 pub contract LendingPool {
     pub let PoolAdminStoragePath: StoragePath
     pub let UnderlyingAssetVaultStoragePath: StoragePath
     pub let PoolPublicStoragePath: StoragePath
+    pub let PoolPublicPublicPath: PublicPath
+    pub let PoolCertificateStoragePath: StoragePath
+    pub let PoolCertificatePrivatePath: PrivatePath
 
     pub enum Error: UInt8 {
         pub case NO_ERROR
@@ -154,8 +156,12 @@ pub contract LendingPool {
         return borrower.principal * self.borrowIndex / borrower.interestIndex
     }
 
+    // Check whether or not the given certificate is issued by system
+    access(self) fun checkUserCertificateType(certCap: Capability<&{Interfaces.IdentityCertificate}>): Bool {
+        return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
+    }
+
     // Supplier deposits underlying asset's Vault into the pool
-    // TODO: Check fake currency deposit? 
     pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
         pre {
             inUnderlyingVault.balance > 0.0: "Supplied empty underlying Vault"
@@ -185,21 +191,18 @@ pub contract LendingPool {
     }
 
     access(self) fun redeemInternal(
-        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+        redeemer: Address,
         numLpTokenToRedeem: UFix64,
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
             numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0: "numLpTokenToRedeem or numUnderlyingToRedeem must be 0.0"
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
+            self.accountLpTokens.containsKey(redeemer): "redeemer has no liquidity, nothing to redeem"
         }
 
         // 1. Accrues interests and checkpoints latest states
         let err = self.accrueInterest()
         assert(err == Error.NO_ERROR, message: "REDEEM_ACCRUE_INTEREST_FAILED")
-        
-        let redeemer = userCertificateCap.borrow()!.owner!.address
-        assert(self.accountLpTokens.containsKey(redeemer), message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
 
         // 2. Check whether or not redeemAllowed()
         var lpTokenToRedeem = 0.0
@@ -250,8 +253,9 @@ pub contract LendingPool {
     }
 
     // User redeems @numLpTokenToRedeem lpTokens for the underlying asset's vault
-    // redeemer is inferred from the reference to the deposit Certificate, which can only be provided by the Certificate owner,
-    // thus preventing passing in a fake redeemer
+    // Note: redeemerAddress is inferred from the private capability to the IdentityCertificate resource,
+    // which is stored in user account and can only be given by its owner
+    // @numLpTokenToRedeem - the special value of `UFIx64.max` indicating to redeem all virtual LP tokens the redeemer has
     // Since redeemer decreases his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun redeem(
         userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
@@ -259,40 +263,48 @@ pub contract LendingPool {
     ): @FungibleToken.Vault {
         pre {
             numLpTokenToRedeem > 0.0: "Redeemed zero-balanced lpToken"
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid UserCertificate"
+            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
         }
+        let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         return <- self.redeemInternal(
-            userCertificateCap: userCertificateCap,
+            redeemer: redeemerAddress,
             numLpTokenToRedeem: numLpTokenToRedeem,
             numUnderlyingToRedeem: 0.0
         )
     }
 
+    // User redeems @numUnderlyingToRedeem underlying FungibleTokens
+    // @numUnderlyingToRedeem - the special value of `UFIx64.max` indicating to redeem all the underlying liquidity
+    // the redeemer has provided to this pool
     pub fun redeemUnderlying(
         userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault? {
         pre {
             numUnderlyingToRedeem > 0.0: "Redeemed zero-balanced underlying"
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid UserCertificate"
+            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
         }
+        let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         return <- self.redeemInternal(
-            userCertificateCap: userCertificateCap,
+            redeemer: redeemerAddress,
             numLpTokenToRedeem: 0.0,
             numUnderlyingToRedeem: numUnderlyingToRedeem
         )
     }
 
     // User borrows underlying asset from the pool.
-    // borrower is inferred from the reference to the deposit Certificate, which can only be provided by the Certificate owner,
-    // thus preventing passing in a fake borrower
+    // Note: borrowerAddress is inferred from the private capability to the IdentityCertificate resource,
+    // which is stored in user account and can only be given by its owner
     // Since borrower would decrease his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun borrow(
         userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         borrowAmount: UFix64,
     ): @FungibleToken.Vault {
         pre {
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Invalid user certificate."
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid userCertificate"
+            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
             borrowAmount > 0.0: "borrowAmount zero"
             borrowAmount <= self.getPoolCash(): "Pool not enough underlying balance for borrow"
         }
@@ -396,8 +408,7 @@ pub contract LendingPool {
             actualRepaidBorrowAmount: actualRepayAmount
         )
 
-        // 4. seizeInternal if current pool is also borrower's collateralPool;
-        // otherwise delegate to comptroller to seize another external collateralPool
+        // 4. seizeInternal if current pool is also borrower's collateralPool; otherwise seize external collateralPool
         if (poolCollateralizedToSeize == self.poolAddress) {
             self.seizeInternal(
                 borrowPool: self.poolAddress,
@@ -406,11 +417,11 @@ pub contract LendingPool {
                 borrowerLpTokenToSeize: collateralLpTokenSeizedAmount
             )
         } else {
-            // Get local pool's certificate
-            let localPoolCertificateCap = self.account.getCapability<&{Interfaces.IdentityCertificate}>(Config.PoolCertificatePrivatePath)
-            // Get remote pool's seize function
-            let remotePoolPublicCap = getAccount(poolCollateralizedToSeize).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath)
-            assert(remotePoolPublicCap.check(), message: "Invalid remote call pool")
+            // Get private capability of local pool's certificate
+            let localPoolCertificateCap = self.account.getCapability<&{Interfaces.IdentityCertificate}>(self.PoolCertificatePrivatePath)
+            // Get public capability of remote pool
+            let remotePoolPublicCap = getAccount(poolCollateralizedToSeize).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
+            assert(remotePoolPublicCap.check(), message: "Cannot borrow reference to remote PoolPublic")
             remotePoolPublicCap.borrow()!.seize(
                 fromPoolCertificateCap: localPoolCertificateCap,
                 borrowPool: self.poolAddress,
@@ -430,7 +441,7 @@ pub contract LendingPool {
         return <-remainingVault
     }
 
-    // Used for "external" called seize. Run-time type check of certificate ensures it can only be called by pools in comptroller's markets.
+    // Only used for "external" called seize. Run-time type check of pool certificate ensures it can only be called by pools in comptroller's markets.
     pub fun seize(
         fromPoolCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         borrowPool: Address,
@@ -438,18 +449,18 @@ pub contract LendingPool {
         borrower: Address,
         borrowerCollateralLpTokenToSeize: UFix64
     ) {
-        pre {
-            self.comptrollerCap!.check(): "Lost comptroller"
-            fromPoolCertificateCap.check() && fromPoolCertificateCap.borrow()!.owner != nil: "Invalid pool certificate."
-            // The caller of this seize function must be the pool contract which is added in the markets.
-            self.comptrollerCap!.borrow()!.identifyPoolCertificate(poolCertificateCap: fromPoolCertificateCap) == 0: "Invalid pool certificate"
-        }
+        // Check and verify caller from another LendingPool contract
+        let ret = self.comptrollerCap!.borrow()!.callerAllowed(
+            callerCertificateCap: fromPoolCertificateCap,
+            callerAddress: borrowPool
+        )
+        assert(ret == 0, message: "external seize not allowed, error reason: ".concat(ret.toString()))
 
-        // 1. Accrues interests and checkpoints latest states
+        // 2. Accrues interests and checkpoints latest states
         let err = self.accrueInterest()
         assert(err == Error.NO_ERROR, message: "SEIZE_ACCRUE_INTEREST_FAILED")
 
-        // 2. seizeInternal
+        // 3. seizeInternal
         self.seizeInternal(
             borrowPool: borrowPool,
             liquidator: liquidator,
@@ -487,23 +498,14 @@ pub contract LendingPool {
         self.totalReserves = self.totalReserves + addedUnderlyingReserves
         self.totalSupply = self.totalSupply - protocolSeizedLpTokens
         // in-place liquidation: only virtual lpToken records get updated, no token deposit / withdraw needs to happen
-        self.accountLpTokens[borrower] = self.accountLpTokens[borrower]! - borrowerLpTokenToSeize
-        self.accountLpTokens[liquidator] = self.accountLpTokens[liquidator]! + liquidatorSeizedLpTokens
+        if (self.accountLpTokens[borrower] == borrowerLpTokenToSeize) {
+            self.accountLpTokens.remove(key: borrower)
+        } else {
+            self.accountLpTokens[borrower] = self.accountLpTokens[borrower]! - borrowerLpTokenToSeize
+        }
+        self.accountLpTokens[liquidator] = liquidatorSeizedLpTokens + (self.accountLpTokens[liquidator] ?? 0.0)
 
         emit ReserveAdded(donator: self.poolAddress, addedUnderlyingAmount: addedUnderlyingReserves, newTotalReserves: self.totalReserves)
-    }
-
-    // This certificate identify the address and needs to be stored in storage path locally.
-    // User should keep it safe and never give this resource's capability to others
-    pub resource UserCertificate: Interfaces.IdentityCertificate {
-        // The distributor's type of this certificate
-        pub let authorityType: Type
-        init() {
-            self.authorityType = LendingPool.getType()
-        }
-    }
-    pub fun IssueUserCertificate(): @UserCertificate {
-        return <- create UserCertificate()
     }
 
     pub resource PoolCertificate: Interfaces.IdentityCertificate {
@@ -620,7 +622,7 @@ pub contract LendingPool {
                 let oldComptrollerAddress = LendingPool.comptrollerAddress
                 LendingPool.comptrollerAddress = newComptrollerAddress
                 LendingPool.comptrollerCap = getAccount(newComptrollerAddress)
-                    .getCapability<&{Interfaces.ComptrollerPublic}>(ComptrollerV1.ComptrollerPublicPath)
+                    .getCapability<&{Interfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath)
                 emit NewComptroller(oldComptrollerAddress, newComptrollerAddress)
             }
         }
@@ -654,6 +656,9 @@ pub contract LendingPool {
         self.PoolAdminStoragePath = /storage/poolAdmin
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
         self.PoolPublicStoragePath = /storage/poolPublic
+        self.PoolPublicPublicPath = /public/poolPublic
+        self.PoolCertificateStoragePath = /storage/poolCertificate
+        self.PoolCertificatePrivatePath = /private/poolCertificate
 
         self.poolAddress = self.account.address
         self.initialExchangeRate = 1.0
@@ -677,9 +682,9 @@ pub contract LendingPool {
         self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
         // save pool public interface
         self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
-        self.account.link<&{Interfaces.PoolPublic}>(Config.PoolPublicPath, target: self.PoolPublicStoragePath)
+        self.account.link<&{Interfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
         // save pool certificate
-        self.account.save(<-create PoolCertificate(), to: Config.PoolCertificateStoragePath)
-        self.account.link<&{Interfaces.IdentityCertificate}>(Config.PoolCertificatePrivatePath, target: Config.PoolCertificateStoragePath)
+        self.account.save(<-create PoolCertificate(), to: self.PoolCertificateStoragePath)
+        self.account.link<&{Interfaces.IdentityCertificate}>(self.PoolCertificatePrivatePath, target: self.PoolCertificateStoragePath)
     }
 }
