@@ -1,10 +1,18 @@
 pub contract Config {
+    // TwoSegmentsInterestRateModel.InterestRateModelPublicPath
+    pub let InterestRateModelPublicPath: PublicPath
+    // SimpleOracle.OraclePublicPath
+    pub let OraclePublicPath: PublicPath
+    // SimpleOracle.UpdaterPublicPath
+    pub let UpdaterPublicPath: PublicPath
+
 
     pub var ComptrollerAddr: Address
     pub var FUSDPoolAddr: Address
     pub var InterestModelAddr: Address
     pub var OracleAddr: Address
 
+    // LendingPool.PoolPublicStoragePath
     pub var PoolPublicPath: PublicPath
 
     pub var PoolCertificateStoragePath: StoragePath
@@ -23,5 +31,8 @@ pub contract Config {
         self.UserCertificateStoragePath = /storage/incrementalUserCertificate
         self.UserCertificatePrivatePath = /private/incrementalUserCertificate
 
+        self.InterestRateModelPublicPath = /public/InterestRateModel
+        self.OraclePublicPath = /public/oracleModule
+        self.UpdaterPublicPath = /public/oracleUpdaterProxy
     }
 }

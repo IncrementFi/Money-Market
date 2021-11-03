@@ -119,22 +119,16 @@ pub contract ComptrollerV1 {
             }
 
             // Add to user markets list
-            /* TODO: delete
-            if (self.accountMarketsIn[supplierAddress]?.contains(poolAddress) != true) {
-                self.accountMarketsIn[supplierAddress]!.append(poolAddress)
-            }
-            */
             if (self.accountMarketsIn.containsKey(supplierAddress) == false) {
-                self.accountMarketsIn[supplierAddress] = []
-            }
-            if (self.accountMarketsIn[supplierAddress]!.contains(poolAddress) == false) {
+                self.accountMarketsIn[supplierAddress] = [poolAddress]
+            } else if (self.accountMarketsIn[supplierAddress]!.contains(poolAddress) == false) {
                 self.accountMarketsIn[supplierAddress]!.append(poolAddress)
             }
              
 
             ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cToken);
-            ///// distributeSupplierComp(cToken, minter);
+            ///// updateCompSupplyIndex(poolAddress);
+            ///// distributeSupplierComp(poolAddress, supplierAddress);
             return Error.NO_ERROR.rawValue
         }
 
@@ -167,9 +161,9 @@ pub contract ComptrollerV1 {
                 redeemOrRepayAmount: redeemLpTokenAmount
             )
 
-            ///// 3. TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cToken);
-            ///// distributeSupplierComp(cToken, redeemer);
+            ///// TODO: Keep the flywheel moving
+            ///// updateCompSupplyIndex(poolAddress);
+            ///// distributeSupplierComp(poolAddress, redeemerAddress);
             return Error.NO_ERROR.rawValue
         }
 
@@ -203,14 +197,16 @@ pub contract ComptrollerV1 {
             }
 
             // 3. Add to user markets list
-            if (self.accountMarketsIn[borrowerAddress]?.contains(poolAddress) != true) {
+            if (self.accountMarketsIn.containsKey(borrowerAddress) == false) {
+                self.accountMarketsIn[borrowerAddress] = [poolAddress]
+            } else if (self.accountMarketsIn[borrowerAddress]!.contains(poolAddress) == false) {
                 self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
             }
 
-            ///// 5. TODO: Keep the flywheel moving
+            ///// 4. TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(cToken, borrowIndex);
-            ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
+            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
+            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
             return Error.NO_ERROR.rawValue
         }
 
@@ -228,8 +224,8 @@ pub contract ComptrollerV1 {
 
             ///// TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(cToken, borrowIndex);
-            ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
+            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
+            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
             return Error.NO_ERROR.rawValue
         }
 
@@ -261,9 +257,9 @@ pub contract ComptrollerV1 {
             }
 
             ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cTokenCollateral);
-            ///// distributeSupplierComp(cTokenCollateral, borrower);
-            ///// distributeSupplierComp(cTokenCollateral, liquidator);
+            ///// updateCompSupplyIndex(collateralPool);
+            ///// distributeSupplierComp(collateralPool, borrower);
+            ///// distributeSupplierComp(collateralPool, liquidator);
             return Error.NO_ERROR.rawValue
         }
 
@@ -406,7 +402,6 @@ pub contract ComptrollerV1 {
                     "price feed for the market is not available yet, abort listing"
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
-            // TODO: fix hardcode path
             let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPath)
             assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
 
@@ -450,11 +445,8 @@ pub contract ComptrollerV1 {
         }
 
         access(contract) fun configOracle(oracleAddress: Address) {
-            // TODO: delete
-            //let oldOracleAddress = (self.oracleCap?.borrow()! ?? nil)?.owner?.address
-            let oldOracleAddress = (self.oracleCap!=nil)? self.oracleCap!.borrow()!.owner!.address : Address(0x00)
-            // TODO: fix hardcode path
-            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(/public/oracleModule)
+            let oldOracleAddress = (self.oracleCap != nil)? self.oracleCap!.borrow()!.owner?.address : nil
+            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(Config.OraclePublicPath)
             emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
         }
 
