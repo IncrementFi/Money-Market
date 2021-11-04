@@ -1,5 +1,6 @@
 import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
+import Config from "./Config.cdc"
 
 pub contract ComptrollerV1 {
     // The storage path for the Admin resource
@@ -12,6 +13,10 @@ pub contract ComptrollerV1 {
     pub let ComptrollerPublicPath: PublicPath
     // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
+    // Storage path user account stores UserCertificate resource
+    pub let UserCertificateStoragePath: StoragePath
+    // Path for creating private capability of UserCertificate resource
+    pub let UserCertificatePrivatePath: PrivatePath
 
     pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
@@ -37,6 +42,7 @@ pub contract ComptrollerV1 {
         pub case LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SET_VALUE_OUT_OF_RANGE
+        pub case INVALID_CALLER_CERTIFICATE
     }
 
     pub struct Market {
@@ -94,7 +100,13 @@ pub contract ComptrollerV1 {
         }
     }
 
-    pub resource Auth: Interfaces.Auth {}
+    // This certificate identifies account address and needs to be stored in storage path locally.
+    // User should keep it safe and never give this resource's capability to others
+    pub resource UserCertificate: Interfaces.IdentityCertificate {}
+
+    pub fun IssueUserCertificate(): @UserCertificate {
+        return <- create UserCertificate()
+    }
 
     pub resource Comptroller: Interfaces.ComptrollerPublic {
         access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
@@ -107,30 +119,23 @@ pub contract ComptrollerV1 {
         // { accountAddress => markets the account has either provided liquidity to or borrowed from }
         access(self) let accountMarketsIn: {Address: [Address]}
 
-        // Add market to be included in account liquidity calculation
-        // pub fun joinMarket(market: Address): @{Interfaces.Certificate} {}
-
-        // pub fun exitMarket(market: Address) {}
-
-        pub fun getAuthType(): Type {
-            return Type<@ComptrollerV1.Auth>()
-        }
-
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
         pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Add to user markets list
-            if (self.accountMarketsIn[supplierAddress]?.contains(poolAddress) != true) {
+            if (self.accountMarketsIn.containsKey(supplierAddress) == false) {
+                self.accountMarketsIn[supplierAddress] = [poolAddress]
+            } else if (self.accountMarketsIn[supplierAddress]!.contains(poolAddress) == false) {
                 self.accountMarketsIn[supplierAddress]!.append(poolAddress)
             }
 
             ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cToken);
-            ///// distributeSupplierComp(cToken, minter);
-            return Error.NO_ERROR as! UInt8
+            ///// updateCompSupplyIndex(poolAddress);
+            ///// distributeSupplierComp(poolAddress, supplierAddress);
+            return Error.NO_ERROR.rawValue
         }
 
         // Return 0 for Error.NO_ERROR, i.e. redeem allowed
@@ -140,7 +145,7 @@ pub contract ComptrollerV1 {
             redeemLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Hypothetical account liquidity check after PoolToken was redeemed
@@ -152,7 +157,7 @@ pub contract ComptrollerV1 {
                 amountUnderlyingToBorrow: 0.0
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_REDEEM_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_REDEEM_LIQUIDITY.rawValue
             }
     
             // Remove pool out of user markets list if necessary
@@ -162,10 +167,10 @@ pub contract ComptrollerV1 {
                 redeemOrRepayAmount: redeemLpTokenAmount
             )
 
-            ///// 3. TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cToken);
-            ///// distributeSupplierComp(cToken, redeemer);
-            return Error.NO_ERROR as! UInt8
+            ///// TODO: Keep the flywheel moving
+            ///// updateCompSupplyIndex(poolAddress);
+            ///// distributeSupplierComp(poolAddress, redeemerAddress);
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun borrowAllowed(
@@ -174,14 +179,14 @@ pub contract ComptrollerV1 {
             borrowUnderlyingAmount: UFix64
         ): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
             // 1. totalBorrows limit check if not unlimited borrowCap
             let borrowCap = self.markets[poolAddress]!.borrowCap
             if (borrowCap != 0.0) {
                 let totalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrows() + borrowUnderlyingAmount
                 if (totalBorrowsNew > borrowCap) {
-                    return Error.EXCEED_MARKET_BORROW_CAP as! UInt8
+                    return Error.EXCEED_MARKET_BORROW_CAP.rawValue
                 }
             }
 
@@ -194,24 +199,26 @@ pub contract ComptrollerV1 {
                 amountUnderlyingToBorrow: borrowUnderlyingAmount
             )
             if (liquidity[1] > 0.0) {
-                return Error.INSUFFICIENT_BORROW_LIQUIDITY as! UInt8
+                return Error.INSUFFICIENT_BORROW_LIQUIDITY.rawValue
             }
 
             // 3. Add to user markets list
-            if (self.accountMarketsIn[borrowerAddress]?.contains(poolAddress) != true) {
+            if (self.accountMarketsIn.containsKey(borrowerAddress) == false) {
+                self.accountMarketsIn[borrowerAddress] = [poolAddress]
+            } else if (self.accountMarketsIn[borrowerAddress]!.contains(poolAddress) == false) {
                 self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
             }
 
-            ///// 5. TODO: Keep the flywheel moving
+            ///// 4. TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(cToken, borrowIndex);
-            ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
-            return Error.NO_ERROR as! UInt8
+            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
+            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun repayAllowed(poolAddress: Address, borrowerAddress: Address, repayUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolAddress]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             // Remove pool out of user markets list if necessary
@@ -223,25 +230,25 @@ pub contract ComptrollerV1 {
 
             ///// TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(cToken, borrowIndex);
-            ///// distributeBorrowerComp(cToken, borrower, borrowIndex);
-            return Error.NO_ERROR as! UInt8
+            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
+            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun liquidateAllowed(poolBorrowed: Address, poolCollateralized: Address, borrower: Address, repayUnderlyingAmount: UFix64): UInt8 {
             if (self.markets[poolBorrowed]?.isOpen != true || self.markets[poolCollateralized]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
             let liquidity = self.getAccountLiquiditySnapshot(account: borrower)
             if liquidity[0] > 0.0 {
-                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED as! UInt8
+                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED.rawValue
             }
             let borrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalance(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
             if (repayUnderlyingAmount > borrowBalance * self.closeFactor) {
-                return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY as! UInt8
+                return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY.rawValue
             }
-            return Error.NO_ERROR as! UInt8
+            return Error.NO_ERROR.rawValue
         }
 
         pub fun seizeAllowed(
@@ -252,20 +259,20 @@ pub contract ComptrollerV1 {
             seizeCollateralPoolLpTokenAmount: UFix64
         ): UInt8 {
             if (self.markets[borrowPool]?.isOpen != true || self.markets[collateralPool]?.isOpen != true) {
-                return Error.MARKET_NOT_OPEN as! UInt8
+                return Error.MARKET_NOT_OPEN.rawValue
             }
 
             ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(cTokenCollateral);
-            ///// distributeSupplierComp(cTokenCollateral, borrower);
-            ///// distributeSupplierComp(cTokenCollateral, liquidator);
-            return Error.NO_ERROR as! UInt8
+            ///// updateCompSupplyIndex(collateralPool);
+            ///// distributeSupplierComp(collateralPool, borrower);
+            ///// distributeSupplierComp(collateralPool, liquidator);
+            return Error.NO_ERROR.rawValue
         }
 
         // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
         // Called in LendingPool.liquidate()
         pub fun calculateCollateralPoolLpTokenToSeize(
-            borrower: Address
+            borrower: Address,
             borrowPool: Address,
             collateralPool: Address,
             actualRepaidBorrowAmount: UFix64
@@ -290,30 +297,26 @@ pub contract ComptrollerV1 {
             return collateralLpTokenSeizedAmount
         }
 
-        // Process an seize request delegated from LendingPool contract.
-        // Check to ensure the auth is minted by one of the LendingPools (auth's run-time type is LendingPool.Certificate),
-        // so that this public function cannot be called by other accounts arbitrarily.
-        pub fun seizeExternal(
-            poolAuth: @{Interfaces.Auth},
-            borrowPool: Address,
-            collateralPoolToSeize: Address,
-            liquidator: Address,
-            borrower: Address,
-            borrowerCollateralLpTokenToSeize: UFix64
-        ) {
-            pre {
-                poolAuth.isInstance(self.markets[borrowPool]!.poolPublicCap.borrow()!.getAuthType()):
-                "not called by LendingPool, seizeExternal revert"
-            }
-            destroy poolAuth
+        pub fun getUserCertificateType(): Type {
+            return Type<@ComptrollerV1.UserCertificate>()
+        }
 
-            self.markets[collateralPoolToSeize]!.poolPublicCap.borrow()!.seize(
-                comptrollerAuth: <- create ComptrollerV1.Auth(),
-                borrowPool: borrowPool,
-                liquidator: liquidator,
-                borrower: borrower,
-                borrowerCollateralLpTokenToSeize: borrowerCollateralLpTokenToSeize
-            )
+        pub fun callerAllowed(
+            callerCertificate: @{Interfaces.IdentityCertificate},
+            callerAddress: Address
+        ): UInt8 {
+            if (self.markets[callerAddress]?.isOpen != true) {
+                destroy callerCertificate
+                return Error.MARKET_NOT_OPEN.rawValue
+            }
+            let callerPoolCertificateType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
+            let ret = callerCertificate.isInstance(callerPoolCertificateType)
+            destroy callerCertificate
+            if (ret == false) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            } else {
+                return Error.NO_ERROR.rawValue
+            }
         }
 
         // Return the current account liquidity snapshot:
@@ -409,8 +412,7 @@ pub contract ComptrollerV1 {
                     "price feed for the market is not available yet, abort listing"
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
-            // TODO: fix hardcode path
-            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(/public/poolPublic)
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
 
             self.markets[poolAddress] =
@@ -453,9 +455,8 @@ pub contract ComptrollerV1 {
         }
 
         access(contract) fun configOracle(oracleAddress: Address) {
-            let oldOracleAddress = (self.oracleCap?.borrow()! ?? nil)?.owner?.address
-            // TODO: fix hardcode path
-            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(/public/oracleModule)
+            let oldOracleAddress = (self.oracleCap != nil)? self.oracleCap!.borrow()!.owner?.address : nil
+            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(Config.OraclePublicPath)
             emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
         }
 
@@ -487,34 +488,37 @@ pub contract ComptrollerV1 {
     }
 
     pub resource Admin {
-        // Admin funciton to create an Comptroller resource
-        pub fun createComptrollerResource(): @Comptroller {
-            return <- create Comptroller()
-        }
         // Admin function to list a new asset pool to the lending market
         // Note: Do not list a new asset pool before the oracle feed is ready
-        pub fun addMarket(comptroller: Capability<&Comptroller>, poolAddress: Address, collateralFactor: UFix64) {
-             comptroller.borrow()!.addMarket(poolAddress: poolAddress, collateralFactor: collateralFactor)
+        pub fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.addMarket(poolAddress: poolAddress, collateralFactor: collateralFactor)
         }
         // Admin function to config parameters of a listed-market
-        pub fun configMarket(
-            comptroller: Capability<&Comptroller>,
-            pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?)
-        {
-            comptroller.borrow()!.configMarket(
-                pool: pool, isOpen: isOpen, isMining: isMining, collateralFactor: collateralFactor, borrowCap: borrowCap)
+        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.configMarket(
+                pool: pool,
+                isOpen: isOpen,
+                isMining: isMining,
+                collateralFactor: collateralFactor,
+                borrowCap: borrowCap
+            )
         }
         // Admin function to set a new oracle
-        pub fun configOracle(comptroller: Capability<&Comptroller>, oracleAddress: Address) {
-            comptroller.borrow()!.configOracle(oracleAddress: oracleAddress)
+        pub fun configOracle(oracleAddress: Address) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.configOracle(oracleAddress: oracleAddress)
         }
         // Admin function to set closeFactor
-        pub fun setCloseFactor(comptroller: Capability<&Comptroller>, closeFactor: UFix64) {
-            comptroller.borrow()!.setCloseFactor(newCloseFactor: closeFactor)
+        pub fun setCloseFactor(closeFactor: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)
         }
         // Admin function to set liquidationIncentive
-        pub fun setLiquidationIncentive(comptroller: Capability<&Comptroller>, liquidationIncentive: UFix64) {
-            comptroller.borrow()!.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
+        pub fun setLiquidationIncentive(liquidationIncentive: UFix64) {
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            comptrollerRef.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
         }
     }
 
@@ -523,8 +527,13 @@ pub contract ComptrollerV1 {
         self.ComptrollerStoragePath = /storage/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
         self.ComptrollerPublicPath = /public/comptrollerModule
+        self.UserCertificateStoragePath = /storage/userCertificate
+        self.UserCertificatePrivatePath = /private/userCertificate
 
         self.comptrollerAddress = self.account.address
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
+        
+        self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
+        self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }

@@ -1,4 +1,4 @@
-import OracleInterface from "../../contracts/OracleInterface.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
 import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 
 // Note: Only run once.
@@ -6,7 +6,7 @@ import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 transaction() {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
-            .borrow<&SimpleOracle.Admin>(from: SimpleOracle.AdminStoragePath)
+            .borrow<&SimpleOracle.Admin>(from: SimpleOracle.OracleAdminStoragePath)
             ?? panic("Could not borrow reference to Oracle Admin")
 
         // Discard any existing contents
@@ -15,8 +15,8 @@ transaction() {
         // Create and store a new Oracle resource
         adminAccount.save(<-adminRef.createOracleResource(), to: SimpleOracle.OracleStoragePath)
 
-        // Create a public capability to Oracle resource that only exposes {Getter} interface to public.
-        adminAccount.link<&SimpleOracle.Oracle{OracleInterface.Getter}>(
+        // Create a public capability to Oracle resource that only exposes {OraclePublic} interface to public.
+        adminAccount.link<&SimpleOracle.Oracle{Interfaces.OraclePublic}>(
             SimpleOracle.OraclePublicPath,
             target: SimpleOracle.OracleStoragePath
         )

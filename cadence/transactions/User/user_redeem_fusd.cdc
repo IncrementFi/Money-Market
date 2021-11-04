@@ -1,33 +1,48 @@
 import FUSD from "../../contracts/FUSD.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
-import CDToken from "../../contracts/CDToken.cdc"
-import LedgerToken from "../../contracts/LedgerToken.cdc"
-import IncPool from "../../contracts/IncPool.cdc"
-import IncPoolInterface from "../../contracts/IncPoolInterface.cdc"
-import IncConfig from "../../contracts/IncConfig.cdc"
+import LendingPool from "../../contracts/LendingPool.cdc"
+import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
+import Config from "../../contracts/Config.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
 
 
-transaction(redeemAmount: UFix64) {
 
-  prepare(signer: AuthAccount) {
-    log("====================")
-    let fusdReceiver = signer.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
-    //
-    let CDTokenIdentityReceiverCap = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)
+transaction(amountRedeem: UFix64) {
+    prepare(signer: AuthAccount) {
+        log("Transaction Start --------------- user_redeem_fusd")
 
-    log("当前ctoken数量 ".concat(CDTokenIdentityReceiverCap.borrow()!.balance.toString()))
+        let fusdStoragePath = /storage/fusdVault
+        var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        if fusdVault == nil {
+            log("Create new local fusd vault")
+            signer.save(<-FUSD.createEmptyVault(), to: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver, target: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Balance}>(/public/fusdBalance, target: fusdStoragePath)
+        }
+        fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
+        log("User redeem fusd ".concat(amountRedeem.toString()))
 
-    log("尝试取款 ".concat(redeemAmount.toString()))
-    let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr
-    let poolPublic = getAccount(fusdPoolAddress).getCapability<&{IncPoolInterface.PoolPublic}>(IncPool.PoolPath_Public)
-    poolPublic.borrow()!.redeemExplicitly(redeemOverlyingAmount: redeemAmount, identityCap: CDTokenIdentityReceiverCap, outUnderlyingVaultCap: fusdReceiver) 
-    //
+        // Get local user certificate
+        var userCertificateCap = signer.getCapability<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath)
+        if userCertificateCap.check() == false {
+            if signer.borrow<&{Interfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil {
+                // Create new user certificate
+                let userCertificate <- ComptrollerV1.IssueUserCertificate()
+                signer.save(<-userCertificate, to: Config.UserCertificateStoragePath)
+                signer.link<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath, target: Config.UserCertificateStoragePath)
+            }
+        }
+        userCertificateCap = signer.getCapability<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath)
 
-    log("当前ctoken数量 ".concat(CDTokenIdentityReceiverCap.borrow()!.balance.toString()))
+        // redeem
+        let redeemVault <- LendingPool.redeemUnderlying(userCertificateCap: userCertificateCap, numUnderlyingToRedeem: amountRedeem) ?? panic("Redeem fail.")
+        fusdVault!.deposit(from: <-redeemVault)
 
-    log("---------------------")
-  }
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
+        log("End -----------------------------")
+    }
 
-  execute {
-  }
+    execute {
+    }
 }

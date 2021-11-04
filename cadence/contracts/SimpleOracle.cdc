@@ -1,14 +1,14 @@
-import OracleInterface from "./OracleInterface.cdc"
+import Interfaces from "./Interfaces.cdc"
 
 // A simple centralized oracle maintained by the team. Admin can grant updateData role to other managed accounts.
-pub contract SimpleOracle: OracleInterface {
+pub contract SimpleOracle {
     // The storage path for the Admin resource
-    pub let AdminStoragePath: StoragePath
+    pub let OracleAdminStoragePath: StoragePath
     // The storage path for the Oracle resource
     pub let OracleStoragePath: StoragePath
     // The private path for the capability to Oracle resource for admin to modify feeds
     pub let OraclePrivatePath: PrivatePath
-    // The public path for the capability to restricted to &{OracleInterface.Getter}
+    // The public path for the capability to restricted to &{Interfaces.OraclePublic}
     pub let OraclePublicPath: PublicPath
 
     // The storage path for updater's OracleUpdateProxy resource
@@ -18,7 +18,7 @@ pub contract SimpleOracle: OracleInterface {
 
     pub event PriceFeedAdded(for newYToken: Address, maxCapacity: Int)
     pub event PriceFeedRemoved(from newYToken: Address)
-    pub event DataUpdated(for yToken: Address, at timestamp: UFix64, data: UFix64)
+    pub event DataUpdated(for pool: Address, at timestamp: UFix64, data: UFix64)
 
     // A single data point the off-chain oracle node reports.
     pub struct Observation {
@@ -82,26 +82,26 @@ pub contract SimpleOracle: OracleInterface {
     }
 
     pub resource interface DataUpdater {
-        access(contract) fun updatePrice(yToken: Address, data: UFix64)
+        access(contract) fun updatePrice(pool: Address, data: UFix64)
     }
 
-    pub resource Oracle: OracleInterface.Getter, DataUpdater {
+    pub resource Oracle: Interfaces.OraclePublic, DataUpdater {
         access(self) let feeds: [Address]
-        // { yToken : Oracle data for yToken }
+        // { poolAddress : Oracle data for pool }
         access(self) let observations: @{Address: RingBuffer}
 
-        // Return the underlying asset price denominated in USD.
-        // Return 0.0 means price feed for the given yToken is not available.  
-        pub fun getUnderlyingPrice(yToken: Address): UFix64 {
-            if (!self.feeds.contains(yToken)) {
+        // Return underlying asset price of the pool, denominated in USD.
+        // Return 0.0 means price feed for the given pool is not available.  
+        pub fun getUnderlyingPrice(pool: Address): UFix64 {
+            if (!self.feeds.contains(pool)) {
                 return 0.0
             }
-            return self.latestResult(yToken: yToken)[1]
+            return self.latestResult(pool: pool)[1]
         }
 
-        // Return yToken's latest data point in form of (timestamp, data)
-        pub fun latestResult(yToken: Address): [UFix64; 2] {
-            let dataRef: &RingBuffer = &self.observations[yToken] as &RingBuffer
+        // Return pool's latest data point in form of (timestamp, data)
+        pub fun latestResult(pool: Address): [UFix64; 2] {
+            let dataRef: &RingBuffer = &self.observations[pool] as &RingBuffer
             if (dataRef == nil || dataRef.isEmpty()) {
                 return [0.0, 0.0]
             }
@@ -128,33 +128,33 @@ pub contract SimpleOracle: OracleInterface {
 
         }
 
-        access(contract) fun removePriceFeed(yToken: Address) {
-            if (self.feeds.contains(yToken)) {
-                // 1. Remove yToken from data feeds
+        access(contract) fun removePriceFeed(pool: Address) {
+            if (self.feeds.contains(pool)) {
+                // 1. Remove pool from data feeds
                 var idx = 0
                 while idx < self.feeds.length {
-                    if (self.feeds[idx] == yToken) {
+                    if (self.feeds[idx] == pool) {
                         break
                     }
                     idx = idx + 1
                 }
                 let lastToken = self.feeds.removeLast()
-                if (lastToken != yToken) {
+                if (lastToken != pool) {
                     self.feeds[idx] = lastToken
                 }
-                // 2. Remove yToken's associated data
-                let oldData <- self.observations.remove(key: yToken)
+                // 2. Remove pool's associated data
+                let oldData <- self.observations.remove(key: pool)
                 destroy oldData
-                emit PriceFeedRemoved(from: yToken)
+                emit PriceFeedRemoved(from: pool)
             }
         }
 
-        access(contract) fun updatePrice(yToken: Address, data: UFix64) {
-            if (self.feeds.contains(yToken)) {
-                let dataRef: &RingBuffer = &self.observations[yToken] as &RingBuffer
+        access(contract) fun updatePrice(pool: Address, data: UFix64) {
+            if (self.feeds.contains(pool)) {
+                let dataRef: &RingBuffer = &self.observations[pool] as &RingBuffer
                 let now = getCurrentBlock().timestamp
                 dataRef.enqueue(Observation(timestamp: now, data: data))
-                emit DataUpdated(for: yToken, at: now, data: data)
+                emit DataUpdated(for: pool, at: now, data: data)
             }
         }
 
@@ -187,8 +187,8 @@ pub contract SimpleOracle: OracleInterface {
             self.updateCapability = cap
         }
 
-        pub fun update(yToken: Address, data: UFix64) {
-            self.updateCapability!.borrow()!.updatePrice(yToken: yToken, data: data)
+        pub fun update(pool: Address, data: UFix64) {
+            self.updateCapability!.borrow()!.updatePrice(pool: pool, data: data)
         }
 
         init() {
@@ -209,25 +209,25 @@ pub contract SimpleOracle: OracleInterface {
         }
         // Admin can update data points directly, however, we also want to grant update rights to specific accounts
         // (i.e. off-chain oracle clients), so as not to expose admin private key in any condition.
-        pub fun update(oracleCap: Capability<&Oracle>, yToken: Address, data: UFix64) {
-            oracleCap.borrow()!.updatePrice(yToken: yToken, data: data)
+        pub fun update(oracleCap: Capability<&Oracle>, pool: Address, data: UFix64) {
+            oracleCap.borrow()!.updatePrice(pool: pool, data: data)
         }
-        pub fun addPriceFeed(oracleCap: Capability<&Oracle>, yToken: Address, capacity: Int) {
-            oracleCap.borrow()!.addPriceFeed(for: yToken, maxCapacity: capacity)
+        pub fun addPriceFeed(oracleCap: Capability<&Oracle>, pool: Address, capacity: Int) {
+            oracleCap.borrow()!.addPriceFeed(for: pool, maxCapacity: capacity)
         }
-        pub fun removePriceFeed(oracleCap: Capability<&Oracle>, yToken: Address) {
-            oracleCap.borrow()!.removePriceFeed(yToken: yToken)
+        pub fun removePriceFeed(oracleCap: Capability<&Oracle>, pool: Address) {
+            oracleCap.borrow()!.removePriceFeed(pool: pool)
         }
     }
 
     init() {
-        self.AdminStoragePath = /storage/oracleAdmin
+        self.OracleAdminStoragePath = /storage/oracleAdmin
         self.OracleStoragePath = /storage/oracleModule
         self.OraclePrivatePath = /private/oracleModule
         self.OraclePublicPath = /public/oracleModule
         self.UpdaterStoragePath = /storage/oracleUpdaterProxy
         self.UpdaterPublicPath = /public/oracleUpdaterProxy
 
-        self.account.save(<-create Admin(), to: self.AdminStoragePath)
+        self.account.save(<-create Admin(), to: self.OracleAdminStoragePath)
     }
 }

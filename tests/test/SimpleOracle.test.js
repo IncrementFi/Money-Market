@@ -47,7 +47,7 @@ describe("SimpleOracle Testsuites", () => {
         expect(feeds.length).toBe(0);
 
         // test add price feed
-        const testYToken1 = await getAccountAddress("yToken1");
+        const testYToken1 = await getAccountAddress("pool1");
         await shallPass(adminAddPriceFeed(testYToken1, 100));
         feeds = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(1);
@@ -60,7 +60,7 @@ describe("SimpleOracle Testsuites", () => {
         expect(feeds).toContain(testYToken1);
 
         // test add multiple feeds
-        const testYToken2 = await getAccountAddress("yToken2");
+        const testYToken2 = await getAccountAddress("pool2");
         await shallPass(adminAddPriceFeed(testYToken2, 50));
         feeds = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(2);
@@ -116,7 +116,7 @@ describe("SimpleOracle Testsuites", () => {
 
         const oracleAddress = await getOracleContractAddress();
         // Add price feed
-        const testYToken1 = await getAccountAddress("yToken1");
+        const testYToken1 = await getAccountAddress("pool1");
         await shallPass(adminAddPriceFeed(testYToken1, 3));
         // Upload 4 data points, which should wrap in the RingBuffer (capacity 3), and check every latest result.
         const data = [toUFix64(35.5), toUFix64(36.6), toUFix64(37.7), toUFix64(38.8)];
