@@ -1,4 +1,4 @@
-import InterestRateModelInterface from "../../contracts/InterestRateModelInterface.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
 import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRateModel.cdc"
 
 // TODO: Do not break arguments into multi-lines unless this bug has been fixed: https://github.com/onflow/flow-cadut/issues/15
@@ -8,7 +8,7 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 transaction(modelName: String, blocksPerYear: UInt64, zeroUtilInterestRatePerYear: UFix64, criticalUtilInterestRatePerYear: UFix64, fullUtilInterestRatePerYear: UFix64, criticalUtilRate: UFix64) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
-            .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.AdminStoragePath)
+            .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.InterestRateModelAdminStoragePath)
             ?? panic("Could not borrow reference to InterestRateModel Admin")
 
         // Discard any existing contents
@@ -31,13 +31,8 @@ transaction(modelName: String, blocksPerYear: UInt64, zeroUtilInterestRatePerYea
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
         // Create a public capability to InterestRateModel resource that only exposes ModelPublic
-        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{InterestRateModelInterface.ModelPublic}>(
+        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{Interfaces.InterestRateModelPublic}>(
             TwoSegmentsInterestRateModel.InterestRateModelPublicPath,
-            target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
-        )
-        // Create another public capability to InterestRateModel resource that only exposes ModelParamsGetter
-        adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{TwoSegmentsInterestRateModel.ModelParamsGetter}>(
-            TwoSegmentsInterestRateModel.InterestRateModelParamsPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
     }
