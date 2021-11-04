@@ -5,7 +5,7 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 transaction(newBlocksPerYear: UInt64, newZeroUtilInterestRatePerYear: UFix64, newCriticalUtilInterestRatePerYear: UFix64, newFullUtilInterestRatePerYear: UFix64, newCriticalUtilPoint: UFix64) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
-            .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.AdminStoragePath)
+            .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.InterestRateModelAdminStoragePath)
             ?? panic("Could not borrow reference to InterestRateModel Admin")
         let updateCapability = adminAccount
             .getCapability<&TwoSegmentsInterestRateModel.InterestRateModel>(TwoSegmentsInterestRateModel.InterestRateModelPrivatePath)

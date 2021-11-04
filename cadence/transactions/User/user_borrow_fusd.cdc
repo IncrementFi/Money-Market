@@ -1,46 +1,48 @@
 import FUSD from "../../contracts/FUSD.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
-import LedgerToken from "../../contracts/LedgerToken.cdc"
-import CDToken from "../../contracts/CDToken.cdc"
-import IncPool from "../../contracts/IncPool.cdc"
-import IncPoolInterface from "../../contracts/IncPoolInterface.cdc"
-import IncConfig from "../../contracts/IncConfig.cdc"
+import LendingPool from "../../contracts/LendingPool.cdc"
+import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
+import Config from "../../contracts/Config.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
 
 
-transaction(borrowAmount: UFix64) {
 
-  prepare(signer: AuthAccount) {
-    log("====================")
-    log("user borrows:")
-    let fusdStoragePath = /storage/fusdVault
-    var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
-    if fusdVault == nil {
-      signer.save(<-FUSD.createEmptyVault(), to: fusdStoragePath)
-      signer.link<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver, target: fusdStoragePath)
-      signer.link<&FUSD.Vault{FungibleToken.Balance}>(/public/fusdBalance, target: fusdStoragePath)
+transaction(amountBorrow: UFix64) {
+    prepare(signer: AuthAccount) {
+        log("Transaction Start --------------- user_borrow_fusd")
+
+        let fusdStoragePath = /storage/fusdVault
+        var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        if fusdVault == nil {
+            log("Create new local fusd vault")
+            signer.save(<-FUSD.createEmptyVault(), to: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver, target: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Balance}>(/public/fusdBalance, target: fusdStoragePath)
+        }
+        fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
+        log("User borrow fusd ".concat(amountBorrow.toString()))
+
+        // Get local user certificate
+        var userCertificateCap = signer.getCapability<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath)
+        if userCertificateCap.check() == false {
+            if signer.borrow<&{Interfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil {
+                // Create new user certificate
+                let userCertificate <- ComptrollerV1.IssueUserCertificate()
+                signer.save(<-userCertificate, to: Config.UserCertificateStoragePath)
+                signer.link<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath, target: Config.UserCertificateStoragePath)
+            }
+        }
+        userCertificateCap = signer.getCapability<&{Interfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath)
+
+        // borrow
+        let borrowVault <- LendingPool.borrow(userCertificateCap: userCertificateCap, borrowAmount: amountBorrow)
+        fusdVault!.deposit(from: <-borrowVault)
+
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
+        log("End -----------------------------")
     }
-    fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
 
-    let fusdReceiver = signer.getCapability<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver)
-    
-    //
-    let tokenVault = signer.borrow<&CDToken.Vault>(from: CDToken.VaultPath_Storage)
-    assert(tokenVault != nil, message: "Lost local CDToken vault.")
-
-    let tokenCertificate = signer.getCapability<&{LedgerToken.IdentityReceiver}>(CDToken.VaultCollateralPath_Priv)    
-
-    log("尝试借款 FUSD ".concat(borrowAmount.toString()))
-    let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr
-    let poolPublic = getAccount(fusdPoolAddress).getCapability<&{IncPoolInterface.PoolPublic}>(IncPool.PoolPath_Public)
-    // 抵押品:
-    let collaterals = [tokenCertificate]
-    //
-    poolPublic.borrow()!.borrow(amountUnderlyingBorrow: borrowAmount, identityCaps: collaterals, outUnderlyingVaultCap: fusdReceiver)
-    //
-
-    log("---------------------")
-  }
-
-  execute {
-  }
+    execute {
+    }
 }
