@@ -1,46 +1,45 @@
 import FUSD from "../../contracts/FUSD.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
-import LedgerToken from "../../contracts/LedgerToken.cdc"
-import CDToken from "../../contracts/CDToken.cdc"
-import IncPool from "../../contracts/IncPool.cdc"
-import IncPoolInterface from "../../contracts/IncPoolInterface.cdc"
-import IncConfig from "../../contracts/IncConfig.cdc"
+import LendingPool from "../../contracts/LendingPool.cdc"
+import Interfaces from "../../contracts/Interfaces.cdc"
+import Config from "../../contracts/Config.cdc"
 
+transaction(amount: UFix64) {
+    prepare(signer: AuthAccount) {
+        log("Transaction Start --------------- user_repay_fusd")
+        
+        let fusdStoragePath = /storage/fusdVault
+        var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        if fusdVault == nil {
+            log("Create new local fusd vault")
+            signer.save(<-FUSD.createEmptyVault(), to: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver, target: fusdStoragePath)
+            signer.link<&FUSD.Vault{FungibleToken.Balance}>(/public/fusdBalance, target: fusdStoragePath)
+        }
+        fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
 
-transaction(repayAmount: UFix64) {
+        var amountRepay = amount
+        if amountRepay == UFix64.max {
+            let poolPublicRef = getAccount(Config.FUSDPoolAddr).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow()!
+            amountRepay = poolPublicRef.getAccountBorrowBalance(account: signer.address)
+        }
+        log("Test repay fusd ".concat(amountRepay.toString()))
+        assert(fusdVault!.balance >= amountRepay, message: "No enough FUSD balance.")
+        let inUnderlyingVault <-fusdVault!.withdraw(amount: amountRepay)
 
-  prepare(signer: AuthAccount) {
-    log("====================")
-    let fusdStoragePath = /storage/fusdVault
-    let fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
-    assert(fusdVault != nil, message: "Lost FUSD vault.")
-
-    let borrower: Address = signer.address
-    let fusdPoolAddress: Address = IncConfig.FUSDPoolAddr
-    let poolPublic = getAccount(fusdPoolAddress).getCapability<&{IncPoolInterface.PoolPublic}>(IncPool.PoolPath_Public)
-
-    var repayUnderlyingAmount = repayAmount
-    if repayUnderlyingAmount == UFix64.max {
-      // 当前欠款
-      let curBorrow = poolPublic.borrow()!.queryBorrowBalanceRealtime(userAddr: borrower)
-      repayUnderlyingAmount = curBorrow
+        // repay
+        let leftVault <- LendingPool.repayBorrow(borrower: signer.address, repayUnderlyingVault: <-inUnderlyingVault)
+        if leftVault != nil {
+            fusdVault!.deposit(from: <-leftVault!)
+        } else {
+            destroy leftVault
+        }
+        
+        log("User left fusd ".concat(fusdVault!.balance.toString()))
+        log("End -----------------------------")
     }
-    
-    //
-    log("尝试还钱 ".concat(repayUnderlyingAmount.toString()))
-    
 
-    log("当前欠款".concat(poolPublic.borrow()!.queryBorrowBalanceRealtime(userAddr: borrower).toString()))
-
-    // 还钱
-    let repayVault <- fusdVault!.withdraw(amount: repayUnderlyingAmount)
-    poolPublic.borrow()!.repayBorrow(repayUnderlyingVault: <-repayVault, borrowerAddr: borrower)
-    
-    
-    log("当前欠款".concat(poolPublic.borrow()!.queryBorrowBalanceRealtime(userAddr: borrower).toString()))
-    log("---------------------")
-  }
-
-  execute {
-  }
+    execute {
+    }
 }
