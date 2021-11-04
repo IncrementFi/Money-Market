@@ -3,10 +3,9 @@ import FUSD from "../../contracts/FUSD.cdc"
 
 transaction() {
     prepare(poolAccount: AuthAccount) {
-        log("==================")
-        log("创建本地fusd vault")
+        log("Transaction Start --------------- create_fusdvault_of_pool")
+        log("Create local fusd vault:")
         poolAccount.save(<- FUSD.createEmptyVault(), to: /storage/underlyingVault)
-        log("------------------")
+        log("End -----------------------------")
     }
 }
- 

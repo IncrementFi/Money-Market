@@ -10,7 +10,7 @@ const utils = require('./utils');
 
 /// [Imported code start] - Related cadence transactions/scripts used in this script.
 const simpleOracleImportPath = '"../../contracts/SimpleOracle.cdc"';
-const oracleInterfaceImportPath = '"../../contracts/OracleInterface.cdc"';
+const InterfacesImportPath = '"../../contracts/Interfaces.cdc"';
 const uploadFeedDataFile = '../../cadence/transactions/Oracle/updater_upload_feed_data.cdc';
 const getFeedLatestResultFile = '../../cadence/scripts/Oracle/get_feed_latest_result.cdc';
 const uploadFeedDataTxCode = fs
@@ -18,12 +18,12 @@ const uploadFeedDataTxCode = fs
   .replace(simpleOracleImportPath, config.oracleContract);
 const getFeedLatestResultScriptCode = fs
   .readFileSync(path.resolve(__dirname, getFeedLatestResultFile), "utf8")
-  .replace(oracleInterfaceImportPath, config.oracleContract)
+  .replace(InterfacesImportPath, config.oracleContract)
   .replace(simpleOracleImportPath, config.oracleContract);
 /// [Imported code end]
 
 /// [DATA STRUCTURE start] - Local data structure used in this script.
-// yToken feeds' latest blockchain state, initialized on start or synced per heartbeat.
+// pool feeds' latest blockchain state, initialized on start or synced per heartbeat.
 const states = [];
 // keyConfig used in utils.authFunc
 const keyConfig = {
@@ -67,9 +67,9 @@ async function sync() {
 }
 
 // Call cadence tx with private key exported in process.env
-async function updateFeedData(yToken, data) {
+async function updateFeedData(pool, data) {
   const fclArgs = fcl.args([
-    fcl.arg(yToken, t.Address),
+    fcl.arg(pool, t.Address),
     fcl.arg(data.toFixed(8).toString(), t.UFix64)
   ]);
   const response = await fcl.send([
@@ -86,10 +86,10 @@ async function updateFeedData(yToken, data) {
 }
 
 // Call cadence script
-async function getFeedLatestResult(oracle, yToken) {
+async function getFeedLatestResult(oracle, pool) {
   const fclArgs = fcl.args([
     fcl.arg(oracle, t.Address),
-    fcl.arg(yToken, t.Address)
+    fcl.arg(pool, t.Address)
   ]);
   const response = await fcl.send([
     fcl.script`
