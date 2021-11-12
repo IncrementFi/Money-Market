@@ -28,14 +28,13 @@ do
     echo $key
     flow accounts create --key $key --sig-algo "ECDSA_secp256k1"  --signer "emulator-account"
 done
+
 for addr in ${accounts[@]}
 do
     echo "transfer flow token."
-    flow transactions send ./cadence/Transactions/Test/emulator_flow_transfer.cdc --arg Address:$addr  --signer emulator-account
+    flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc $addr --signer emulator-account
 done
 
-flow project deploy --update -f flow_env.json
-
-flow transactions send ./cadence/Transactions/Pool/create_fusdvault_of_pool.cdc --signer emulator-pool-fusd
+flow transactions send ./cadence/Transactions/Pool/prepare_flow_vault_for_pool.cdc --signer emulator-flow-pool-deployer
 
 flow project deploy --update -f flow.json

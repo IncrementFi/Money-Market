@@ -27,12 +27,12 @@
       }
     },
     "Kibble":                         "./cadence/contracts/Kibble.cdc",
+    "Config":                         "./cadence/contracts/Config.cdc",
+    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-    "LendingPool":                    "./cadence/contracts/LendingPool.cdc",
     "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
-    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
-    "Config":                         "./cadence/contracts/Config.cdc"
+    "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -44,7 +44,7 @@
       "address": "f8d6e0586b0a20c7",
       "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f"
     },
-    "emulator-pool-fusd": {
+    "emulator-flow-pool-deployer": {
       "address": "01cf0e2f2f715450",
       "key": {
         "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782",
@@ -145,11 +145,10 @@
         "TwoSegmentsInterestRateModel",
         "ComptrollerV1"
       ],
-      "emulator-pool-fusd": [
+      "emulator-flow-pool-deployer": [
         "LendingPool"
       ],
       "emulator-oracle-deployer": [
-        "Interfaces",
         "SimpleOracle"
       ]
     },

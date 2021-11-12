@@ -98,7 +98,7 @@ pub contract LendingPool {
 
     // Calculates interest accrued from the last checkpointed block to the current block and 
     // applies to total borrows, total reserves, borrow index.
-    access(self) fun accrueInterest(): Error {
+    pub fun accrueInterest(): Error {
         let currentBlockNumber = getCurrentBlock().height
         let accrualBlockNumberPrior = self.accrualBlockNumber
         // Return early if accrue 0 interest
@@ -134,9 +134,8 @@ pub contract LendingPool {
     }
 
     // Calculates the exchange rate from the underlying to virtual lpToken (i.e. how many UnderlyingToken per virtual lpToken)
-    // Note: This is for internal call only, it doesn't call accrueInterest() first to update with latest states which is 
-    // used in calculating the exchange rate.
-    access(self) fun underlyingToLpTokenRateSnapshot(): UFix64 {
+    // Note: It doesn't call accrueInterest() first to update with latest states which is used in calculating the exchange rate.
+    pub fun underlyingToLpTokenRateSnapshot(): UFix64 {
         if (self.totalSupply == 0.0) {
             return self.initialExchangeRate
         } else {
@@ -144,9 +143,8 @@ pub contract LendingPool {
         }
     }
     // Calculates the borrow balance of borrower address based on stored states
-    // Note: This is for internal call only, it doesn't call accrueInterest() first to update with latest states which is 
-    // used in calculating the borrow balance.
-    access(self) fun borrowBalanceSnapshot(borrowerAddress: Address): UFix64 {
+    // Note: It doesn't call accrueInterest() first to update with latest states which is used in calculating the borrow balance.
+    pub fun borrowBalanceSnapshot(borrowerAddress: Address): UFix64 {
         if (self.accountBorrows.containsKey(borrowerAddress) == false) {
             return 0.0
         }
@@ -278,7 +276,7 @@ pub contract LendingPool {
     pub fun redeemUnderlying(
         userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
         numUnderlyingToRedeem: UFix64
-    ): @FungibleToken.Vault? {
+    ): @FungibleToken.Vault {
         pre {
             numUnderlyingToRedeem > 0.0: "Redeemed zero-balanced underlying"
             userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid UserCertificate"
@@ -646,7 +644,6 @@ pub contract LendingPool {
         }
     }
 
-    //init(anyFungibleVault: @FungibleToken.Vault) {
     init() {
         self.PoolAdminStoragePath = /storage/poolAdmin
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
@@ -668,9 +665,11 @@ pub contract LendingPool {
         self.interestRateModelCap = nil
         self.comptrollerAddress = nil
         self.comptrollerCap = nil
-        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath) ?? panic("Lost local overlying vault.")
+        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath)
+            ?? panic("Deployer should own zero-balanced underlying asset vault first")
         self.underlyingAssetType = self.underlyingVault.getType()
         assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
+
         // save pool admin
         self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
         // save pool public interface
