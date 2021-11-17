@@ -107,3 +107,11 @@ dist
 
 # mac os
 .DS_Store
+
+#project related
+flow_multipool.json
+flow_multipool_env.json
+cadence/contracts/autogen
+cadence/transactions/Pool/autogen
+cadence/transactions/Test/autogen
+cadence/transactions/User/autogen

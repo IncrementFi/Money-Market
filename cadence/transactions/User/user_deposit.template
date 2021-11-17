@@ -8,7 +8,7 @@ transaction(amountDeposit: UFix64) {
 
     prepare(signer: AuthAccount) {
         log("Transaction Start --------------- user_deposit_flow")
-        log("Test deposit flow ".concat(amountDeposit.toString()))
+        log("Test deposit FlowToken ".concat(amountDeposit.toString()))
 
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
@@ -18,6 +18,7 @@ transaction(amountDeposit: UFix64) {
             signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
         }
         self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
+        log("User vault :".concat(self.flowTokenVault.balance.toString()))
         self.supplierAddress = signer.address
     }
 
