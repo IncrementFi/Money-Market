@@ -1,0 +1,10 @@
+import POOLNAME from "../../../contracts/POOLNAME.cdc"
+
+transaction() {
+    prepare(poolAccount: AuthAccount) {
+        log("Transaction Start --------------- prepare_POOL_vault_for_pool")
+        log("Create empty POOL vault:")
+        poolAccount.save(<- POOLNAME.createEmptyVault(), to: /storage/poolUnderlyingAssetVault)
+        log("End -----------------------------")
+    }
+}
