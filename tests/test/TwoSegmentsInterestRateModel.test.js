@@ -60,6 +60,7 @@ describe("InterestRateModel Testsuites", () => {
         ));
         const modelParams = await getInterestRateModelParams();
         const eventData = createTxResult.events[0].data;
+        console.log(eventData)
         expect(eventData.newBlocksPerYear).toBe(modelParams.blocksPerYear);
         expect(eventData.newBaseRatePerBlock).toBe(modelParams.baseRatePerBlock);
         expect(eventData.newBaseMultiplierPerBlock).toBe(modelParams.baseMultiplierPerBlock);
