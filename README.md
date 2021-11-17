@@ -22,10 +22,10 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 1. Run `flow emulator -v` to start emulator
 2. Run `./scripts/multipool-deploy.sh` to deploy accounts and contracts.
 3. Run `./scripts/multipool-test.sh` for testing.
-
+###### pool setting:
 ./scripts/emulator/multipool_setting.py can be modified to support various pools.
-
-Emulator addr: 127.0.0.1:3569
+###### clear tmp codes:
+python ./scripts/emulator/gen_tmp_codes.py 1
 
 ### Deploy to testnet:
 
