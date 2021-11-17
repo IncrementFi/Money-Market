@@ -8,9 +8,9 @@
     "flow-js-testing": "^0.1.13",
     "jest": "^27.2.0"
   },
-  "name": "Incremental.fi",
-  "description": "Money Market on Flow",
-  "version": "1.0.0",
+  "name": "IncrementFi",
+  "description": "Decentralized Money Market on Flow",
+  "version": "1.0.1",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -20,12 +20,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IncrementalFi/Money-Market.git"
+    "url": "git+https://github.com/IncrementFi/Money-Market.git"
   },
-  "author": "Team Incremental",
+  "author": "Increment Labs",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/IncrementalFi/Money-Market/issues"
+    "url": "https://github.com/IncrementFi/Money-Market/issues"
   },
-  "homepage": "https://github.com/IncrementalFi/Money-Market/blob/main/README.md"
+  "homepage": "https://github.com/IncrementFi/Money-Market/blob/main/README.md"
 }

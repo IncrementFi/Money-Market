@@ -5,7 +5,7 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 
 // Note: Only run once.
 //       Any subsequent runs will discard existing InterestRateModel resource and create & link a new one.
-transaction(modelName: String, blocksPerYear: UInt64, zeroUtilInterestRatePerYear: UFix64, criticalUtilInterestRatePerYear: UFix64, fullUtilInterestRatePerYear: UFix64, criticalUtilRate: UFix64) {
+transaction(modelName: String, blocksPerYear: UInt256, scaleFactor: UInt256, scaledZeroUtilInterestRatePerYear: UInt256, scaledCriticalUtilInterestRatePerYear: UInt256, scaledFullUtilInterestRatePerYear: UInt256, scaledCriticalUtilRate: UInt256) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
             .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.InterestRateModelAdminStoragePath)
@@ -19,10 +19,11 @@ transaction(modelName: String, blocksPerYear: UInt64, zeroUtilInterestRatePerYea
         let newModel <- adminRef.createInterestRateModel(
             modelName: modelName,
             blocksPerYear: blocksPerYear,
-            zeroUtilInterestRatePerYear: zeroUtilInterestRatePerYear,
-            criticalUtilInterestRatePerYear: criticalUtilInterestRatePerYear,
-            fullUtilInterestRatePerYear: fullUtilInterestRatePerYear,
-            criticalUtilPoint: criticalUtilRate
+            scaleFactor: scaleFactor,
+            scaledZeroUtilInterestRatePerYear: scaledZeroUtilInterestRatePerYear,
+            scaledCriticalUtilInterestRatePerYear: scaledCriticalUtilInterestRatePerYear,
+            scaledFullUtilInterestRatePerYear: scaledFullUtilInterestRatePerYear,
+            scaledCriticalUtilPoint: scaledCriticalUtilRate
         )
         adminAccount.save(<-newModel, to: TwoSegmentsInterestRateModel.InterestRateModelStoragePath)
         // Create a private capability to InterestRateModel resource, which is only used for adminAccount to update parameters

@@ -5,9 +5,12 @@ pub contract interface Interfaces {
     pub resource interface InterestRateModelPublic {
         // exposing model specific fields, e.g.: modelName, model params.
         pub fun getInterestRateModelParams(): {String: AnyStruct}
-        pub fun getUtilizationRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
-        pub fun getBorrowRate(cash: UFix64, borrows: UFix64, reserves: UFix64): UFix64
-        pub fun getSupplyRate(cash: UFix64, borrows: UFix64, reserves: UFix64, reserveFactor: UFix64): UFix64
+        // pool's capital utilization rate (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        // Get the borrow interest rate per block (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        // Get the supply interest rate per block (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
     }
 
     // IdentityCertificate resource which is used to identify account address or perform caller authentication
@@ -17,12 +20,12 @@ pub contract interface Interfaces {
         pub fun getPoolAddress(): Address
         pub fun getPoolTypeString(): String
         pub fun getUnderlyingTypeString(): String
-        pub fun getUnderlyingToLpTokenRate(): UFix64
-        pub fun getAccountLpTokenBalance(account: Address): UFix64
-        pub fun getAccountBorrowBalance(account: Address): UFix64
-        // Return: [exchangeRate, lpTokenBalance, borrowBalance]
-        pub fun getAccountSnapshot(account: Address): [UFix64; 3]
-        pub fun getPoolTotalBorrows(): UFix64
+        pub fun getUnderlyingToLpTokenRateScaled(): UInt256
+        pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
+        pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
+        // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance]
+        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3]
+        pub fun getPoolTotalBorrowsScaled(): UInt256
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
         pub fun getPoolCertificateType(): Type
@@ -33,7 +36,7 @@ pub contract interface Interfaces {
             seizerPool: Address,
             liquidator: Address,
             borrower: Address,
-            borrowerCollateralLpTokenToSeize: UFix64
+            scaledBorrowerCollateralLpTokenToSeize: UInt256
         )
     }
 
@@ -53,32 +56,32 @@ pub contract interface Interfaces {
         pub fun supplyAllowed(
             poolAddress: Address,
             supplierAddress: Address,
-            supplyUnderlyingAmount: UFix64
+            supplyUnderlyingAmountScaled: UInt256
         ): UInt8
 
         pub fun redeemAllowed(
             poolAddress: Address,
             redeemerAddress: Address,
-            redeemLpTokenAmount: UFix64
+            redeemLpTokenAmountScaled: UInt256
         ): UInt8
 
         pub fun borrowAllowed(
             poolAddress: Address,
             borrowerAddress: Address,
-            borrowUnderlyingAmount: UFix64
+            borrowUnderlyingAmountScaled: UInt256
         ): UInt8
         
         pub fun repayAllowed(
             poolAddress: Address,
             borrowerAddress: Address,
-            repayUnderlyingAmount: UFix64
+            repayUnderlyingAmountScaled: UInt256
         ): UInt8
 
         pub fun liquidateAllowed(
             poolBorrowed: Address,
             poolCollateralized: Address,
             borrower: Address,
-            repayUnderlyingAmount: UFix64
+            repayUnderlyingAmountScaled: UInt256
         ): UInt8
 
         pub fun seizeAllowed(
@@ -86,15 +89,15 @@ pub contract interface Interfaces {
             collateralPool: Address,
             liquidator: Address,
             borrower: Address,
-            seizeCollateralPoolLpTokenAmount: UFix64
+            seizeCollateralPoolLpTokenAmountScaled: UInt256
         ): UInt8
 
         pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address,
             borrowPool: Address,
             collateralPool: Address,
-            actualRepaidBorrowAmount: UFix64
-        ): UFix64
+            actualRepaidBorrowAmountScaled: UInt256
+        ): UInt256
 
         pub fun getUserCertificateType(): Type
 
