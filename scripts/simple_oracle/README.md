@@ -2,7 +2,7 @@
 #### Setup
 
 *  `npm -g install pm2`
-* `npm install`
+*  `npm install`
 *  `export PK=<your private key>`: The private key used for the off-chain reporter account (e.g. [0x8c1293886c086b0c](https://testnet.flowscan.org/account/0x8c1293886c086b0c))
 
   
@@ -19,7 +19,7 @@ Oracle contract and supported feeds deployment address and configuration. The up
 
 *  `config.js` file:
 	*  `network`: testnet for now.
-	* `heartbeat`: e.g. 60 * 1000 - check marketData every 60 seconds and update if necessary.
+	*  `heartbeat`: e.g. 60 * 1000 - check marketData every 60 seconds and update if necessary.
 
   
 
