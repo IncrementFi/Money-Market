@@ -16,7 +16,7 @@
 * flow scripts execute ./cadence/scripts/Query/query_user_pool_supply.cdc 0x01cf0e2f2f715450
 * flow scripts execute ./cadence/scripts/Query/query_user_pool_borrow.cdc 0x01cf0e2f2f715450
 
-#### quer用户本地underlying vault的余额
+#### query用户本地underlying vault的余额
 * flow scripts execute ./cadence/scripts/Query/query_local_fusd.cdc 0x01cf0e2f2f715450
 * flow scripts execute ./cadence/scripts/Query/query_local_flow.cdc 0x01cf0e2f2f715450
 * flow scripts execute ./cadence/scripts/Query/query_local_kibble.cdc 0x01cf0e2f2f715450
