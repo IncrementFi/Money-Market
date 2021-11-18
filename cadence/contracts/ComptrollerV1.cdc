@@ -9,8 +9,6 @@ pub contract ComptrollerV1 {
     pub let ComptrollerStoragePath: StoragePath
     // The private path for the capability to Comptroller resource for admin functions
     pub let ComptrollerPrivatePath: PrivatePath
-    // The public path for the capability to restricted to &{Interfaces.ComptrollerPublic}
-    pub let ComptrollerPublicPath: PublicPath
     // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
     // Storage path user account stores UserCertificate resource
@@ -510,6 +508,41 @@ pub contract ComptrollerV1 {
             emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
         }
 
+        pub fun getAllMarketAddrs(): [Address] {
+            return self.markets.keys
+        }
+
+        pub fun getMarketInfoByAddr(poolAddr: Address): {String: AnyStruct} {
+            pre {
+                self.markets.containsKey(poolAddr): "Invalid pool addrees."
+            }
+            var poolInfo: {String: AnyStruct} = {}
+            let market = self.markets[poolAddr]!
+            let poolRef = market.poolPublicCap.borrow()!
+            let poolAddr = poolRef.getPoolAddress()
+            var oraclePrice = 0.0
+            if(self.oracleCap != nil && self.oracleCap!.check()) {
+                oraclePrice = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddr)
+            }
+            //
+            poolInfo = {
+                "poolAddress": poolAddr,
+                "poolType": poolRef.getPoolTypeString(),
+                "totalSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
+                "totalBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
+                "totalReservesScaled": poolRef.getPoolTotalReservesScaled(),
+                "usdExchangeRate": oraclePrice,
+                "apySupply": poolRef.getPoolSupplyApyScaled(),
+                "apyBorrow": poolRef.getPoolBorrowApyScaled(),
+                "collateralFactor": market.scaledCollateralFactor,
+                "borrowCap": market.scaledBorrowCap,
+                "isOpen": market.isOpen,
+                "isMining": market.isMining
+            }
+
+            return poolInfo
+        }
+
         init() {
             self.oracleCap = nil
             self.scaledCloseFactor = 0
@@ -558,7 +591,6 @@ pub contract ComptrollerV1 {
         self.AdminStoragePath = /storage/comptrollerAdmin
         self.ComptrollerStoragePath = /storage/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
-        self.ComptrollerPublicPath = /public/comptrollerModule
         self.UserCertificateStoragePath = /storage/userCertificate
         self.UserCertificatePrivatePath = /private/userCertificate
 
@@ -571,6 +603,6 @@ pub contract ComptrollerV1 {
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
         
         self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
-        self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
+        self.account.link<&{Interfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }

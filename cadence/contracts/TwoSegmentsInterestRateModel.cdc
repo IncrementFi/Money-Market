@@ -65,6 +65,11 @@ pub contract TwoSegmentsInterestRateModel {
             return (self.scaleFactor - reserveFactor) * scaledBorrowRate / self.scaleFactor * scaledUtilRate / self.scaleFactor
         }
 
+        //
+        pub fun getBlocksPerYear(): UInt256 {
+            return self.blocksPerYear
+        }
+
         pub fun getInterestRateModelParams(): {String: AnyStruct} {
             return {
                 "modelName": self.modelName,
