@@ -115,5 +115,6 @@ cadence/contracts/autogen
 cadence/transactions/Pool/autogen
 cadence/transactions/Test/autogen
 cadence/transactions/User/autogen
-
+cadence/scripts/Query/autogen
 *.pyc
+scripts/emulator/__pycache__
