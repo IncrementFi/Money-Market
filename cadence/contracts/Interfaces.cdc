@@ -119,5 +119,7 @@ pub contract interface Interfaces {
 
         pub fun getAllMarketAddrs(): [Address]
         pub fun getMarketInfoByAddr(poolAddr: Address): {String: AnyStruct}
+        pub fun getUserMarketAddrs(userAddr: Address): [Address]
+        pub fun getUserMarketInfoByAddr(userAddr: Address, poolAddr: Address): {String: AnyStruct}
     }
 }

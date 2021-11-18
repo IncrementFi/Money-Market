@@ -539,8 +539,35 @@ pub contract ComptrollerV1 {
                 "isOpen": market.isOpen,
                 "isMining": market.isMining
             }
-
             return poolInfo
+        }
+
+        pub fun getUserMarketAddrs(userAddr: Address): [Address] {
+            if(self.accountMarketsIn.containsKey(userAddr)) == false {
+                return []
+            }
+            return self.accountMarketsIn[userAddr]!
+        }
+
+        pub fun getUserMarketInfoByAddr(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
+            pre {
+                self.markets.containsKey(poolAddr): "Invalid pool addrees."
+                self.accountMarketsIn.containsKey(userAddr): "Invalid user address."
+                self.accountMarketsIn[userAddr]!.contains(poolAddr): "No pool record under this user."
+            }
+            var userInfo: {String: AnyStruct} = {}
+            let market = self.markets[poolAddr]!
+            let poolRef = market.poolPublicCap.borrow()!
+            let scaledAccountSnapshot = poolRef.getAccountSnapshotScaled(account: userAddr)
+            //
+            userInfo = {
+                "poolAddress": poolAddr,
+                "poolType": poolRef.getPoolTypeString(),
+                "userSupplyScaled": scaledAccountSnapshot[1]*scaledAccountSnapshot[0],
+                "userBorrowScaled": scaledAccountSnapshot[2]
+            }
+            
+            return userInfo
         }
 
         init() {
