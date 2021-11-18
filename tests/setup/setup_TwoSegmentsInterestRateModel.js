@@ -21,8 +21,13 @@ export const deployInterestRateModel = async () => {
         name: "Interfaces"
     });
 
+    await deployContractByName({
+        to: interestRateModelDeployer,
+        name: "Config"
+    });
+
     // Must use deployed InterestRateModelInterface.
-    const addressMap = { Interfaces: interestRateModelDeployer };
+    const addressMap = { Interfaces: interestRateModelDeployer, Config: interestRateModelDeployer };
     return deployContractByName({
         to: interestRateModelDeployer,
         name: "TwoSegmentsInterestRateModel",
@@ -35,7 +40,6 @@ export const deployInterestRateModel = async () => {
  * @param {Address} signer - Transaction proposer. Only contract admin could create model resource successfully.
  * @param {string}  modelName - e.g. "TwoSegmentsInterestRateModel"
  * @param {UInt256} blocksPerYear - 1s avg blocktime for testnet (31536000 blocks / year), 2.5s avg blocktime for mainnet (12614400 blocks / year).
- * @param {UInt256} scaleFactor - Scale factor applied to fixed point number calculation to get rid of truncation accuracy loss, e.g. 1e18
  * @param {UInt256} scaledZeroUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 0%, e.g. 0.0 x 1e18 (0%)
  * @param {UInt256} scaledCriticalUtilInterestRatePerYear - Borrow interest rate per year when utilization rate hits the critical point, e.g. 0.05 x 1e18 (5%)
  * @param {UInt256} scaledFullUtilInterestRatePerYear - Borrow interest rate per year when utilization rate is 100%, e.g. 0.35 x 1e18 (35%)
@@ -46,7 +50,6 @@ export const createInterestRateModel = async (
     signer,
     modelName,
     blocksPerYear,
-    scaleFactor,
     scaledZeroUtilInterestRatePerYear,
     scaledCriticalUtilInterestRatePerYear,
     scaledFullUtilInterestRatePerYear,
@@ -54,14 +57,13 @@ export const createInterestRateModel = async (
 ) => {
     const name = "InterestRateModel/create_interest_rate_model";
     const signers = [signer];
-    const args = [modelName, blocksPerYear, scaleFactor, scaledZeroUtilInterestRatePerYear, scaledCriticalUtilInterestRatePerYear, scaledFullUtilInterestRatePerYear, scaledCriticalUtilPoint];
+    const args = [modelName, blocksPerYear, scaledZeroUtilInterestRatePerYear, scaledCriticalUtilInterestRatePerYear, scaledFullUtilInterestRatePerYear, scaledCriticalUtilPoint];
     return sendTransaction({ name, args, signers });
 }
 
 /**
  * @param {Address} signer - Only contract admin could update model params successfully.
  * @param {UInt256} newBlocksPerYear
- * @param {UInt256} newScaleFactor
  * @param {UInt256} newScaledZeroUtilInterestRatePerYear
  * @param {UInt256} newScaledCriticalUtilInterestRatePerYear
  * @param {UInt256} newScaledFullUtilInterestRatePerYear
@@ -71,7 +73,6 @@ export const createInterestRateModel = async (
 export const updateInterestRateModelParams = async (
     signer,
     newBlocksPerYear,
-    newScaleFactor,
     newScaledZeroUtilInterestRatePerYear,
     newScaledCriticalUtilInterestRatePerYear,
     newScaledFullUtilInterestRatePerYear,
@@ -79,7 +80,7 @@ export const updateInterestRateModelParams = async (
 ) => {
     const name = "InterestRateModel/update_model_params";
     const signers = [signer];
-    const args = [newBlocksPerYear, newScaleFactor, newScaledZeroUtilInterestRatePerYear, newScaledCriticalUtilInterestRatePerYear, newScaledFullUtilInterestRatePerYear, newScaledCriticalUtilPoint];
+    const args = [newBlocksPerYear, newScaledZeroUtilInterestRatePerYear, newScaledCriticalUtilInterestRatePerYear, newScaledFullUtilInterestRatePerYear, newScaledCriticalUtilPoint];
     return sendTransaction({ name, args, signers });
 }
 

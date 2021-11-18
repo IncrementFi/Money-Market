@@ -40,7 +40,6 @@ describe("InterestRateModel Testsuites", () => {
             alice,
             "TwoSegmentsInterestRateModelV1-test",
             12614400,
-            scaleFactor,
             0,
             5 * scaleFactor / 100,   // 0.05
             35 * scaleFactor / 100,  // 0.35
@@ -57,7 +56,6 @@ describe("InterestRateModel Testsuites", () => {
             admin,
             "TwoSegmentsInterestRateModelV1-test",
             12614400,
-            scaleFactor,
             0,
             5 * scaleFactor / 100,   // 0.05
             35 * scaleFactor / 100,  // 0.35
@@ -66,7 +64,6 @@ describe("InterestRateModel Testsuites", () => {
         const modelParams = await getInterestRateModelParams();
         const eventData = createTxResult.events[0].data;
         expect(eventData.newBlocksPerYear).toBe(modelParams.blocksPerYear);
-        expect(eventData.newScaleFactor).toBe(modelParams.scaleFactor);
         expect(eventData.newScaledBaseRatePerBlock).toBe(modelParams.scaledBaseRatePerBlock);
         expect(eventData.newScaledBaseMultiplierPerBlock).toBe(modelParams.scaledBaseMultiplierPerBlock);
         // Manual calculation and do the comparison to double check. Should be '4954654997'
@@ -85,7 +82,6 @@ describe("InterestRateModel Testsuites", () => {
             admin,
             "TwoSegmentsInterestRateModelV1-test",
             12614400,
-            scaleFactor,
             0,
             5 * scaleFactor / 100,  // 0.05
             35 * scaleFactor / 100, // 0.35
@@ -112,7 +108,6 @@ describe("InterestRateModel Testsuites", () => {
             admin,
             "TwoSegmentsInterestRateModelV1-test",
             12614400,
-            scaleFactor,
             0,
             5 * scaleFactor / 100,   // 0.05
             35 * scaleFactor / 100,  // 0.35
@@ -123,7 +118,6 @@ describe("InterestRateModel Testsuites", () => {
         const updateTxResult = await shallPass(updateInterestRateModelParams(
             admin,
             31536000,
-            scaleFactor,
             0.5 * scaleFactor / 100,  // 0.005
             6.5 * scaleFactor / 100,  // 0.065
             55 * scaleFactor / 100,   // 0.55
@@ -139,8 +133,6 @@ describe("InterestRateModel Testsuites", () => {
         expect(updateEventData.newBlocksPerYear).toBe(newParams.blocksPerYear);
         expect(updateEventData.oldScaledBaseRatePerBlock).toBe(oldParams.scaledBaseRatePerBlock);
         expect(updateEventData.newScaledBaseRatePerBlock).toBe(newParams.scaledBaseRatePerBlock);
-        expect(updateEventData.oldScaleFactor).toBe(oldParams.scaleFactor);
-        expect(updateEventData.newScaleFactor).toBe(newParams.scaleFactor);
         expect(updateEventData.oldScaledBaseMultiplierPerBlock).toBe(oldParams.scaledBaseMultiplierPerBlock);
         expect(updateEventData.newScaledBaseMultiplierPerBlock).toBe(newParams.scaledBaseMultiplierPerBlock);
         expect(updateEventData.oldScaledJumpMultiplierPerBlock).toBe(oldParams.scaledJumpMultiplierPerBlock);

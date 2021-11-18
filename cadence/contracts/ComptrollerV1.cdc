@@ -18,11 +18,6 @@ pub contract ComptrollerV1 {
     // Path for creating private capability of UserCertificate resource
     pub let UserCertificatePrivatePath: PrivatePath
 
-    // 1_000_000_000_000_000_000, i.e. 1e18
-    pub let scaleFactor: UInt256
-    // 100_000_000.0, i.e. 1.0e8
-    pub let ufixDecimals: UFix64
-
     pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
     pub event NewCloseFactor(_ oldCloseFactor: UFix64, _ newCloseFactor: UFix64)
@@ -78,13 +73,13 @@ pub contract ComptrollerV1 {
             pre {
                 newCollateralFactor <= 1.0: "newCollateralFactor out of range 1.0"
             }
-            let scaledNewCollateralFactor = ComptrollerV1.UFix64ToScaledUInt256(newCollateralFactor)
+            let scaledNewCollateralFactor = Config.UFix64ToScaledUInt256(newCollateralFactor)
             if (self.scaledCollateralFactor != scaledNewCollateralFactor) {
                 self.scaledCollateralFactor = scaledNewCollateralFactor
             }
         }
         pub fun setBorrowCap(newBorrowCap: UFix64) {
-            let scaledNewBorrowCap = ComptrollerV1.UFix64ToScaledUInt256(newBorrowCap)
+            let scaledNewBorrowCap = Config.UFix64ToScaledUInt256(newBorrowCap)
             if (self.scaledBorrowCap != scaledNewBorrowCap) {
                 self.scaledBorrowCap = scaledNewBorrowCap
             }
@@ -102,20 +97,9 @@ pub contract ComptrollerV1 {
             self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
             self.isMining = isMining
-            self.scaledCollateralFactor = ComptrollerV1.UFix64ToScaledUInt256(collateralFactor)
-            self.scaledBorrowCap = ComptrollerV1.UFix64ToScaledUInt256(borrowCap)
+            self.scaledCollateralFactor = Config.UFix64ToScaledUInt256(collateralFactor)
+            self.scaledBorrowCap = Config.UFix64ToScaledUInt256(borrowCap)
         }
-    }
-
-    // Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
-    // e.g. 0.00015678 => 156780000000000
-    access(self) fun UFix64ToScaledUInt256(_ ufixParam: UFix64): UInt256 {
-        return UInt256(ufixParam * self.ufixDecimals) * self.scaleFactor / UInt256(self.ufixDecimals)
-    }
-    // Utility function to convert a fixed point number in form of scaled UInt256 back to UFix64 format
-    // e.g. 156780000000000 => 0.00015678
-    access(self) fun ScaledUInt256ToUFix64(_ scaledParam: UInt256): UFix64 {
-        return UFix64(scaledParam * UInt256(self.ufixDecimals) / self.scaleFactor) / self.ufixDecimals
     }
 
     // This certificate identifies account address and needs to be stored in storage path locally.
@@ -263,7 +247,7 @@ pub contract ComptrollerV1 {
             }
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
-            if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / ComptrollerV1.scaleFactor) {
+            if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / Config.scaleFactor) {
                 return Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY.rawValue
             }
             return Error.NO_ERROR.rawValue
@@ -306,9 +290,9 @@ pub contract ComptrollerV1 {
 
             // 2. Calculate collateralPool lpTokenSeizedAmount
             let scaledCollateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublicCap.borrow()!.getUnderlyingToLpTokenRateScaled()
-            let scaledBorrowPoolUnderlyingPriceUSD = ComptrollerV1.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
-            let scaledCollateralPoolUnderlyingPriceUSD = ComptrollerV1.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
-            let scaleFactor = ComptrollerV1.scaleFactor
+            let scaledBorrowPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
+            let scaledCollateralPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
+            let scaleFactor = Config.scaleFactor
             // collatetalPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD x collateralPoolUnderlyingToLpTokenRate
             // seizedCollateralPoolLpTokenAmount = repaidBorrowWithIncentiveInUSD / collatetalPoolLpTokenPriceUSD
             let scaledActualRepaidBorrowWithIncentiveInUSD =
@@ -404,8 +388,8 @@ pub contract ComptrollerV1 {
                 let scaledLpTokenAmount = scaledAccountSnapshot[1]
                 let scaledBorrowBalance = scaledAccountSnapshot[2]
                 let underlyingPriceInUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress)
-                let scaledUnderlyingPriceInUSD = ComptrollerV1.UFix64ToScaledUInt256(underlyingPriceInUSD)
-                let scaleFactor = ComptrollerV1.scaleFactor
+                let scaledUnderlyingPriceInUSD = Config.UFix64ToScaledUInt256(underlyingPriceInUSD)
+                let scaleFactor = Config.scaleFactor
                 if (scaledLpTokenAmount > 0) {
                     sumScaledCollateralNormalized = sumScaledCollateralNormalized +
                         scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
@@ -469,11 +453,11 @@ pub contract ComptrollerV1 {
             if (isMining != nil) {
                 self.markets[pool]!.setMiningStatus(isMining: isMining!)
             }
-            let oldCollateralFactor = ComptrollerV1.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            let oldCollateralFactor = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
             if (collateralFactor != nil) {
                 self.markets[pool]!.setCollateralFactor(newCollateralFactor: collateralFactor!)
             }
-            let oldBorrowCap = ComptrollerV1.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
+            let oldBorrowCap = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
             if (borrowCap != nil) {
                 self.markets[pool]!.setBorrowCap(newBorrowCap: borrowCap!)
             }
@@ -496,8 +480,8 @@ pub contract ComptrollerV1 {
             pre {
                 newCloseFactor <= 1.0: "value out of range 1.0"
             }
-            let oldCloseFactor = ComptrollerV1.ScaledUInt256ToUFix64(self.scaledCloseFactor)
-            self.scaledCloseFactor = ComptrollerV1.UFix64ToScaledUInt256(newCloseFactor)
+            let oldCloseFactor = Config.ScaledUInt256ToUFix64(self.scaledCloseFactor)
+            self.scaledCloseFactor = Config.UFix64ToScaledUInt256(newCloseFactor)
             emit NewCloseFactor(oldCloseFactor, newCloseFactor)
         }
 
@@ -505,8 +489,8 @@ pub contract ComptrollerV1 {
             pre {
                 newLiquidationIncentive <= 1.0: "value out of range 1.0"
             }
-            let oldLiquidationIncentive = ComptrollerV1.ScaledUInt256ToUFix64(self.scaledLiquidationIncentive)
-            self.scaledLiquidationIncentive = ComptrollerV1.UFix64ToScaledUInt256(newLiquidationIncentive)
+            let oldLiquidationIncentive = Config.ScaledUInt256ToUFix64(self.scaledLiquidationIncentive)
+            self.scaledLiquidationIncentive = Config.UFix64ToScaledUInt256(newLiquidationIncentive)
             emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
         }
 
@@ -561,11 +545,6 @@ pub contract ComptrollerV1 {
         self.ComptrollerPublicPath = /public/comptrollerModule
         self.UserCertificateStoragePath = /storage/userCertificate
         self.UserCertificatePrivatePath = /private/userCertificate
-
-        // 1e18
-        self.scaleFactor = 1_000_000_000_000_000_000
-        // 1.0e8
-        self.ufixDecimals = 100_000_000.0
 
         self.comptrollerAddress = self.account.address
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
