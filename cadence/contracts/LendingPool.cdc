@@ -566,6 +566,34 @@ pub contract LendingPool {
         pub fun getPoolTotalBorrowsScaled(): UInt256 {
             return LendingPool.scaledTotalBorrows
         }
+        pub fun getPoolTotalSupplyScaled(): UInt256 {
+            return LendingPool.scaledTotalSupply
+        }
+
+        pub fun getPoolTotalReservesScaled(): UInt256 {
+            return LendingPool.scaledTotalReserves
+        }
+
+        pub fun getPoolBorrowApyScaled(): UInt256 {
+            let scaledCashPrior = LendingPool.getPoolCash()
+            let scaledBorrowPrior = LendingPool.scaledTotalBorrows
+            let scaledReservesPrior = LendingPool.scaledTotalReserves
+            let scaledBorrowRatePerBlock = LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
+                cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior)
+            let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
+            return scaledBorrowRatePerBlock * blocksPerYear
+        }
+
+        pub fun getPoolSupplyApyScaled(): UInt256 {
+            let scaledCashPrior = LendingPool.getPoolCash()
+            let scaledBorrowPrior = LendingPool.scaledTotalBorrows
+            let scaledReservesPrior = LendingPool.scaledTotalReserves
+            let scaledSupplyRatePerBlock = LendingPool.interestRateModelCap!.borrow()!.getSupplyRate(
+                cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior, reserveFactor: LendingPool.scaledReserveFactor)
+            let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
+            return scaledSupplyRatePerBlock * blocksPerYear
+        }
+
         pub fun accrueInterest(): UInt8 {
             let ret = LendingPool.accrueInterest()
             return ret.rawValue
