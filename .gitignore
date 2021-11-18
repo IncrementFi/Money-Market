@@ -115,3 +115,5 @@ cadence/contracts/autogen
 cadence/transactions/Pool/autogen
 cadence/transactions/Test/autogen
 cadence/transactions/User/autogen
+
+*.pyc
