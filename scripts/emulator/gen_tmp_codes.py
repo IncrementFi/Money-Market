@@ -13,6 +13,8 @@ if os.path.exists('./cadence/transactions/Test/autogen'):
     shutil.rmtree('./cadence/transactions/Test/autogen')
 if os.path.exists('./cadence/transactions/User/autogen'):
     shutil.rmtree('./cadence/transactions/User/autogen')
+if os.path.exists('./cadence/scripts/Query/autogen'):
+    shutil.rmtree('./cadence/scripts/Query/autogen')
 
 if len(sys.argv) > 1 and sys.argv[1] == '1':
     os.system('rm flow_multipool*')
@@ -253,4 +255,38 @@ for name in setting.PoolNames:
         fusd_vault = fusd_vault.replace('LendingPool', 'LendingPool_'+name)
         fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fusd_vault = fusd_vault.replace('../contracts/LendingPool', '../contracts/autogen/LendingPool')
+        fw.write(fusd_vault)
+
+# generate scripts
+# query token local amount
+with open('./cadence/scripts/Query/query_local_Token.template', 'r') as f:
+    transaction_template = f.read()
+for name in setting.FakePoolNames:
+    path = './cadence/scripts/Query/autogen'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+'/query_local_{0}.cdc'.format(name), 'w') as fw:
+        fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('FUSD', name)
+
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD':
+            lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('fusd', lowerName)
+        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
+        fusd_vault = fusd_vault.replace('../contracts/'+name, '../contracts/autogen/'+name)
+        fw.write(fusd_vault)
+for name in setting.PoolNames:
+    path = './cadence/scripts/Query/autogen'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+'/query_local_{0}.cdc'.format(name), 'w') as fw:
+        fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('FUSD', name)
+
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD':
+            lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('fusd', lowerName)
+        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fw.write(fusd_vault)
