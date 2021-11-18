@@ -6,15 +6,15 @@
 4. 预言机的underling token的价格需要使用其他接口实时获取，合约返回的价格有很大的滞后（具体咨询jonny）
 
 ## Scripts
-#### 查询所有pool的address，返回 [address1, address2, address3]
+#### 查询所有pool的address，返回 [address1, address2, address3]，Input: 固定Comptroller地址
 * flow scripts execute ./cadence/scripts/Query/query_pool_all_address.cdc
-#### 按address查询pool的info (total supply, APY, total borrow, borrow APY 等等)
-* flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0x192440c99cb17282
+#### 按address查询pool的info (total supply, APY, total borrow, borrow APY 等等)，Input: poolAddr, 固定Comptroller地址
+* flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
-#### 查询有用户记录的所有pool的address，输入userAddr
-flow scripts execute ./cadence/scripts/Query/query_user_pool_all_address.cdc e03daebed8ca0615
-#### 查询用户在特定pool下的信息(存款，借款)，输入userAddr, poolAddr
-flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc e03daebed8ca0615 0x192440c99cb17282
+#### 查询有用户记录的所有pool的address，输入userAddr, 固定的comptroller地址
+flow scripts execute ./cadence/scripts/Query/query_user_pool_all_address.cdc e03daebed8ca0615 0xf8d6e0586b0a20c7
+#### 查询用户在特定pool下的信息(存款，借款)，输入userAddr, poolAddr, 固定的comptroller地址
+flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc e03daebed8ca0615 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
 #### 查询用户本地underlying vault的余额
 * FUSD的是: flow scripts execute ./cadence/scripts/Query/autogen/query_local_FUSD.cdc e03daebed8ca0615
