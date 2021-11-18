@@ -19,10 +19,6 @@ pub contract LendingPool {
 
     // Account address the pool is deployed to, i.e. the pool 'contract address'
     pub let poolAddress: Address
-    // 1_000_000_000_000_000_000, i.e. 1e18
-    pub let scaleFactor: UInt256
-    // 100_000_000.0, i.e. 1.0e8
-    pub let ufixDecimals: UFix64
     // Initial exchange rate (when LendingPool.totalSupply == 0) between the virtual lpToken and pool underlying token
     pub let scaledInitialExchangeRate: UInt256
     // Block number that interest was last accrued at
@@ -95,20 +91,9 @@ pub contract LendingPool {
         return self.underlyingAssetType.identifier
     }
 
-    // Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
-    // e.g. 0.00015678 => 156780000000000
-    access(self) fun UFix64ToScaledUInt256(_ ufixParam: UFix64): UInt256 {
-        return UInt256(ufixParam * self.ufixDecimals) * self.scaleFactor / UInt256(self.ufixDecimals)
-    }
-    // Utility function to convert a fixed point number in form of scaled UInt256 back to UFix64 format
-    // e.g. 156780000000000 => 0.00015678
-    access(self) fun ScaledUInt256ToUFix64(_ scaledParam: UInt256): UFix64 {
-        return UFix64(scaledParam * UInt256(self.ufixDecimals) / self.scaleFactor) / self.ufixDecimals
-    }
-
     // Gets current underlying balance of this pool, scaled up by 1e18
     pub fun getPoolCash(): UInt256 {
-        return self.UFix64ToScaledUInt256(self.underlyingVault.balance)
+        return Config.UFix64ToScaledUInt256(self.underlyingVault.balance)
     }
 
     // Calculates interest accrued from the last checkpointed block to the current block and 
@@ -133,10 +118,11 @@ pub contract LendingPool {
             self.interestRateModelCap!.borrow()!.getBorrowRate(cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior)
         let blockDelta = currentBlockNumber - accrualBlockNumberPrior
         let scaledInterestFactor = scaledBorrowRatePerBlock * blockDelta
-        let scaledInterestAccumulated = scaledInterestFactor * scaledBorrowPrior / self.scaleFactor
+        let scaleFactor = Config.scaleFactor
+        let scaledInterestAccumulated = scaledInterestFactor * scaledBorrowPrior / scaleFactor
         let scaledTotalBorrowsNew = scaledInterestAccumulated + scaledBorrowPrior
-        let scaledTotalReservesNew = self.scaledReserveFactor * scaledInterestAccumulated / self.scaleFactor + scaledReservesPrior
-        let scaledBorrowIndexNew = scaledInterestFactor * scaledBorrowIndexPrior / self.scaleFactor + scaledBorrowIndexPrior
+        let scaledTotalReservesNew = self.scaledReserveFactor * scaledInterestAccumulated / scaleFactor + scaledReservesPrior
+        let scaledBorrowIndexNew = scaledInterestFactor * scaledBorrowIndexPrior / scaleFactor + scaledBorrowIndexPrior
 
         // Write calculated values into contract storage
         self.accrualBlockNumber = currentBlockNumber
@@ -154,7 +140,7 @@ pub contract LendingPool {
         if (self.scaledTotalSupply == 0) {
             return self.scaledInitialExchangeRate
         } else {
-            return (self.getPoolCash() + self.scaledTotalBorrows - self.scaledTotalReserves) * self.scaleFactor / self.scaledTotalSupply
+            return (self.getPoolCash() + self.scaledTotalBorrows - self.scaledTotalReserves) * Config.scaleFactor / self.scaledTotalSupply
         }
     }
     // Calculates the scaled borrow balance of borrower address based on stored states
@@ -169,7 +155,7 @@ pub contract LendingPool {
 
     pub fun borrowBalanceSnapshot(borrowerAddress: Address): UFix64 {
         let scaledBalance = self.borrowBalanceSnapshotScaled(borrowerAddress: borrowerAddress)
-        return self.ScaledUInt256ToUFix64(scaledBalance)
+        return Config.ScaledUInt256ToUFix64(scaledBalance)
     }
 
     // Check whether or not the given certificate is issued by system
@@ -188,7 +174,7 @@ pub contract LendingPool {
         assert(err == Error.NO_ERROR, message: "SUPPLY_ACCRUE_INTEREST_FAILED")
 
         // 2. Check whether or not supplyAllowed()
-        let scaledAmount = self.UFix64ToScaledUInt256(inUnderlyingVault.balance)
+        let scaledAmount = Config.UFix64ToScaledUInt256(inUnderlyingVault.balance)
         let ret = self.comptrollerCap!.borrow()!.supplyAllowed(
             poolAddress: self.poolAddress,
             supplierAddress: supplierAddr,
@@ -198,7 +184,7 @@ pub contract LendingPool {
 
         // 3. Deposit into underlying vault and mint corresponding PoolTokens 
         let underlyingToken2LpTokenRateScaled = self.underlyingToLpTokenRateSnapshotScaled()
-        let scaledMintVirtualAmount = scaledAmount * self.scaleFactor / underlyingToken2LpTokenRateScaled
+        let scaledMintVirtualAmount = scaledAmount * Config.scaleFactor / underlyingToken2LpTokenRateScaled
         self.accountLpTokens[supplierAddr] = scaledMintVirtualAmount + (self.accountLpTokens[supplierAddr] ?? (0 as UInt256))
         self.scaledTotalSupply = self.scaledTotalSupply + scaledMintVirtualAmount
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
@@ -224,22 +210,23 @@ pub contract LendingPool {
         var scaledLpTokenToRedeem: UInt256 = 0
         var scaledUnderlyingToRedeem: UInt256 = 0
         let scaledUnderlyingToLpRate = self.underlyingToLpTokenRateSnapshotScaled()
+        let scaleFactor = Config.scaleFactor
         if (numLpTokenToRedeem == 0.0) {
             // redeem all
             if numUnderlyingToRedeem == UFix64.max {
                 scaledLpTokenToRedeem = self.accountLpTokens[redeemer]!
-                scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / self.scaleFactor
+                scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
             } else {
-                scaledLpTokenToRedeem = self.UFix64ToScaledUInt256(numUnderlyingToRedeem) * self.scaleFactor / scaledUnderlyingToLpRate
-                scaledUnderlyingToRedeem = self.UFix64ToScaledUInt256(numUnderlyingToRedeem)
+                scaledLpTokenToRedeem = Config.UFix64ToScaledUInt256(numUnderlyingToRedeem) * scaleFactor / scaledUnderlyingToLpRate
+                scaledUnderlyingToRedeem = Config.UFix64ToScaledUInt256(numUnderlyingToRedeem)
             }
         } else {
             if numLpTokenToRedeem == UFix64.max {
                 scaledLpTokenToRedeem = self.accountLpTokens[redeemer]!
             } else {
-                scaledLpTokenToRedeem = self.UFix64ToScaledUInt256(numLpTokenToRedeem)
+                scaledLpTokenToRedeem = Config.UFix64ToScaledUInt256(numLpTokenToRedeem)
             }
-            scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / self.scaleFactor
+            scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
         }
         
         assert(scaledLpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
@@ -265,7 +252,7 @@ pub contract LendingPool {
             scaledLpTokenToRedeem: scaledLpTokenToRedeem,
             scaledRedeemedUnderlyingAmount: scaledUnderlyingToRedeem
         )
-        let amountUnderlyingToRedeem = self.ScaledUInt256ToUFix64(scaledUnderlyingToRedeem)
+        let amountUnderlyingToRedeem = Config.ScaledUInt256ToUFix64(scaledUnderlyingToRedeem)
         return <- self.underlyingVault.withdraw(amount: amountUnderlyingToRedeem)
     }
 
@@ -329,7 +316,7 @@ pub contract LendingPool {
         assert(err == Error.NO_ERROR, message: "BORROW_ACCRUE_INTEREST_FAILED")
 
         // 2. Pool liquidity check
-        let scaledBorrowAmount = self.UFix64ToScaledUInt256(borrowAmount)
+        let scaledBorrowAmount = Config.UFix64ToScaledUInt256(borrowAmount)
         assert(scaledBorrowAmount <= self.getPoolCash(), message: "Pool not enough underlying balance for borrow")
 
         // 3. Check whether or not borrowAllowed()
@@ -352,7 +339,7 @@ pub contract LendingPool {
     // Note: caller ensures that LendingPool.accrueInterest() has been called with latest states checkpointed
     access(self) fun repayBorrowInternal(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
         // Check whether or not repayAllowed()
-        let scaledRepayAmount = self.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
+        let scaledRepayAmount = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
         let scaledAccountTotalBorrows = self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
         let scaledActualRepayAmount = scaledAccountTotalBorrows > scaledRepayAmount ? scaledRepayAmount : scaledAccountTotalBorrows
         let ret = self.comptrollerCap!.borrow()!.repayAllowed(
@@ -372,7 +359,7 @@ pub contract LendingPool {
             return nil
         } else {
             self.accountBorrows.remove(key: borrower)
-            let surplusAmount = self.ScaledUInt256ToUFix64(scaledRepayAmount - scaledAccountTotalBorrows)
+            let surplusAmount = Config.ScaledUInt256ToUFix64(scaledRepayAmount - scaledAccountTotalBorrows)
             return <- self.underlyingVault.withdraw(amount: surplusAmount)
         }
     }
@@ -407,7 +394,7 @@ pub contract LendingPool {
         assert(err == Error.NO_ERROR, message: "LIQUIDATE_ACCRUE_INTEREST_FAILED")
 
         // 2. Check whether or not liquidateAllowed()
-        let scaledUnderlyingAmountToRepay = self.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
+        let scaledUnderlyingAmountToRepay = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
         let ret = self.comptrollerCap!.borrow()!.liquidateAllowed(
             poolBorrowed: self.poolAddress,
             poolCollateralized: poolCollateralizedToSeize,
@@ -419,7 +406,7 @@ pub contract LendingPool {
         // 3. Liquidator repays on behave of borrower
         assert(liquidator != borrower, message: "LIQUIDATE_LIQUIDATOR_IS_BORROWER")
         let remainingVault <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
-        let scaledRemainingAmount = self.UFix64ToScaledUInt256(remainingVault?.balance ?? 0.0)
+        let scaledRemainingAmount = Config.UFix64ToScaledUInt256(remainingVault?.balance ?? 0.0)
         let scaledActualRepayAmount = scaledUnderlyingAmountToRepay - scaledRemainingAmount
         // Calculate collateralLpTokenSeizedAmount based on actualRepayAmount
         let scaledCollateralLpTokenSeizedAmount = self.comptrollerCap!.borrow()!.calculateCollateralPoolLpTokenToSeize(
@@ -515,10 +502,11 @@ pub contract LendingPool {
         // accountLpTokens[borrower] -= collateralPoolLpTokenToSeize
         // LendingPool.totalReserves += collateralPoolLpTokenToSeize * LendingPool.poolSeizeShare
         // accountLpTokens[liquidator] += (collateralPoolLpTokenToSeize * (1 - LendingPool.poolSeizeShare))
-        let scaledProtocolSeizedLpTokens = scaledBorrowerLpTokenToSeize * self.scaledPoolSeizeShare / self.scaleFactor
+        let scaleFactor = Config.scaleFactor
+        let scaledProtocolSeizedLpTokens = scaledBorrowerLpTokenToSeize * self.scaledPoolSeizeShare / scaleFactor
         let scaledLiquidatorSeizedLpTokens = scaledBorrowerLpTokenToSeize - scaledProtocolSeizedLpTokens
         let scaledUnderlyingToLpTokenRate = self.underlyingToLpTokenRateSnapshotScaled()
-        let scaledAddedUnderlyingReserves = scaledUnderlyingToLpTokenRate * scaledProtocolSeizedLpTokens / self.scaleFactor
+        let scaledAddedUnderlyingReserves = scaledUnderlyingToLpTokenRate * scaledProtocolSeizedLpTokens / scaleFactor
         self.scaledTotalReserves = self.scaledTotalReserves + scaledAddedUnderlyingReserves
         self.scaledTotalSupply = self.scaledTotalSupply - scaledProtocolSeizedLpTokens
         // in-place liquidation: only virtual lpToken records get updated, no token deposit / withdraw needs to happen
@@ -616,8 +604,8 @@ pub contract LendingPool {
             if (newReserveFactor > 1.0) {
                 return Error.SET_RESERVE_FACTOR_OUT_OF_RANGE
             }
-            let oldReserveFactor = LendingPool.ScaledUInt256ToUFix64(LendingPool.scaledReserveFactor)
-            LendingPool.scaledReserveFactor = LendingPool.UFix64ToScaledUInt256(newReserveFactor)
+            let oldReserveFactor = Config.ScaledUInt256ToUFix64(LendingPool.scaledReserveFactor)
+            LendingPool.scaledReserveFactor = Config.UFix64ToScaledUInt256(newReserveFactor)
             emit NewReserveFactor(oldReserveFactor, newReserveFactor);
             return Error.NO_ERROR
         }
@@ -627,8 +615,8 @@ pub contract LendingPool {
             if (newPoolSeizeShare > 1.0) {
                 return Error.SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
             }
-            let oldPoolSeizeShare = LendingPool.ScaledUInt256ToUFix64(LendingPool.scaledPoolSeizeShare)
-            LendingPool.scaledPoolSeizeShare = LendingPool.UFix64ToScaledUInt256(newPoolSeizeShare)
+            let oldPoolSeizeShare = Config.ScaledUInt256ToUFix64(LendingPool.scaledPoolSeizeShare)
+            LendingPool.scaledPoolSeizeShare = Config.UFix64ToScaledUInt256(newPoolSeizeShare)
             emit NewPoolSeizeShare(oldPoolSeizeShare, newPoolSeizeShare);
             return Error.NO_ERROR
         }
@@ -663,9 +651,9 @@ pub contract LendingPool {
                 LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true: "InterestRateModel not properly initialized"
             }
             LendingPool.accrualBlockNumber = UInt256(getCurrentBlock().height)
-            LendingPool.scaledBorrowIndex = LendingPool.scaleFactor
-            LendingPool.scaledReserveFactor = LendingPool.UFix64ToScaledUInt256(reserveFactor)
-            LendingPool.scaledPoolSeizeShare = LendingPool.UFix64ToScaledUInt256(poolSeizeShare)
+            LendingPool.scaledBorrowIndex = Config.scaleFactor
+            LendingPool.scaledReserveFactor = Config.UFix64ToScaledUInt256(reserveFactor)
+            LendingPool.scaledPoolSeizeShare = Config.UFix64ToScaledUInt256(poolSeizeShare)
             LendingPool.interestRateModelAddress = interestRateModelAddress
             LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
                 .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
@@ -679,11 +667,7 @@ pub contract LendingPool {
         self.PoolPublicPublicPath = /public/poolPublic
 
         self.poolAddress = self.account.address
-        // 1e18
-        self.scaleFactor = 1_000_000_000_000_000_000
-        // 1.0e8
-        self.ufixDecimals = 100_000_000.0
-        self.scaledInitialExchangeRate = self.scaleFactor
+        self.scaledInitialExchangeRate = Config.scaleFactor
         self.accrualBlockNumber = 0
         self.scaledBorrowIndex = 0
         self.scaledTotalBorrows = 0

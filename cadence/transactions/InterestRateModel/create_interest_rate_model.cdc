@@ -5,7 +5,7 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 
 // Note: Only run once.
 //       Any subsequent runs will discard existing InterestRateModel resource and create & link a new one.
-transaction(modelName: String, blocksPerYear: UInt256, scaleFactor: UInt256, scaledZeroUtilInterestRatePerYear: UInt256, scaledCriticalUtilInterestRatePerYear: UInt256, scaledFullUtilInterestRatePerYear: UInt256, scaledCriticalUtilRate: UInt256) {
+transaction(modelName: String, blocksPerYear: UInt256, scaledZeroUtilInterestRatePerYear: UInt256, scaledCriticalUtilInterestRatePerYear: UInt256, scaledFullUtilInterestRatePerYear: UInt256, scaledCriticalUtilRate: UInt256) {
     prepare(adminAccount: AuthAccount) {
         let adminRef = adminAccount
             .borrow<&TwoSegmentsInterestRateModel.Admin>(from: TwoSegmentsInterestRateModel.InterestRateModelAdminStoragePath)
@@ -19,7 +19,6 @@ transaction(modelName: String, blocksPerYear: UInt256, scaleFactor: UInt256, sca
         let newModel <- adminRef.createInterestRateModel(
             modelName: modelName,
             blocksPerYear: blocksPerYear,
-            scaleFactor: scaleFactor,
             scaledZeroUtilInterestRatePerYear: scaledZeroUtilInterestRatePerYear,
             scaledCriticalUtilInterestRatePerYear: scaledCriticalUtilInterestRatePerYear,
             scaledFullUtilInterestRatePerYear: scaledFullUtilInterestRatePerYear,
