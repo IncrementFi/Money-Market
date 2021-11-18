@@ -167,6 +167,11 @@ pub contract LendingPool {
         return borrower.scaledPrincipal * self.scaledBorrowIndex / borrower.scaledInterestIndex
     }
 
+    pub fun borrowBalanceSnapshot(borrowerAddress: Address): UFix64 {
+        let scaledBalance = self.borrowBalanceSnapshotScaled(borrowerAddress: borrowerAddress)
+        return self.ScaledUInt256ToUFix64(scaledBalance)
+    }
+
     // Check whether or not the given certificate is issued by system
     access(self) fun checkUserCertificateType(certCap: Capability<&{Interfaces.IdentityCertificate}>): Bool {
         return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
@@ -547,6 +552,9 @@ pub contract LendingPool {
         }
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256 {
             return LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: account)
+        }
+        pub fun getAccountBorrowBalance(account: Address): UFix64 {
+            return LendingPool.borrowBalanceSnapshot(borrowerAddress: account)
         }
         pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3] {
             return [
