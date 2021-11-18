@@ -11,6 +11,8 @@ pub contract interface Interfaces {
         pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
         // Get the supply interest rate per block (scaled up by scaleFactor, e.g. 1e18)
         pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
+        // Get the number of blocks per year.
+        pub fun getBlocksPerYear(): UInt256
     }
 
     // IdentityCertificate resource which is used to identify account address or perform caller authentication
@@ -28,7 +30,13 @@ pub contract interface Interfaces {
         pub fun getAccountBorrowBalance(account: Address): UFix64
         // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance]
         pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3]
+
         pub fun getPoolTotalBorrowsScaled(): UInt256
+        pub fun getPoolTotalSupplyScaled(): UInt256
+        pub fun getPoolTotalReservesScaled(): UInt256
+        pub fun getPoolSupplyApyScaled(): UInt256
+        pub fun getPoolBorrowApyScaled(): UInt256
+        
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
         pub fun getPoolCertificateType(): Type
@@ -108,5 +116,8 @@ pub contract interface Interfaces {
             callerCertificate: @{Interfaces.IdentityCertificate},
             callerAddress: Address
         ): UInt8
+
+        pub fun getAllMarketAddrs(): [Address]
+        pub fun getMarketInfoByAddr(poolAddr: Address): {String: AnyStruct}
     }
 }

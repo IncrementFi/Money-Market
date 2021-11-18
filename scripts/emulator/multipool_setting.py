@@ -9,9 +9,11 @@ global DictPoolNameToDeployName
 
 
 # PoolNames's token file should already be created in contracts.
-PoolNames = ['FUSD', 'FlowToken']
+# PoolNames = ['FUSD', 'FlowToken']
+PoolNames = ['FUSD']
 # FakePool's token contract will be generated automatically
-FakePoolNames = ['Apple', 'Banana', 'Peach']
+# FakePoolNames = ['Apple', 'Banana', 'Peach']
+FakePoolNames = ['Apple']
 
 
 
