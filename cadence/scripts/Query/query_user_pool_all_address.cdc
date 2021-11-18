@@ -3,9 +3,9 @@ import Config from "../../contracts/Config.cdc"
 
 
 
-pub fun main(poolAddr: Address, comptrollerAddr: Address): {String: AnyStruct} {
+pub fun main(userAddr: Address, comptrollerAddr: Address): [Address] {
     let comptrollerRef = getAccount(comptrollerAddr).getCapability<&{Interfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath).borrow() ?? panic("Invailid comptroller cap.")
-    let poolInfo = comptrollerRef.getMarketInfoByAddr(poolAddr: poolAddr)
-    log(poolInfo)
-    return poolInfo
+    let poolAddrs = comptrollerRef.getUserMarketAddrs(userAddr: userAddr)
+    log(poolAddrs)
+    return poolAddrs
 }
