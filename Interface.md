@@ -1,11 +1,28 @@
 
-## 所有query的return json都定义在 /cadence/contracts/IncQueryInterface.cdc中
+一些scripts和transactions是自动生成的，请先运行multipool-deploy.sh
 
 ## Scripts
-#### query池子的信息 (total supply, APY, total borrow, borrow APY 等等)
-* flow scripts execute ./cadence/scripts/Query/query_pool_all_infos.cdc
-* flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0xf8d6e0586b0a20c7
+#### 查询所有pool的address，返回 [address1, address2, address3]
+* flow scripts execute ./cadence/scripts/Query/query_pool_all_address.cdc
+#### 按address查询pool的info (total supply, APY, total borrow, borrow APY 等等)
+* flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0x192440c99cb17282
 
+
+
+
+## Transactions
+#### 存钱
+flow transactions send ./cadence/transactions/User/autogen/user_deposit_FUSD.cdc -f flow_multipool.json --arg UFix64:"10.0" --signer emulator-user-A
+
+
+
+
+
+
+
+
+
+#### 废弃：
 #### query整个产品的balance (total supply & total borrow)
 * flow scripts execute ./cadence/scripts/Query/query_universe_balance.cdc
 
