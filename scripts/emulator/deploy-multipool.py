@@ -170,6 +170,6 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
 # test mint for user
 userAddr = '0xe03daebed8ca0615'
 os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} --signer emulator-account'.format(userAddr))
-os.system('flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A')
+os.system('flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A --arg UFix64:\"100.0\"')
 for fakeName in setting.FakePoolNames:
     os.system('flow transactions send ./cadence/transactions/Test/autogen/mint_{0}_for_user.cdc -f flow_multipool.json --signer emulator-user-A'.format(fakeName))
