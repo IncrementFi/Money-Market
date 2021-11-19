@@ -28,7 +28,8 @@ transaction(amount: UFix64) {
         if amountRepay == UFix64.max {
             // accrueInterest() to update with latest pool states used to calculate borrowBalance
             LendingPool.accrueInterest()
-            amountRepay = LendingPool.borrowBalanceSnapshot(borrowerAddress: self.borrowerAddress)
+            let totalRepayScaled = LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: self.borrowerAddress)
+            amountRepay = Config.ScaledUInt256ToUFix64(totalRepayScaled) + 1.0/Config.ufixScale
         }
         log("Test repay flow ".concat(amountRepay.toString()))
 

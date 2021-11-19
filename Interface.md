@@ -7,7 +7,7 @@
 
 ## Scripts
 #### 查询所有pool的address，返回 [address1, address2, address3]，Input: 固定Comptroller地址
-* flow scripts execute ./cadence/scripts/Query/query_pool_all_address.cdc
+* flow scripts execute ./cadence/scripts/Query/query_pool_all_address.cdc 0xf8d6e0586b0a20c7
 #### 按address查询pool的info (total supply, APY, total borrow, borrow APY 等等)，Input: poolAddr, 固定Comptroller地址
 * flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
@@ -36,14 +36,18 @@ flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc e03daebed8
 #### 取钱
 * flow transactions send ./cadence/transactions/User/autogen/user_redeem_FUSD.cdc -f flow_multipool.json --arg UFix64:"1.0" --signer emulator-user-A
     >传入 UFix64.max 或者 184467440737.09551615 取出全部
+    >flow transactions send ./cadence/transactions/User/autogen/user_redeem_FUSD.cdc -f flow_multipool.json --arg UFix64:"184467440737.09551615" --signer emulator-user-A
     >>每个underlying vault会对应一个接口
 
 #### 借钱
 * flow transactions send ./cadence/transactions/User/autogen/user_borrow_FUSD.cdc -f flow_multipool.json --arg UFix64:"2.0" --signer emulator-user-A
 
 #### 还钱
-* flow transactions send ./cadence/transactions/User/autogen/user_repay_FUSD.cdc -f flow_multipool.json --arg UFix64:"2.0" --signer emulator-user-A
+* flow transactions send ./cadence/transactions/User/autogen/user_repay_FUSD.cdc -f flow_multipool.json --arg UFix64:"184467440737.09551615" --signer emulator-user-A
     >传入 UFix64.max 或者 184467440737.09551615 全部还清
+
+#### test next block
+* flow transactions send ./cadence/transactions/Test/test_next_block.cdc
 
 #### 这些池子的文件名模板举例：
 * user_deposit_FUSD.cdc
