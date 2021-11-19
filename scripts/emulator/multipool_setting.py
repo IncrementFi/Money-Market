@@ -18,9 +18,9 @@ FakePoolNames = ['Apple']
 
 
 PoolParams = {}
-PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0,   'collateralFactor':0.75, 'borrowCap':100.0 }
-PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'collateralFactor':0.75, 'borrowCap':100.0 }
-PoolParams['Apple']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':4.0,   'collateralFactor':0.80, 'borrowCap':100.0 }
+PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0,   'collateralFactor':0.75, 'borrowCap':100000000.0 }
+PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'collateralFactor':0.75, 'borrowCap':100000000.0 }
+PoolParams['Apple']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':4.0,   'collateralFactor':0.80, 'borrowCap':100000000.0 }
 
 
 

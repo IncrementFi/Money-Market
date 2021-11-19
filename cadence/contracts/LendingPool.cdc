@@ -75,6 +75,8 @@ pub contract LendingPool {
     pub event Repay(borrower: Address, scaledActualRepayAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
     // Event emitted when pool reserves get added
     pub event ReserveAdded(donator: Address, scaledAddedUnderlyingAmount: UInt256, scaledNewTotalReserves: UInt256)
+    // Event emitted when the reserves is reduced
+    pub event ReservesReduced(scaledReduceAmount: UInt256, scaledNewTotalReserves: UInt256)
     // Event emitted when liquidation happenes
     pub event LiquidateBorrow(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
     // Event emitted when interestRateModel is changed
@@ -680,6 +682,20 @@ pub contract LendingPool {
             LendingPool.interestRateModelAddress = interestRateModelAddress
             LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
                 .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
+        }
+
+        pub fun reduceReserves(reduceAmount: UFix64): @FungibleToken.Vault {
+            pre {
+                reduceAmount <= Config.ScaledUInt256ToUFix64(LendingPool.scaledTotalReserves): "Exceed total reserve amount."
+                LendingPool.accrualBlockNumber == UInt256(getCurrentBlock().height): "Block number is mismatched."
+            }            
+            let reduceAmountScaled = Config.UFix64ToScaledUInt256(reduceAmount)
+
+            LendingPool.scaledTotalReserves = LendingPool.scaledTotalReserves - reduceAmountScaled
+            
+            emit ReservesReduced(scaledReduceAmount: reduceAmountScaled, scaledNewTotalReserves: LendingPool.scaledTotalReserves)
+
+            return <- LendingPool.underlyingVault.withdraw(amount: reduceAmount)
         }
     }
 
