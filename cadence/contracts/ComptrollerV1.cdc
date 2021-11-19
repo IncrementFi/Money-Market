@@ -515,6 +515,7 @@ pub contract ComptrollerV1 {
                 "totalSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
                 "totalBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
                 "totalReservesScaled": poolRef.getPoolTotalReservesScaled(),
+                "lpTokenExchangeRate": poolRef.getUnderlyingToLpTokenRateScaled(),
                 "usdExchangeRate": oraclePrice,
                 "apySupply": poolRef.getPoolSupplyApyScaled(),
                 "apyBorrow": poolRef.getPoolBorrowApyScaled(),
@@ -536,7 +537,7 @@ pub contract ComptrollerV1 {
         pub fun getUserMarketInfoByAddr(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr): "Invalid pool addrees."
-                self.accountMarketsIn.containsKey(userAddr): "Invalid user address."
+                self.accountMarketsIn.containsKey(userAddr): "User has no pool info."
                 self.accountMarketsIn[userAddr]!.contains(poolAddr): "No pool record under this user."
             }
             var userInfo: {String: AnyStruct} = {}
@@ -547,7 +548,8 @@ pub contract ComptrollerV1 {
             userInfo = {
                 "poolAddress": poolAddr,
                 "poolType": poolRef.getPoolTypeString(),
-                "userSupplyScaled": scaledAccountSnapshot[1]*scaledAccountSnapshot[0],
+                "userSupplyScaled": scaledAccountSnapshot[1]*scaledAccountSnapshot[0]/Config.scaleFactor,
+                //"userSupplyScaled": scaledAccountSnapshot[1],
                 "userBorrowScaled": scaledAccountSnapshot[2]
             }
             

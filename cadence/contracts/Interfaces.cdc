@@ -26,8 +26,6 @@ pub contract interface Interfaces {
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
         // Return snapshot of account borrowed balance in scaled UInt256 format
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
-        // Return snapshot of account borrowed balance in UFix64 format
-        pub fun getAccountBorrowBalance(account: Address): UFix64
         // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance]
         pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3]
 
@@ -49,6 +47,7 @@ pub contract interface Interfaces {
             borrower: Address,
             scaledBorrowerCollateralLpTokenToSeize: UInt256
         )
+        
     }
 
     pub resource interface OraclePublic {
