@@ -27,7 +27,7 @@ flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc e03daebed8
 ## Transactions
 #### 水龙头:
 * FlowToken: flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc 0x收款地址 --signer emulator-account
-* FUSD: flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A
+* FUSD: flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A --arg UFix64:"100.0"
 * 假Token: flow transactions send ./cadence/transactions/Test/autogen/mint_Token名字_for_user.cdc -f flow_multipool.json --signer emulator-user-A
 
 #### 存钱，以FUSD举例，通用模板只需要替换文件名token标识

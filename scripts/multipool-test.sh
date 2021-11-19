@@ -18,13 +18,13 @@ redeem="flow transactions send ./cadence/transactions/User/autogen/user_redeem_F
 borrow="flow transactions send ./cadence/transactions/User/autogen/user_borrow_FUSD.cdc -f flow_multipool.json"
 repay="flow transactions send ./cadence/transactions/User/autogen/user_repay_FUSD.cdc -f flow_multipool.json"
 # test case1
-eval $faucet_fusd --signer $SignerA
-eval $faucet_fusd --signer $SignerB
+eval $faucet_fusd --signer $SignerA --arg UFix64:"100.0"
+eval $faucet_fusd --signer $SignerB --arg UFix64:"100000.0"
 
 eval $deposit --signer $SignerA --arg UFix64:"10.0"
-eval $deposit --signer $SignerB --arg UFix64:"10.0"
+eval $deposit --signer $SignerB --arg UFix64:"100000.0"
 
-eval $borrow --signer $SignerB --arg UFix64:"5.0"
+eval $borrow --signer $SignerB --arg UFix64:"50000.0"
 
 eval $next_block
 eval $next_block
