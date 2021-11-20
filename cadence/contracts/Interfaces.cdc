@@ -32,8 +32,8 @@ pub contract interface Interfaces {
         pub fun getPoolTotalBorrowsScaled(): UInt256
         pub fun getPoolTotalSupplyScaled(): UInt256
         pub fun getPoolTotalReservesScaled(): UInt256
-        pub fun getPoolSupplyApyScaled(): UInt256
-        pub fun getPoolBorrowApyScaled(): UInt256
+        pub fun getPoolSupplyAprScaled(): UInt256
+        pub fun getPoolBorrowAprScaled(): UInt256
         
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8
@@ -116,9 +116,10 @@ pub contract interface Interfaces {
             callerAddress: Address
         ): UInt8
 
-        pub fun getAllMarketAddrs(): [Address]
-        pub fun getMarketInfoByAddr(poolAddr: Address): {String: AnyStruct}
-        pub fun getUserMarketAddrs(userAddr: Address): [Address]
-        pub fun getUserMarketInfoByAddr(userAddr: Address, poolAddr: Address): {String: AnyStruct}
+        pub fun getAllMarkets(): [Address]
+        pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
+        pub fun getUserMarkets(userAddr: Address): [Address]
+        pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct}
+        pub fun getCrossMarketLiquiditySnapshot(userAddr: Address): [UInt256; 2]
     }
 }
