@@ -3,7 +3,12 @@
 1. 一些scripts和transactions是自动生成的，请先运行multipool-deploy.sh
 2. 合约返回的所有number，都是被scale up的，需要除以1e18，前端暂时显示小数点后8位。
 3. 一些当前borrow limit的计算请使用参数实时计算（比如用户输入不同的deposit金额时）
-4. 预言机的underling token的价格需要使用其他接口实时获取，合约返回的价格有很大的滞后（具体咨询jonny）
+4. 前端显示和前端计算用到的价格数据都从外部api读取，比如：https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=bitcoin,ethereum,flow
+
+
+## JS-api
+* TODO
+
 
 ## Scripts
 #### 查询所有pool的address，返回 [address1, address2, address3]，Input: 固定Comptroller地址
