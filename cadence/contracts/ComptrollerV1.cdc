@@ -31,13 +31,10 @@ pub contract ComptrollerV1 {
     pub enum Error: UInt8 {
         pub case NO_ERROR
         pub case MARKET_NOT_OPEN
-        pub case COLLATERAL_LIST_EMPTY
-        pub case COLLATERAL_OWNER_AND_ACCOUNT_NOT_MATCH
-        pub case COLLATERAL_TYPE_UNRECOGNIZED
-        pub case INSUFFICIENT_REDEEM_LIQUIDITY
-        pub case INSUFFICIENT_BORROW_LIQUIDITY
-        pub case EXCEED_MARKET_BORROW_CAP
-        pub case LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED
+        pub case REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER
+        pub case BORROW_NOT_ALLOWED_POSITION_UNDER_WATER
+        pub case BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP
+        pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SET_VALUE_OUT_OF_RANGE
         pub case INVALID_CALLER_CERTIFICATE
@@ -148,16 +145,17 @@ pub contract ComptrollerV1 {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
 
-            // Hypothetical account liquidity check after PoolToken was redeemed
-            // liquidity[1] - shortage if any
+            // Hypothetical account liquidity check if virtual lpToken was redeemed
+            // liquidity[0] - cross-market collateral value
+            // liquidity[1] - cross-market borrow value
             let scaledLiquidity: [UInt256;2] = self.getHypotheticalAccountLiquidity(
                 account: redeemerAddress,
                 poolToModify: poolAddress,
                 scaledAmountLPTokenToRedeem: redeemLpTokenAmountScaled,
                 scaledAmountUnderlyingToBorrow: 0
             )
-            if (scaledLiquidity[1] > 0) {
-                return Error.INSUFFICIENT_REDEEM_LIQUIDITY.rawValue
+            if (scaledLiquidity[1] >= scaledLiquidity[0]) {
+                return Error.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
     
             // Remove pool out of user markets list if necessary
@@ -186,20 +184,21 @@ pub contract ComptrollerV1 {
             if (scaledBorrowCap != 0) {
                 let scaledTotalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrowsScaled() + borrowUnderlyingAmountScaled
                 if (scaledTotalBorrowsNew > scaledBorrowCap) {
-                    return Error.EXCEED_MARKET_BORROW_CAP.rawValue
+                    return Error.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP.rawValue
                 }
             }
 
             // 2. Hypothetical account liquidity check after underlying was borrowed
-            // liquidity[1] - shortage if any
+            // liquidity[0] - cross-market collateral value
+            // liquidity[1] - cross-market borrow value
             let scaledLiquidity: [UInt256; 2] = self.getHypotheticalAccountLiquidity(
                 account: borrowerAddress,
                 poolToModify: poolAddress,
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: borrowUnderlyingAmountScaled
             )
-            if (scaledLiquidity[1] > 0) {
-                return Error.INSUFFICIENT_BORROW_LIQUIDITY.rawValue
+            if (scaledLiquidity[1] >= scaledLiquidity[0]) {
+                return Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
 
             // 3. Add to user markets list
@@ -239,9 +238,9 @@ pub contract ComptrollerV1 {
             if (self.markets[poolBorrowed]?.isOpen != true || self.markets[poolCollateralized]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
-            let liquidity = self.getAccountLiquiditySnapshot(account: borrower)
-            if liquidity[0] > 0 {
-                return Error.LIQUIDATION_NOT_ALLOWED_FULLY_COLLATERIZED.rawValue
+            let liquidity = self.getCrossMarketLiquiditySnapshot(userAddr: borrower)
+            if liquidity[0] > liquidity[1] {
+                return Error.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER.rawValue
             }
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
@@ -328,10 +327,11 @@ pub contract ComptrollerV1 {
         }
 
         // Return the current account liquidity snapshot:
-        // [liquidity redundance more than collateral requirement, liquidity shortage below collateral requirement]
-        pub fun getAccountLiquiditySnapshot(account: Address): [UInt256; 2] {
+        // [cross-market account collateral value in usd, cross-market account borrows in usd]
+        // Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
+        pub fun getCrossMarketLiquiditySnapshot(userAddr: Address): [UInt256; 2] {
             return self.getHypotheticalAccountLiquidity(
-                account: account,
+                account: userAddr,
                 poolToModify: 0x0,
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: 0
@@ -364,20 +364,20 @@ pub contract ComptrollerV1 {
         // poolToModify - The market to hypothetically redeem/borrow from
         // amountLPTokenToRedeem - The number of LPTokens to hypothetically redeem
         // amountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
-        // Return: 0. hypothetical liquidity redundance more than the collateral requirements
-        //         1. hypothetical liquidity shortage below collateral requirements
+        // Return: 0. hypothetical cross-market total collateral value normalized in usd
+        //         1. hypothetical cross-market tatal borrow value normalized in usd
         access(self) fun getHypotheticalAccountLiquidity(
             account: Address,
             poolToModify: Address,
             scaledAmountLPTokenToRedeem: UInt256,
             scaledAmountUnderlyingToBorrow: UInt256
         ): [UInt256; 2] {
-            pre {
-                scaledAmountLPTokenToRedeem == 0 || scaledAmountUnderlyingToBorrow == 0: "at least one of redeemed or borrowed amount must be zero"
+            if (self.accountMarketsIn.containsKey(account) == false) {
+                return [0, 0]
             }
-            // Total collateral value normalized in usd
-            var sumScaledCollateralNormalized: UInt256 = 0
-            // Total borrow value with side-effects normalized in usd
+            // Cross-market total collateral value applies with hypothetical side effects, normalized in usd
+            var sumScaledCollateralWithEffectsNormalized: UInt256 = 0
+            // Cross-market total borrow value applies with hypothetical side-effects, normalized in usd
             var sumScaledBorrowWithEffectsNormalized: UInt256 = 0
             for poolAddress in self.accountMarketsIn[account]! {
                 let scaledCollateralFactor = self.markets[poolAddress]!.scaledCollateralFactor
@@ -389,7 +389,7 @@ pub contract ComptrollerV1 {
                 let scaledUnderlyingPriceInUSD = Config.UFix64ToScaledUInt256(underlyingPriceInUSD)
                 let scaleFactor = Config.scaleFactor
                 if (scaledLpTokenAmount > 0) {
-                    sumScaledCollateralNormalized = sumScaledCollateralNormalized +
+                    sumScaledCollateralWithEffectsNormalized = sumScaledCollateralWithEffectsNormalized +
                         scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
                             scaledUnderlyingToLpTokenRate / scaleFactor * scaledLpTokenAmount / scaleFactor
                 }
@@ -400,7 +400,7 @@ pub contract ComptrollerV1 {
                 if (poolAddress == poolToModify) {
                     // Apply hypothetical redeem side-effect
                     if (scaledAmountLPTokenToRedeem > 0) {
-                        sumScaledCollateralNormalized = sumScaledCollateralNormalized - 
+                        sumScaledCollateralWithEffectsNormalized = sumScaledCollateralWithEffectsNormalized -
                             scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
                                 scaledUnderlyingToLpTokenRate / scaleFactor * scaledAmountLPTokenToRedeem / scaleFactor
                     }
@@ -411,11 +411,7 @@ pub contract ComptrollerV1 {
                     }
                 }
             }
-            if (sumScaledCollateralNormalized > sumScaledBorrowWithEffectsNormalized) {
-                return [sumScaledCollateralNormalized - sumScaledBorrowWithEffectsNormalized, 0]
-            } else {
-                return [0, sumScaledBorrowWithEffectsNormalized - sumScaledCollateralNormalized]
-            }
+            return [sumScaledCollateralWithEffectsNormalized, sumScaledBorrowWithEffectsNormalized]
         }
 
         access(contract) fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
@@ -492,68 +488,57 @@ pub contract ComptrollerV1 {
             emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
         }
 
-        pub fun getAllMarketAddrs(): [Address] {
+        pub fun getAllMarkets(): [Address] {
             return self.markets.keys
         }
 
-        pub fun getMarketInfoByAddr(poolAddr: Address): {String: AnyStruct} {
+        pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct} {
             pre {
-                self.markets.containsKey(poolAddr): "Invalid pool addrees."
+                self.markets.containsKey(poolAddr): "Invalid pool"
             }
-            var poolInfo: {String: AnyStruct} = {}
             let market = self.markets[poolAddr]!
             let poolRef = market.poolPublicCap.borrow()!
-            let poolAddr = poolRef.getPoolAddress()
             var oraclePrice = 0.0
             if(self.oracleCap != nil && self.oracleCap!.check()) {
                 oraclePrice = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddr)
             }
-            //
-            poolInfo = {
-                "poolAddress": poolAddr,
-                "poolType": poolRef.getPoolTypeString(),
-                "totalSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
-                "totalBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
-                "totalReservesScaled": poolRef.getPoolTotalReservesScaled(),
-                "lpTokenExchangeRate": poolRef.getUnderlyingToLpTokenRateScaled(),
-                "usdExchangeRate": oraclePrice,
-                "apySupply": poolRef.getPoolSupplyApyScaled(),
-                "apyBorrow": poolRef.getPoolBorrowApyScaled(),
-                "collateralFactor": market.scaledCollateralFactor,
-                "borrowCap": market.scaledBorrowCap,
+            return {
                 "isOpen": market.isOpen,
-                "isMining": market.isMining
+                "isMining": market.isMining,
+                "marketAddress": poolAddr,
+                "marketType": poolRef.getPoolTypeString(),
+                "marketSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
+                "marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
+                "marketReserveScaled": poolRef.getPoolTotalReservesScaled(),
+                "marketSupplyApr": poolRef.getPoolSupplyAprScaled(),
+                "marketBorrowApr": poolRef.getPoolBorrowAprScaled(),
+                "marketCollateralFactor": market.scaledCollateralFactor,
+                "marketBorrowCap": market.scaledBorrowCap,
+                "marketOraclePriceUsd": oraclePrice
             }
-            return poolInfo
         }
 
-        pub fun getUserMarketAddrs(userAddr: Address): [Address] {
-            if(self.accountMarketsIn.containsKey(userAddr)) == false {
+        pub fun getUserMarkets(userAddr: Address): [Address] {
+            if (self.accountMarketsIn.containsKey(userAddr) == false) {
                 return []
             }
             return self.accountMarketsIn[userAddr]!
         }
 
-        pub fun getUserMarketInfoByAddr(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
+        pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
             pre {
-                self.markets.containsKey(poolAddr): "Invalid pool addrees."
-                self.accountMarketsIn.containsKey(userAddr): "User has no pool info."
-                self.accountMarketsIn[userAddr]!.contains(poolAddr): "No pool record under this user."
+                self.markets.containsKey(poolAddr): "Invalid market address"
             }
-            var userInfo: {String: AnyStruct} = {}
+            if (self.accountMarketsIn.containsKey(userAddr) == false || self.accountMarketsIn[userAddr]!.contains(poolAddr) == false) {
+                return {}
+            }
             let market = self.markets[poolAddr]!
             let poolRef = market.poolPublicCap.borrow()!
             let scaledAccountSnapshot = poolRef.getAccountSnapshotScaled(account: userAddr)
-            //
-            userInfo = {
-                "poolAddress": poolAddr,
-                "poolType": poolRef.getPoolTypeString(),
-                "userSupplyScaled": scaledAccountSnapshot[1]*scaledAccountSnapshot[0]/Config.scaleFactor,
-                //"userSupplyScaled": scaledAccountSnapshot[1],
+            return {
+                "userSupplyScaled": scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor,
                 "userBorrowScaled": scaledAccountSnapshot[2]
             }
-            
-            return userInfo
         }
 
         init() {

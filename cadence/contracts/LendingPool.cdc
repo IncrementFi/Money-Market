@@ -74,8 +74,8 @@ pub contract LendingPool {
     // Event emitted when user repays underlying to pool
     pub event Repay(borrower: Address, scaledActualRepayAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
     // Event emitted when pool reserves get added
-    pub event ReserveAdded(donator: Address, scaledAddedUnderlyingAmount: UInt256, scaledNewTotalReserves: UInt256)
-    // Event emitted when the reserves is reduced
+    pub event ReservesAdded(donator: Address, scaledAddedUnderlyingAmount: UInt256, scaledNewTotalReserves: UInt256)
+    // Event emitted when pool reserves is reduced
     pub event ReservesReduced(scaledReduceAmount: UInt256, scaledNewTotalReserves: UInt256)
     // Event emitted when liquidation happenes
     pub event LiquidateBorrow(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
@@ -182,10 +182,7 @@ pub contract LendingPool {
         // 3. Deposit into underlying vault and mint corresponding PoolTokens 
         let underlyingToken2LpTokenRateScaled = self.underlyingToLpTokenRateSnapshotScaled()
         let scaledMintVirtualAmount = scaledAmount * Config.scaleFactor / underlyingToken2LpTokenRateScaled
-        log(self.accountLpTokens[supplierAddr])
-        log(scaledMintVirtualAmount)
         self.accountLpTokens[supplierAddr] = scaledMintVirtualAmount + (self.accountLpTokens[supplierAddr] ?? (0 as UInt256))
-        log(self.accountLpTokens[supplierAddr])
         self.scaledTotalSupply = self.scaledTotalSupply + scaledMintVirtualAmount
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
@@ -517,7 +514,7 @@ pub contract LendingPool {
         }
         self.accountLpTokens[liquidator] = scaledLiquidatorSeizedLpTokens + (self.accountLpTokens[liquidator] ?? (0 as UInt256))
 
-        emit ReserveAdded(donator: self.poolAddress, scaledAddedUnderlyingAmount: scaledAddedUnderlyingReserves, scaledNewTotalReserves: self.scaledTotalReserves)
+        emit ReservesAdded(donator: self.poolAddress, scaledAddedUnderlyingAmount: scaledAddedUnderlyingReserves, scaledNewTotalReserves: self.scaledTotalReserves)
     }
 
     pub resource PoolCertificate: Interfaces.IdentityCertificate {}
@@ -552,29 +549,31 @@ pub contract LendingPool {
             return LendingPool.scaledTotalBorrows
         }
         pub fun getPoolTotalSupplyScaled(): UInt256 {
-            return LendingPool.scaledTotalSupply
+            return LendingPool.getPoolCash() + LendingPool.scaledTotalBorrows
         }
-
         pub fun getPoolTotalReservesScaled(): UInt256 {
             return LendingPool.scaledTotalReserves
         }
 
-        pub fun getPoolBorrowApyScaled(): UInt256 {
-            let scaledCashPrior = LendingPool.getPoolCash()
-            let scaledBorrowPrior = LendingPool.scaledTotalBorrows
-            let scaledReservesPrior = LendingPool.scaledTotalReserves
-            let scaledBorrowRatePerBlock = LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
-                cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior)
+        pub fun getPoolBorrowAprScaled(): UInt256 {
+            let scaledBorrowRatePerBlock =
+                LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
+                    cash: LendingPool.getPoolCash(),
+                    borrows: LendingPool.scaledTotalBorrows,
+                    reserves: LendingPool.scaledTotalReserves
+                )
             let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
             return scaledBorrowRatePerBlock * blocksPerYear
         }
 
-        pub fun getPoolSupplyApyScaled(): UInt256 {
-            let scaledCashPrior = LendingPool.getPoolCash()
-            let scaledBorrowPrior = LendingPool.scaledTotalBorrows
-            let scaledReservesPrior = LendingPool.scaledTotalReserves
-            let scaledSupplyRatePerBlock = LendingPool.interestRateModelCap!.borrow()!.getSupplyRate(
-                cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior, reserveFactor: LendingPool.scaledReserveFactor)
+        pub fun getPoolSupplyAprScaled(): UInt256 {
+            let scaledSupplyRatePerBlock =
+                LendingPool.interestRateModelCap!.borrow()!.getSupplyRate(
+                    cash: LendingPool.getPoolCash(),
+                    borrows: LendingPool.scaledTotalBorrows,
+                    reserves: LendingPool.scaledTotalReserves,
+                    reserveFactor: LendingPool.scaledReserveFactor
+                )
             let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
             return scaledSupplyRatePerBlock * blocksPerYear
         }
@@ -684,12 +683,14 @@ pub contract LendingPool {
                 .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
         }
 
-        pub fun reduceReserves(reduceAmount: UFix64): @FungibleToken.Vault {
-            pre {
-                reduceAmount <= Config.ScaledUInt256ToUFix64(LendingPool.scaledTotalReserves): "Exceed total reserve amount."
-                LendingPool.accrualBlockNumber == UInt256(getCurrentBlock().height): "Block number is mismatched."
-            }            
-            let reduceAmountScaled = Config.UFix64ToScaledUInt256(reduceAmount)
+        // Admin function to withdraw pool reserve
+        pub fun withdrawReserves(reduceAmount: UFix64): @FungibleToken.Vault {
+            let err = LendingPool.accrueInterest()
+            assert(err == Error.NO_ERROR, message: "WITHDRAW_RESERVES_ACCRUE_INTEREST_FAILED")
+
+            let reduceAmountScaled = reduceAmount == UFix64.max ? LendingPool.scaledTotalReserves : Config.UFix64ToScaledUInt256(reduceAmount)
+            assert(reduceAmountScaled <= LendingPool.scaledTotalReserves, message: "Exceed pool reserve amount")
+            assert(reduceAmountScaled <= LendingPool.getPoolCash(), message: "Exceed pool liquidity")
 
             LendingPool.scaledTotalReserves = LendingPool.scaledTotalReserves - reduceAmountScaled
             
