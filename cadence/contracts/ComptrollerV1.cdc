@@ -514,7 +514,9 @@ pub contract ComptrollerV1 {
                 "marketBorrowApr": poolRef.getPoolBorrowAprScaled(),
                 "marketCollateralFactor": market.scaledCollateralFactor,
                 "marketBorrowCap": market.scaledBorrowCap,
-                "marketOraclePriceUsd": oraclePrice
+                "marketOraclePriceUsd": oraclePrice,
+                "marketSupplierCount": poolRef.getPoolSupplierCount(),
+                "marketBorrowerCount": poolRef.getPoolBorrowerCount()
             }
         }
 

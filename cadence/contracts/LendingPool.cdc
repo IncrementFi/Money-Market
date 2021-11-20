@@ -554,6 +554,12 @@ pub contract LendingPool {
         pub fun getPoolTotalReservesScaled(): UInt256 {
             return LendingPool.scaledTotalReserves
         }
+        pub fun getPoolSupplierCount(): UInt256 {
+            return UInt256(LendingPool.accountLpTokens.length)
+        }
+        pub fun getPoolBorrowerCount(): UInt256 {
+            return UInt256(LendingPool.accountBorrows.length)
+        }
 
         pub fun getPoolBorrowAprScaled(): UInt256 {
             let scaledBorrowRatePerBlock =
