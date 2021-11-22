@@ -506,7 +506,7 @@ pub contract ComptrollerV1 {
                 "isOpen": market.isOpen,
                 "isMining": market.isMining,
                 "marketAddress": poolAddr,
-                "marketType": poolRef.getPoolTypeString(),
+                "marketType": poolRef.getUnderlyingTypeString(),
                 "marketSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
                 "marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
                 "marketReserveScaled": poolRef.getPoolTotalReservesScaled(),
@@ -514,7 +514,7 @@ pub contract ComptrollerV1 {
                 "marketBorrowApr": poolRef.getPoolBorrowAprScaled(),
                 "marketCollateralFactor": market.scaledCollateralFactor,
                 "marketBorrowCap": market.scaledBorrowCap,
-                "marketOraclePriceUsd": oraclePrice,
+                "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice),
                 "marketSupplierCount": poolRef.getPoolSupplierCount(),
                 "marketBorrowerCount": poolRef.getPoolBorrowerCount()
             }
