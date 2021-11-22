@@ -18,6 +18,7 @@ if os.path.exists('./cadence/scripts/Query/autogen'):
 
 if len(sys.argv) > 1 and sys.argv[1] == '1':
     os.system('rm flow_multipool*')
+    os.system('rm config_emulator.json')
     exit()
 
 # generate fake pool token contracts: Apple.cdc, Peach.cdc

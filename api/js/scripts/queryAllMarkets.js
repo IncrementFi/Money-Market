@@ -1,17 +1,13 @@
 const FCL = require('@onflow/fcl');
 const T = require('@onflow/types');
-const Utils = require('../utils')
-const Config = require('../config')
+const ConfigJson = require('../../../deploy.config.emulator.json')
 
 // load contract codes
-var CODE = Utils.LoadCode('./cadence/scripts/Query/query_all_markets.cdc')
-// import path -> 0xContractName
-CODE = Utils.ReplaceContractPathToOxName(CODE)
+var CODE = ConfigJson.Codes.Scripts["QueryAllMarkets"]
+console.log(CODE)
 
 function queryAllMarkets(auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
-  
-  Config.CommonAddressMapping()
 
   return FCL.send(
     [
@@ -23,6 +19,8 @@ function queryAllMarkets(auditAddr) {
       )
     ]).then(FCL.decode);
 }
+
+queryAllMarkets(ConfigJson["ContractAddress"]["ComptrollerV1"])
 
 module.exports = {
   queryAllMarkets
