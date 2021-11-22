@@ -12,21 +12,17 @@
 
 ## Scripts
 #### 查询所有pool的address，返回 [address1, address2, address3]，Input: 固定Comptroller地址
-* flow scripts execute ./cadence/scripts/Query/query_pool_all_address.cdc 0xf8d6e0586b0a20c7
+* flow scripts execute ./cadence/scripts/Query/query_all_markets.cdc 0xf8d6e0586b0a20c7
 #### 按address查询pool的info (total supply, APY, total borrow, borrow APY 等等)，Input: poolAddr, 固定Comptroller地址
-* flow scripts execute ./cadence/scripts/Query/query_pool_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
+* flow scripts execute ./cadence/scripts/Query/query_market_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
 #### 查询有用户记录的所有pool的address，输入userAddr, 固定的comptroller地址
-flow scripts execute ./cadence/scripts/Query/query_user_pool_all_address.cdc e03daebed8ca0615 0xf8d6e0586b0a20c7
+flow scripts execute ./cadence/scripts/Query/query_user_all_pools.cdc e03daebed8ca0615 0xf8d6e0586b0a20c7
 #### 查询用户在特定pool下的信息(存款，借款)，输入userAddr, poolAddr, 固定的comptroller地址
 flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc e03daebed8ca0615 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
-#### 查询用户本地underlying vault的余额
-* FUSD的是: flow scripts execute ./cadence/scripts/Query/autogen/query_local_FUSD.cdc e03daebed8ca0615
-* 通用模板:  flow scripts execute ./cadence/scripts/Query/autogen/query_local_TokenName.cdc e03daebed8ca0615
-    >每个underlying vault会对应一个接口
-    >>想吐槽找Flow X.X
-
+#### 查询用户本地underlying vault的余额, input: userAddr, vaultPublicPath
+* FUSD的是: flow scripts execute ./cadence/scripts/Query/autogen/query_vault_balance.cdc 0xe03daebed8ca0615 public/fusdBalance
 
 
 ## Transactions
