@@ -11,7 +11,7 @@ CODE = Utils.ReplaceContractPathToOxName(CODE)
 function queryVaultBalance(userAddr, tokenName) {
   if (!userAddr) return Promise.resolve(false);
   
-  Config.ConfigAddress()
+  Config.CommonAddressMapping()
 
   const pathPara = {
     "domain": "public",

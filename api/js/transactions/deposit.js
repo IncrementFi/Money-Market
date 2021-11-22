@@ -11,22 +11,16 @@ TEMPLATE = Utils.ReplaceContractPathToOxName(TEMPLATE)
 //
 function deposit(amount, poolAddr, tokenName) {
   // generate specific deposit transaction code for token
-  const lowerTokenName = Utils.ConvertTokenNameToLowerName(tokenName)
-  var lendingPoolContractName = "LendingPool"
-  if(Config.network == "emulator") {
-    // the same deployed contract name should be changed on emualtor.
-    lendingPoolContractName = "LendingPool_" + tokenName
-  }
-
-  var CODE = TEMPLATE.replace(/FlowToken/g, tokenName).replace(/flowToken/g, lowerTokenName).replace(/LendingPool/g, lendingPoolContractName)
+  var CODE = TEMPLATE.replace(/FlowToken/g, tokenName)
+                     .replace(/flowToken/g, Utils.ConvertTokenNameToLowerName(tokenName))
+                     .replace(/LendingPool/g, Config.GetLendingPoolContractName(tokenName))
   console.log(CODE)
 
-  Config.ConfigAddress()
-  FCL.config().put("0x"+lendingPoolContractName, poolAddr)
-  if(Config.network == "emulator") {
-    FCL.config().put("0x"+tokenName, "0xf8d6e0586b0a20c7")
-  }
+  // config address mapping
+  Config.CommonAddressMapping()
+  Config.LendingPoolAddressMapping(poolAddr, tokenName)
 
+  // send transaction
   const response = FCL.send([
     FCL.transaction`${CODE}`,
     FCL.args(
@@ -42,6 +36,7 @@ function deposit(amount, poolAddr, tokenName) {
   return FCL.tx(response).onceSealed();
 }
 
+// for testing
 //deposit(0.1, "0x192440c99cb17282", "FUSD")
 
 module.exports = {
