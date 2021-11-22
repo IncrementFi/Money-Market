@@ -1,8 +1,9 @@
 
 ## Tips:
-1. onflow版本有更新，type的版本请更新到0.0.6，"@onflow/types": "^0.0.6"
-2. 一些scripts和transactions是自动生成的(比如10个pool的存款接口)，请先运行./scripts/multipool-deploy.sh
+1. 请先运行./scripts/multipool-deploy.sh
+   root下会生成deploy.config.emulator.json配置
    如果需要在emulator上模拟多个池子，请修改: ./scripts/emulator/multipool_setting.py
+2. onflow版本有更新，type的版本请更新到0.0.6，"@onflow/types": "^0.0.6"
 3. 合约返回的所有number，都是被scale up的，需要除以1e18，前端暂时显示小数点后8位。
 4. 一些当前borrow limit的计算请使用参数实时计算（比如用户输入不同的deposit金额时）
 5. 前端显示和前端计算用到的价格数据都从外部api读取，比如：https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids=bitcoin,ethereum,flow

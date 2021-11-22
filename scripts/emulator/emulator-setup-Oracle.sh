@@ -21,4 +21,4 @@ echo "---- 2.4 Updater uploads one single data point to update speficied feed"
 #flow transactions send ./cadence/transactions/Oracle/updater_upload_feed_data.cdc --args-json '[{"type": "Address", "value": "0x01cf0e2f2f715450"}, {"type": "UFix64", "value": "14.15"}]' --signer emulator-oracle-updater
 echo "---- 3// Check specified pool's underlying asset's latest price data,Expect to see 14.15"
 #flow scripts execute ./cadence/scripts/Oracle/get_pool_underlying_price.cdc --args-json '[{"type": "Address", "value": "0xf3fcd2c1a78f5eee"}, {"type": "Address", "value": "0x01cf0e2f2f715450"}]'
-#flow scripts execute ./cadence/scripts/Oracle/get_pool_underlying_price.cdc --arg Address:"0xf3fcd2c1a78f5eee" --arg Address:"0x01cf0e2f2f715450"
+#flow scripts execute ./cadence/scripts/Oracle/get_pool_underlying_price.cdc --arg Address:0xf3fcd2c1a78f5eee --arg Address:0x01cf0e2f2f715450
