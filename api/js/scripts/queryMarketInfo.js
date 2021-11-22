@@ -11,7 +11,7 @@ CODE = Utils.ReplaceContractPathToOxName(CODE)
 function queryMarketInfo(poolAddr, auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
   
-  Config.ConfigAddress()
+  Config.CommonAddressMapping()
 
   return FCL.send(
     [
