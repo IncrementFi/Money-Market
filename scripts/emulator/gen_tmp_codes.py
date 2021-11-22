@@ -110,7 +110,7 @@ for name in setting.FakePoolNames:
         fw.write(fusd_vault)
 
 #generate user_deposit_fusd.cdc
-with open('./cadence/transactions/User/user_deposit.template', 'r') as f:
+with open('./cadence/transactions/User/user_deposit_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.FakePoolNames:
     path = './cadence/transactions/User/autogen'
@@ -147,7 +147,7 @@ for name in setting.PoolNames:
         fw.write(fusd_vault)
 
 #generate user_redeem_fusd.cdc
-with open('./cadence/transactions/User/user_redeem.template', 'r') as f:
+with open('./cadence/transactions/User/user_redeem_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.FakePoolNames:
     path = './cadence/transactions/User/autogen'
@@ -184,7 +184,7 @@ for name in setting.PoolNames:
         fw.write(fusd_vault)
 
 #generate user_borrow_fusd.cdc
-with open('./cadence/transactions/User/user_borrow.template', 'r') as f:
+with open('./cadence/transactions/User/user_borrow_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.FakePoolNames:
     path = './cadence/transactions/User/autogen'
@@ -221,7 +221,7 @@ for name in setting.PoolNames:
         fw.write(fusd_vault)
 
 #generate user_repay_fusd.cdc
-with open('./cadence/transactions/User/user_repay.template', 'r') as f:
+with open('./cadence/transactions/User/user_repay_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.FakePoolNames:
     path = './cadence/transactions/User/autogen'
@@ -255,38 +255,4 @@ for name in setting.PoolNames:
         fusd_vault = fusd_vault.replace('LendingPool', 'LendingPool_'+name)
         fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fusd_vault = fusd_vault.replace('../contracts/LendingPool', '../contracts/autogen/LendingPool')
-        fw.write(fusd_vault)
-
-# generate scripts
-# query token local amount
-with open('./cadence/scripts/Query/query_local_Token.template', 'r') as f:
-    transaction_template = f.read()
-for name in setting.FakePoolNames:
-    path = './cadence/scripts/Query/autogen'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    with open(path+'/query_local_{0}.cdc'.format(name), 'w') as fw:
-        fusd_vault = transaction_template
-        fusd_vault = fusd_vault.replace('FUSD', name)
-
-        lowerName = name[:1].lower() + name[1:]
-        if name == 'FUSD':
-            lowerName = lowerName.lower()
-        fusd_vault = fusd_vault.replace('fusd', lowerName)
-        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
-        fusd_vault = fusd_vault.replace('../contracts/'+name, '../contracts/autogen/'+name)
-        fw.write(fusd_vault)
-for name in setting.PoolNames:
-    path = './cadence/scripts/Query/autogen'
-    if not os.path.exists(path):
-        os.makedirs(path)
-    with open(path+'/query_local_{0}.cdc'.format(name), 'w') as fw:
-        fusd_vault = transaction_template
-        fusd_vault = fusd_vault.replace('FUSD', name)
-
-        lowerName = name[:1].lower() + name[1:]
-        if name == 'FUSD':
-            lowerName = lowerName.lower()
-        fusd_vault = fusd_vault.replace('fusd', lowerName)
-        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fw.write(fusd_vault)
