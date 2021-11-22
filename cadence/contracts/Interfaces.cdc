@@ -20,7 +20,6 @@ pub contract interface Interfaces {
 
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
-        pub fun getPoolTypeString(): String
         pub fun getUnderlyingTypeString(): String
         pub fun getUnderlyingToLpTokenRateScaled(): UInt256
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
