@@ -2,12 +2,6 @@ const FCL = require('@onflow/fcl');
 const T = require('@onflow/types');
 const ConfigJson = require('../../../deploy.config.emulator.json')
 
-// Template code
-
-var TEMPLATE = Utils.LoadCode('./cadence/transactions/User/user_deposit_template.cdc')
-// import path -> 0xContractName
-TEMPLATE = Utils.ReplaceContractPathToOxName(TEMPLATE)
-
 //
 function deposit(amount, poolName) {
   var CODE = ConfigJson.Codes.Transactions.Deposit[poolName]
