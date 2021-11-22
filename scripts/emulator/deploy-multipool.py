@@ -302,8 +302,6 @@ for poolName in configJson['PoolName']:
         code = code.replace('FUSD', poolName)
         code = code.replace('fusd', configJson['PoolName'][poolName]['LowerPoolName'])
         codeMapping = AddressMapping(code)
-        print(codeMapping)
-            
     configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = codeMapping
 
 
