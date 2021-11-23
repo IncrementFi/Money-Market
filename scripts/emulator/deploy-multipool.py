@@ -203,6 +203,7 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         "PoolName": poolName,
         "LowerPoolName": lowerPoolName,
         "TokenName": poolTokenName,
+        "VaultBalancePath": lowerPoolName+"Balance",
         "TokenAddress": configJson["ContractAddress"][poolName],
         "PoolAddress":  setting.DictPoolNameToAddr[poolName]
     }
