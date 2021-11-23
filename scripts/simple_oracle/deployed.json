@@ -1,8 +1,9 @@
 {
     "testnet": {
-        "oracleContract": "0x3e1c9476cfe21394",
-        "updaterAccount": "0x8c1293886c086b0c",
-        "updaterKeyIndex": 0,
+        "interfacesContract": "0xa914b5106275c637",
+        "oracleContract": "0x00bb0ede202e2a11",
+        "updaterAccount": "0xed8eaa1512ba24aa",
+        "updaterKeyIndex": 1,
         "feeds": [
             {
                 "id": "bitcoin",
