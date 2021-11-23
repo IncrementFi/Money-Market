@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import multipool_setting as setting
 
 setting.PoolAddrs = []
@@ -173,3 +174,137 @@ os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_tran
 os.system('flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A --arg UFix64:\"100.0\"')
 for fakeName in setting.FakePoolNames:
     os.system('flow transactions send ./cadence/transactions/Test/autogen/mint_{0}_for_user.cdc -f flow_multipool.json --signer emulator-user-A'.format(fakeName))
+
+
+
+# generate current config json
+configJson = {}
+configJson["ContractAddress"] = {}
+for deployer in flow_dict["deployments"]["emulator"]:
+    for contract in flow_dict["deployments"]["emulator"][deployer]:
+        configJson["ContractAddress"][contract] = setting.DictDeployNameToAddr[deployer]
+configJson["ContractAddress"]["FungibleToken"] = "0xee82856bf20e2aa6"
+configJson["ContractAddress"]["FlowToken"] = "0x0ae53cb6e3f42a79"
+
+configJson["PoolAddress"] = {}
+configJson["PoolName"] = {}
+for poolName in setting.PoolNames+setting.FakePoolNames:
+    poolAddr = setting.DictPoolNameToAddr[poolName]
+    poolContract = "LendingPool"
+    if setting.NetworkType == "emulator":
+        poolContract = poolContract + "_" + poolName
+    poolTokenName = poolName
+    if poolName == "FlowToken": poolTokenName = "Flow"
+    lowerPoolName = poolName[:1].lower() + poolName[1:]
+    if poolName == 'FUSD':
+        lowerPoolName = lowerPoolName.lower()
+    info = {
+        "PoolContract": poolContract,
+        "PoolName": poolName,
+        "LowerPoolName": lowerPoolName,
+        "TokenName": poolTokenName,
+        "TokenAddress": configJson["ContractAddress"][poolName],
+        "PoolAddress":  setting.DictPoolNameToAddr[poolName]
+    }
+    configJson["PoolAddress"][poolAddr] = info
+    configJson["PoolName"][poolName] = info
+    
+
+def AddressMapping(code):
+    # "import aaa from ./../../contract/aaa.cdc" => "import aaa from 0xaaa"
+    pattern = re.compile(r'from \"[.\/]+.*\/(.*).cdc\"')
+    res = re.sub(pattern, r"from 0x\1", code)
+    # "0xaaa" => "0x01"
+    for contractName in configJson["ContractAddress"]:
+        res = res.replace("0x"+contractName, configJson["ContractAddress"][contractName])
+    return res
+    
+
+configJson["Codes"] = {}
+configJson["Codes"]["Scripts"] = {}
+
+scriptsCodePath = [
+    {
+        'path': './cadence/scripts/Query/query_all_markets.cdc',
+        'name': 'QueryAllMarkets'
+    },
+    {
+        'path': './cadence/scripts/Query/query_market_info.cdc',
+        'name': 'QueryMarketInfo'
+    },
+    {
+        'path': './cadence/scripts/Query/query_user_all_pools.cdc',
+        'name': 'QueryUserAllPools'
+    },
+    {
+        'path': './cadence/scripts/Query/query_user_pool_info.cdc',
+        'name': 'QueryUserPoolInfo'
+    },
+    {
+        'path': './cadence/scripts/Query/query_vault_balance.cdc',
+        'name': 'QueryVaultBalance'
+    },
+    
+]
+for item in scriptsCodePath:
+    path = item["path"]
+    name = item["name"]
+    with open(path, 'r') as f:
+        code = f.read()
+        codeMapping = AddressMapping(code)
+        configJson["Codes"]["Scripts"][name] = codeMapping
+
+
+configJson["Codes"]["Transactions"] = {}
+poolCodePath = [
+    {
+        "path" : "./cadence/transactions/User/user_deposit_template.cdc",
+        "name" : "Deposit"
+    },
+    {
+        "path" : "./cadence/transactions/User/user_redeem_template.cdc",
+        "name" : "Redeem"
+    },
+    {
+        "path" : "./cadence/transactions/User/user_borrow_template.cdc",
+        "name" : "Borrow"
+    },
+    {
+        "path" : "./cadence/transactions/User/user_repay_template.cdc",
+        "name" : "Repay"
+    }
+]
+for item in poolCodePath:
+    path = item["path"]
+    name = item["name"]
+    configJson["Codes"]["Transactions"][name] = {}
+    with open(path, 'r') as f:
+        poolTemplate = f.read()
+        for poolName in configJson['PoolName']:
+            code = poolTemplate
+            code = code.replace('FlowToken', poolName)
+            code = code.replace('flowToken', configJson['PoolName'][poolName]['LowerPoolName'])
+            code = code.replace('LendingPool', configJson['PoolName'][poolName]['PoolContract'])
+            codeMapping = AddressMapping(code)
+            codeMapping = codeMapping.replace('0xLendingPool', configJson['PoolName'][poolName]['PoolAddress'])
+            configJson["Codes"]["Transactions"][name][poolName] = codeMapping
+                           
+configJson["Codes"]["Transactions"]["Test"] = {}
+with open("./cadence/transactions/Test/test_next_block.cdc", 'r') as f:
+    code = f.read()
+    codeMapping = AddressMapping(code)
+    configJson["Codes"]["Transactions"]["Test"]["NextBlock"] = codeMapping
+
+for poolName in configJson['PoolName']:
+    if poolName == "FlowToken": continue
+    with open("./cadence/transactions/Test/mint_fusd_for_user.cdc", 'r') as f:
+        code = f.read()
+        code = code.replace('FUSD', poolName)
+        code = code.replace('fusd', configJson['PoolName'][poolName]['LowerPoolName'])
+        codeMapping = AddressMapping(code)
+    configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = codeMapping
+
+
+with open("./deploy.config.emulator.json", 'w') as fw:
+    json_str = json.dumps(configJson, indent=2)
+    fw.write(json_str)

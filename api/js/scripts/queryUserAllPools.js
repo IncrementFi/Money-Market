@@ -1,17 +1,16 @@
 const FCL = require('@onflow/fcl');
 const T = require('@onflow/types');
-const Utils = require('../utils')
-const Config = require('../config')
+const ConfigJson = require('../../../deploy.config.emulator.json')
 
 // load contract codes
-var CODE = Utils.LoadCode('./cadence/scripts/Query/query_user_all_pools.cdc')
+var CODE = ConfigJson.Codes.Scripts['QueryUserAllPools']
 // import path -> 0xContractName
-CODE = Utils.ReplaceContractPathToOxName(CODE)
+// CODE = Utils.ReplaceContractPathToOxName(CODE)
 
 function queryUserAllPools(userAddr, auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
   
-  Config.CommonAddressMapping()
+  // Config.CommonAddressMapping()
 
   return FCL.send(
     [
@@ -25,7 +24,7 @@ function queryUserAllPools(userAddr, auditAddr) {
     ]).then(FCL.decode);
 }
 
-//queryUserAllPools("0xe03daebed8ca0615", "0xf8d6e0586b0a20c7")
+queryUserAllPools("0xe03daebed8ca0615", "0xf8d6e0586b0a20c7")
 
 module.exports = {
   queryUserAllPools
