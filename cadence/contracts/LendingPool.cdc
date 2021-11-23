@@ -732,8 +732,11 @@ pub contract LendingPool {
         assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
 
         // save pool admin
+        destroy <-self.account.load<@AnyResource>(from: self.PoolAdminStoragePath)
         self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
         // save pool public interface
+        self.account.unlink(self.PoolPublicPublicPath)
+        destroy <-self.account.load<@AnyResource>(from: self.PoolPublicStoragePath)
         self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
         self.account.link<&{Interfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
     }

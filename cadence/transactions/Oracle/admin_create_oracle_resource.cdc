@@ -10,8 +10,7 @@ transaction() {
             ?? panic("Could not borrow reference to Oracle Admin")
 
         // Discard any existing contents
-        let oldAny <- adminAccount.load<@AnyResource>(from: SimpleOracle.OracleStoragePath)
-        destroy oldAny
+        destroy <-adminAccount.load<@AnyResource>(from: SimpleOracle.OracleStoragePath)
         // Create and store a new Oracle resource
         adminAccount.save(<-adminRef.createOracleResource(), to: SimpleOracle.OracleStoragePath)
 
