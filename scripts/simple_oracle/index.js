@@ -18,7 +18,7 @@ const uploadFeedDataTxCode = fs
   .replace(simpleOracleImportPath, config.oracleContract);
 const getFeedLatestResultScriptCode = fs
   .readFileSync(path.resolve(__dirname, getFeedLatestResultFile), "utf8")
-  .replace(InterfacesImportPath, config.oracleContract)
+  .replace(InterfacesImportPath, config.interfacesContract)
   .replace(simpleOracleImportPath, config.oracleContract);
 /// [Imported code end]
 

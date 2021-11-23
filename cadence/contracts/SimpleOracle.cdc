@@ -16,8 +16,8 @@ pub contract SimpleOracle {
     // The public path for updater's OracleUpdateProxy capability
     pub let UpdaterPublicPath: PublicPath
 
-    pub event PriceFeedAdded(for newYToken: Address, maxCapacity: Int)
-    pub event PriceFeedRemoved(from newYToken: Address)
+    pub event PriceFeedAdded(for pool: Address, maxCapacity: Int)
+    pub event PriceFeedRemoved(from pool: Address)
     pub event DataUpdated(for pool: Address, at timestamp: UFix64, data: UFix64)
 
     // A single data point the off-chain oracle node reports.
@@ -116,14 +116,14 @@ pub contract SimpleOracle {
             return self.feeds
         }
 
-        access(contract) fun addPriceFeed(for newYToken: Address, maxCapacity: Int) {
-            if (!self.feeds.contains(newYToken)) {
+        access(contract) fun addPriceFeed(for pool: Address, maxCapacity: Int) {
+            if (!self.feeds.contains(pool)) {
                 // 1. Append new feed
-                self.feeds.append(newYToken)
+                self.feeds.append(pool)
                 // 2. Create RingBuffer resource to hold new feed's data
-                let oldData <- self.observations[newYToken] <- create RingBuffer(capacity: maxCapacity, dataType: Type<Observation>())
+                let oldData <- self.observations[pool] <- create RingBuffer(capacity: maxCapacity, dataType: Type<Observation>())
                 destroy oldData
-                emit PriceFeedAdded(for: newYToken, maxCapacity: maxCapacity)
+                emit PriceFeedAdded(for: pool, maxCapacity: maxCapacity)
             }
 
         }
@@ -228,6 +228,7 @@ pub contract SimpleOracle {
         self.UpdaterStoragePath = /storage/oracleUpdaterProxy
         self.UpdaterPublicPath = /public/oracleUpdaterProxy
 
+        destroy <-self.account.load<@AnyResource>(from: self.OracleAdminStoragePath)
         self.account.save(<-create Admin(), to: self.OracleAdminStoragePath)
     }
 }
