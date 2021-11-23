@@ -200,9 +200,9 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         lowerPoolName = lowerPoolName.lower()
     info = {
         "PoolContract": poolContract,
-        "TokenContract": poolName,
-        "TokenName": poolTokenName,
+        "PoolName": poolName,
         "LowerPoolName": lowerPoolName,
+        "TokenName": poolTokenName,
         "TokenAddress": configJson["ContractAddress"][poolName],
         "PoolAddress":  setting.DictPoolNameToAddr[poolName]
     }
