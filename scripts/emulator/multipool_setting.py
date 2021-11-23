@@ -1,3 +1,4 @@
+global NetworkType
 global PoolNames
 global FakePoolNames
 global PoolParams
@@ -7,10 +8,11 @@ global DictPoolNameToAddr
 global DictDeployNameToAddr
 global DictPoolNameToDeployName
 
+NetworkType = "emulator" # "testnet"
 
 # PoolNames's token file should already be created in contracts.
-# PoolNames = ['FUSD', 'FlowToken']
-PoolNames = ['FUSD']
+PoolNames = ['FUSD', 'FlowToken']
+
 # FakePool's token contract will be generated automatically
 # FakePoolNames = ['Apple', 'Banana', 'Peach']
 FakePoolNames = ['Apple']
