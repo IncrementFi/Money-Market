@@ -15,11 +15,26 @@
       "source": "./cadence/contracts/FUSD.cdc",
       "aliases": { "testnet": "0xe223d8a629e49c68", "mainnet": "0x3c5959b568896393" }
     },
+    "Config": {
+      "source": "./cadence/contracts/Config.cdc",
+      "aliases": {
+        "testnet": "0xa914b5106275c637"
+      }
+    },
+    "Interfaces": {
+      "source": "./cadence/contracts/Interfaces.cdc",
+      "aliases": {
+        "testnet": "0xa914b5106275c637"
+      }
+    },
+    "SimpleOracle": {
+      "source": "./cadence/contracts/SimpleOracle.cdc",
+      "aliases": {
+        "testnet": "0x00bb0ede202e2a11"
+      }
+    },
     "Kibble":                         "./cadence/contracts/Kibble.cdc",
-    "Config":                         "./cadence/contracts/Config.cdc",
-    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
     "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
     "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
   },
@@ -38,21 +53,31 @@
     "emulator-user-C":          { "address": "0x120e725050340cab", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-user-D":          { "address": "0xf669cb8d41ce0c74", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     
-    "testnet-oracle-deployer": {
-      "address": "0x3e1c9476cfe21394",
+    "testnet-interface-deployer": {
+      "address": "0xa914b5106275c637",
       "key":{
         "type": "hex",
-        "index": 0,
+        "index": 1,
+        "signatureAlgorithm": "ECDSA_secp256k1",
+        "hashAlgorithm": "SHA3_256",
+        "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
+      }
+    },
+    "testnet-oracle-deployer": {
+      "address": "0x00bb0ede202e2a11",
+      "key":{
+        "type": "hex",
+        "index": 1,
         "signatureAlgorithm": "ECDSA_secp256k1",
         "hashAlgorithm": "SHA3_256",
         "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
       }
     },
     "testnet-oracle-updater": {
-      "address": "0x8c1293886c086b0c",
+      "address": "0xed8eaa1512ba24aa",
       "key":{
         "type": "hex",
-        "index": 0,
+        "index": 1,
         "signatureAlgorithm": "ECDSA_secp256k1",
         "hashAlgorithm": "SHA3_256",
         "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec"
@@ -76,10 +101,12 @@
         "LendingPool"
       ]
     },
-
     "testnet": {
+      "testnet-interface-deployer": [
+        "Config",
+        "Interfaces"
+      ],
       "testnet-oracle-deployer": [
-        "Interfaces",
         "SimpleOracle"
       ]
     }

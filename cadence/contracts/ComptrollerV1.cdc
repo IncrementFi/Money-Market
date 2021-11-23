@@ -7,6 +7,7 @@ pub contract ComptrollerV1 {
     pub let AdminStoragePath: StoragePath
     // The storage path for the Comptroller resource
     pub let ComptrollerStoragePath: StoragePath
+    pub let ComptrollerPublicPath: PublicPath
     // The private path for the capability to Comptroller resource for admin functions
     pub let ComptrollerPrivatePath: PrivatePath
     // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
@@ -590,14 +591,17 @@ pub contract ComptrollerV1 {
     init() {
         self.AdminStoragePath = /storage/comptrollerAdmin
         self.ComptrollerStoragePath = /storage/comptrollerModule
+        self.ComptrollerPublicPath = /public/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
         self.UserCertificateStoragePath = /storage/userCertificate
         self.UserCertificatePrivatePath = /private/userCertificate
-
         self.comptrollerAddress = self.account.address
+
+        destroy <-self.account.load<@AnyResource>(from: self.AdminStoragePath)
         self.account.save(<-create Admin(), to: self.AdminStoragePath)
         
+        destroy <-self.account.load<@AnyResource>(from: self.ComptrollerStoragePath)
         self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
-        self.account.link<&{Interfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
+        self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }

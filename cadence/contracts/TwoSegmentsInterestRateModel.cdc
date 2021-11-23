@@ -197,7 +197,7 @@ pub contract TwoSegmentsInterestRateModel {
         self.InterestRateModelPrivatePath = /private/InterestRateModel
         self.InterestRateModelPublicPath = /public/InterestRateModel
 
-        let admin <- create Admin()
-        self.account.save(<-admin, to: self.InterestRateModelAdminStoragePath)
+        destroy <-self.account.load<@AnyResource>(from: self.InterestRateModelAdminStoragePath)
+        self.account.save(<-create Admin(), to: self.InterestRateModelAdminStoragePath)
     }
 }
