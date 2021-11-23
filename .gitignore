@@ -118,3 +118,4 @@ cadence/transactions/User/autogen
 cadence/scripts/Query/autogen
 *.pyc
 scripts/emulator/__pycache__
+deploy.config.emulator.json

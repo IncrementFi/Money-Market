@@ -1,17 +1,17 @@
 const FCL = require('@onflow/fcl');
 const T = require('@onflow/types');
-const Utils = require('../utils')
-const Config = require('../config')
+const ConfigJson = require('../../../deploy.config.emulator.json')
 
 // load contract codes
-var CODE = Utils.LoadCode('./cadence/scripts/Query/query_market_info.cdc')
+var CODE = ConfigJson.Codes.Scripts["QueryMarketInfo"]
+console.log(CODE)
 // import path -> 0xContractName
-CODE = Utils.ReplaceContractPathToOxName(CODE)
+// CODE = Utils.ReplaceContractPathToOxName(CODE)
 
 function queryMarketInfo(poolAddr, auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
   
-  Config.CommonAddressMapping()
+  //Config.CommonAddressMapping()
 
   return FCL.send(
     [
@@ -25,7 +25,7 @@ function queryMarketInfo(poolAddr, auditAddr) {
     ]).then(FCL.decode);
 }
 
-//queryMarketInfo("0x192440c99cb17282", "0xf8d6e0586b0a20c7")
+queryMarketInfo("0x192440c99cb17282", "0xf8d6e0586b0a20c7")
 
 module.exports = {
   queryMarketInfo

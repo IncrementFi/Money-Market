@@ -1,7 +1,7 @@
 const FS = require('fs')
 
 function ReplaceContractPathToOxName(contractContent) {
-    // replace "../....../../xxx.cdc" => 0xxx
+    // replace "../....../../xxx.cdc" => 0xxxx
     return contractContent.replace(/from \"[.\/]+.*\/(.*).cdc\"/g, 'from 0x$1')
 }
 

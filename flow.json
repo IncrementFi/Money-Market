@@ -44,14 +44,14 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "emulator-account": { "address": "f8d6e0586b0a20c7", "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f" },
-    "emulator-oracle-deployer": { "address": "01cf0e2f2f715450", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-oracle-updater":  { "address": "179b6b1cb6755e31", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-pool-template":   { "address": "f3fcd2c1a78f5eee", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-user-A":          { "address": "e03daebed8ca0615", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-user-B":          { "address": "045a1763c93006ca", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-user-C":          { "address": "120e725050340cab", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
-    "emulator-user-D":          { "address": "f669cb8d41ce0c74", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f" },
+    "emulator-oracle-deployer": { "address": "0x01cf0e2f2f715450", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-oracle-updater":  { "address": "0x179b6b1cb6755e31", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-pool-template":   { "address": "0xf3fcd2c1a78f5eee", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-user-A":          { "address": "0xe03daebed8ca0615", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-user-B":          { "address": "0x045a1763c93006ca", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-user-C":          { "address": "0x120e725050340cab", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
+    "emulator-user-D":          { "address": "0xf669cb8d41ce0c74", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     
     "testnet-interface-deployer": {
       "address": "0xa914b5106275c637",
