@@ -1,4 +1,4 @@
-import LendingPool from "../../../contracts/LendingPool.cdc"
+import LendingPool from "../../contracts/LendingPool.cdc"
 
 transaction(interestRateModelAddr: Address, comptrollerAddr: Address, reserveFactor: UFix64, poolSeizeShare: UFix64) {
     prepare(poolAccount: AuthAccount) {
