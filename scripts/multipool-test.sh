@@ -5,6 +5,7 @@ SignerAddrA=0x045a1763c93006ca
 
 SignerA=emulator-user-A
 SignerB=emulator-user-B
+SignerAudit=emulator-account
 
 fusdAddr=0x192440c99cb17282
 auditAddr=0xf8d6e0586b0a20c7
@@ -26,9 +27,9 @@ eval $deposit --signer $SignerB --arg UFix64:"100000.0"
 
 eval $borrow --signer $SignerB --arg UFix64:"50000.0"
 
-eval $next_block
-eval $next_block
-eval $next_block
+eval $next_block --signer $SignerAudit
+eval $next_block --signer $SignerAudit
+eval $next_block --signer $SignerAudit
 
 
 
