@@ -37,8 +37,7 @@
 
 #### 查询用户本地underlying vault的余额
 > input: userAddr, vaultPublicPath
-* FUSD: flow scripts execute ./cadence/scripts/Query/autogen/query_vault_balance.cdc 0xe03daebed8ca0615 public/fusdBalance
-
+* FUSD: flow scripts execute ./cadence/scripts/Query/query_vault_balance.cdc --args-json '[{"type": "Address", "value": "0xe03daebed8ca0615"}, {"type": "Path", "value": {"domain": "public", "identifier": "fusdBalance"}}]'
 
 ## Transactions
 #### 水龙头:
@@ -72,9 +71,8 @@
     >传入 UFix64.max 或者 184467440737.09551615 全部还清
 
 #### test next block
-* flow transactions send ./cadence/transactions/Test/test_next_block.cdc
-
-
+> Input: comptrollerAddress
+* flow transactions send ./cadence/transactions/Test/test_next_block.cdc --signer emulator-account
 
 
 
