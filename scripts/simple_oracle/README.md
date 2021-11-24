@@ -3,7 +3,7 @@
 
 *  `npm -g install pm2`
 *  `npm install`
-*  `export PK=<your private key>`: The private key used for the off-chain reporter account (e.g. [0x8c1293886c086b0c](https://testnet.flowscan.org/account/0x8c1293886c086b0c))
+*  `export PK=3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec`: The private key used for the off-chain reporter account (Given private key is for testnet updater account [0xed8eaa1512ba24aa](https://testnet.flowscan.org/account/0xed8eaa1512ba24aa))
 
   
   
