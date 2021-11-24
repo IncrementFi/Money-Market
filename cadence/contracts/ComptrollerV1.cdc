@@ -155,7 +155,7 @@ pub contract ComptrollerV1 {
                 scaledAmountLPTokenToRedeem: redeemLpTokenAmountScaled,
                 scaledAmountUnderlyingToBorrow: 0
             )
-            if (scaledLiquidity[1] >= scaledLiquidity[0]) {
+            if (scaledLiquidity[1] > scaledLiquidity[0]) {
                 return Error.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
     
@@ -198,7 +198,7 @@ pub contract ComptrollerV1 {
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: borrowUnderlyingAmountScaled
             )
-            if (scaledLiquidity[1] >= scaledLiquidity[0]) {
+            if (scaledLiquidity[1] > scaledLiquidity[0]) {
                 return Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
 
@@ -508,16 +508,16 @@ pub contract ComptrollerV1 {
                 "isMining": market.isMining,
                 "marketAddress": poolAddr,
                 "marketType": poolRef.getUnderlyingTypeString(),
-                "marketSupplyScaled": poolRef.getPoolTotalSupplyScaled(),
-                "marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled(),
-                "marketReserveScaled": poolRef.getPoolTotalReservesScaled(),
-                "marketSupplyApr": poolRef.getPoolSupplyAprScaled(),
-                "marketBorrowApr": poolRef.getPoolBorrowAprScaled(),
-                "marketCollateralFactor": market.scaledCollateralFactor,
-                "marketBorrowCap": market.scaledBorrowCap,
-                "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice),
-                "marketSupplierCount": poolRef.getPoolSupplierCount(),
-                "marketBorrowerCount": poolRef.getPoolBorrowerCount()
+                "marketSupplyScaled": poolRef.getPoolTotalSupplyScaled().toString(),
+                "marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled().toString(),
+                "marketReserveScaled": poolRef.getPoolTotalReservesScaled().toString(),
+                "marketSupplyApr": poolRef.getPoolSupplyAprScaled().toString(),
+                "marketBorrowApr": poolRef.getPoolBorrowAprScaled().toString(),
+                "marketCollateralFactor": market.scaledCollateralFactor.toString(),
+                "marketBorrowCap": market.scaledBorrowCap.toString(),
+                "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice).toString(),
+                "marketSupplierCount": poolRef.getPoolSupplierCount().toString(),
+                "marketBorrowerCount": poolRef.getPoolBorrowerCount().toString()
             }
         }
 
@@ -539,8 +539,8 @@ pub contract ComptrollerV1 {
             let poolRef = market.poolPublicCap.borrow()!
             let scaledAccountSnapshot = poolRef.getAccountSnapshotScaled(account: userAddr)
             return {
-                "userSupplyScaled": scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor,
-                "userBorrowScaled": scaledAccountSnapshot[2]
+                "userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor).toString(),
+                "userBorrowScaled": scaledAccountSnapshot[2].toString()
             }
         }
 
