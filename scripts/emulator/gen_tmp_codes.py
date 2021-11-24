@@ -58,7 +58,7 @@ for name in setting.PoolNames+setting.FakePoolNames:
 
 # generate transactions
 ## generate pool preparations
-with open('./cadence/transactions/Pool/prepare_vault_for_pool.template', 'r') as f:
+with open('./cadence/transactions/Pool/prepare_template_for_pool.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.PoolNames:
     path = './cadence/transactions/Pool/autogen'
@@ -66,7 +66,8 @@ for name in setting.PoolNames:
         os.makedirs(path)
     with open(path+'/prepare_{0}_vault_for_pool.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
-        fusd_vault = fusd_vault.replace('POOLNAME', name)
+        fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
+        fusd_vault = fusd_vault.replace('FlowToken', name)
         fw.write(fusd_vault)
 for name in setting.FakePoolNames:
     path = './cadence/transactions/Pool/autogen'
@@ -74,12 +75,13 @@ for name in setting.FakePoolNames:
         os.makedirs(path)
     with open(path+'/prepare_{0}_vault_for_pool.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
-        fusd_vault = fusd_vault.replace('POOLNAME', name)
+        fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
+        fusd_vault = fusd_vault.replace('FlowToken', name)
         fusd_vault = fusd_vault.replace('../contracts/', '../contracts/autogen/')
         fw.write(fusd_vault)
 
-# generate init_pool_Apple.cdc, using template init_pool.template
-with open('./cadence/transactions/Pool/init_pool.template', 'r') as f:
+# generate init_pool_Apple.cdc, using template init_pool_template.cdc
+with open('./cadence/transactions/Pool/init_pool_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.PoolNames+setting.FakePoolNames:
     path = './cadence/transactions/Pool/autogen'
@@ -88,6 +90,7 @@ for name in setting.PoolNames+setting.FakePoolNames:
         os.makedirs(path)
     with open(path+'/init_pool_{0}.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
         fusd_vault = fusd_vault.replace('LendingPool', lendingPoolName)
         fusd_vault = fusd_vault.replace('../../../contracts/', '../../../contracts/autogen/')
         fw.write(fusd_vault)
