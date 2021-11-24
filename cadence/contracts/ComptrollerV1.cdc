@@ -239,8 +239,16 @@ pub contract ComptrollerV1 {
             if (self.markets[poolBorrowed]?.isOpen != true || self.markets[poolCollateralized]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
-            let liquidity = self.getCrossMarketLiquiditySnapshot(userAddr: borrower)
-            if liquidity[0] > liquidity[1] {
+            // Current account liquidity check
+            // liquidity[0] - cross-market collateral value
+            // liquidity[1] - cross-market borrow value
+            let scaledLiquidity: [UInt256;2] = self.getHypotheticalAccountLiquidity(
+                account: borrower,
+                poolToModify: 0x0,
+                scaledAmountLPTokenToRedeem: 0,
+                scaledAmountUnderlyingToBorrow: 0
+            )
+            if scaledLiquidity[0] >= scaledLiquidity[1] {
                 return Error.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER.rawValue
             }
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
@@ -325,18 +333,6 @@ pub contract ComptrollerV1 {
             } else {
                 return Error.NO_ERROR.rawValue
             }
-        }
-
-        // Return the current account liquidity snapshot:
-        // [cross-market account collateral value in usd, cross-market account borrows in usd]
-        // Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
-        pub fun getCrossMarketLiquiditySnapshot(userAddr: Address): [UInt256; 2] {
-            return self.getHypotheticalAccountLiquidity(
-                account: userAddr,
-                poolToModify: 0x0,
-                scaledAmountLPTokenToRedeem: 0,
-                scaledAmountUnderlyingToBorrow: 0
-            )
         }
 
         // Remove pool out of user markets list if necessary
@@ -526,6 +522,19 @@ pub contract ComptrollerV1 {
                 return []
             }
             return self.accountMarketsIn[userAddr]!
+        }
+
+        // Return the current account cross-market liquidity snapshot:
+        // [cross-market account collateral value in usd, cross-market account borrows in usd]
+        // Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
+        pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 2] {
+            let scaledLiquidity = self.getHypotheticalAccountLiquidity(
+                account: userAddr,
+                poolToModify: 0x0,
+                scaledAmountLPTokenToRedeem: 0,
+                scaledAmountUnderlyingToBorrow: 0
+            )
+            return [scaledLiquidity[0].toString(), scaledLiquidity[1].toString()]
         }
 
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {

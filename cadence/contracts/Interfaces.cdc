@@ -120,7 +120,7 @@ pub contract interface Interfaces {
         pub fun getAllMarkets(): [Address]
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
         pub fun getUserMarkets(userAddr: Address): [Address]
+        pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 2]
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct}
-        pub fun getCrossMarketLiquiditySnapshot(userAddr: Address): [UInt256; 2]
     }
 }
