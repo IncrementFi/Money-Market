@@ -98,7 +98,7 @@ for name in setting.PoolNames+setting.FakePoolNames:
 
 
 # generate test mint transactions
-with open('./cadence/transactions/Test/mint_token_for_user.template', 'r') as f:
+with open('./cadence/transactions/Test/mint_fusd_for_user.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.FakePoolNames:
     path = './cadence/transactions/Test/autogen'
@@ -106,11 +106,13 @@ for name in setting.FakePoolNames:
         os.makedirs(path)
     with open(path+'/mint_{0}_for_user.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('contracts/FUSD.cdc', 'contracts/autogen/FUSD.cdc')
         fusd_vault = fusd_vault.replace('FUSD', name)
         lowerName = name[:1].lower() + name[1:]
         if name == 'FUSD':
             lowerName = lowerName.lower()
         fusd_vault = fusd_vault.replace('fusd', lowerName)
+        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fw.write(fusd_vault)
 
 #generate user_deposit_fusd.cdc

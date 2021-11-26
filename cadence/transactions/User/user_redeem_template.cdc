@@ -10,18 +10,18 @@ transaction(amountUnderlyingToRedeem: UFix64) {
     let userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_redeem_flow")
+        log("Transaction Start --------------- user_redeem_flowToken")
 
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-            log("Create new local flow vault")
+            log("Create new local flowToken vault")
             signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
         }
         self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
-        log("User left flow ".concat(self.flowTokenVault.balance.toString()))
-        log("User redeem flow ".concat(amountUnderlyingToRedeem.toString()))
+        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
+        log("User redeem flowToken ".concat(amountUnderlyingToRedeem.toString()))
 
         // Get protocol-issued user certificate
         if (signer.borrow<&{Interfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil) {
@@ -36,7 +36,7 @@ transaction(amountUnderlyingToRedeem: UFix64) {
         let redeemedVault <- LendingPool.redeemUnderlying(userCertificateCap: self.userCertificateCap, numUnderlyingToRedeem: amountUnderlyingToRedeem)
         self.flowTokenVault.deposit(from: <-redeemedVault)
 
-        log("User left flow ".concat(self.flowTokenVault.balance.toString()))
+        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
         log("End -----------------------------")
     }
 }
