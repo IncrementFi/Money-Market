@@ -52,7 +52,6 @@ pub contract interface Interfaces {
             borrower: Address,
             scaledBorrowerCollateralLpTokenToSeize: UInt256
         )
-        
     }
 
     pub resource interface OraclePublic {
@@ -121,6 +120,7 @@ pub contract interface Interfaces {
             callerAddress: Address
         ): UInt8
 
+        pub fun getPoolPublicRef(poolAddr: Address): &{PoolPublic}
         pub fun getAllMarkets(): [Address]
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
         pub fun getUserMarkets(userAddr: Address): [Address]
