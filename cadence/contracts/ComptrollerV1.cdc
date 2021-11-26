@@ -485,6 +485,13 @@ pub contract ComptrollerV1 {
             emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
         }
 
+        pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {
+            pre {
+                self.markets.containsKey(poolAddr): "Invalid market address"
+            }
+            return self.markets[poolAddr]!.poolPublicCap.borrow() ?? panic("cannot borrow reference to PoolPublic")
+        }
+
         pub fun getAllMarkets(): [Address] {
             return self.markets.keys
         }
