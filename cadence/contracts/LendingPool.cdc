@@ -38,7 +38,7 @@ pub contract LendingPool {
     // Must be in [0.0, 1.0] x scaleFactor
     pub var scaledPoolSeizeShare: UInt256
     // { supplierAddress => # of virtual lpToken the supplier owns, scaled up by 1e18 }
-    access(contract) let accountLpTokens: {Address: UInt256}
+    access(self) let accountLpTokens: {Address: UInt256}
 
     pub struct BorrowSnapshot {
         // Total balance (with accrued interest), after applying the most recent balance-change action
@@ -559,7 +559,38 @@ pub contract LendingPool {
         pub fun getPoolBorrowerCount(): UInt256 {
             return UInt256(LendingPool.accountBorrows.length)
         }
-
+        pub fun getPoolSupplierList(): [Address] {
+            return LendingPool.accountLpTokens.keys
+        }
+        pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
+            pre {
+                from <= to && to < UInt64(LendingPool.accountLpTokens.length): "index out of range"
+            }
+            let borrowers: &[Address] = &LendingPool.accountLpTokens.keys as &[Address]
+            let list: [Address] = []
+            var i = from
+            while i <= to {
+                list.append(borrowers[i])
+                i = i + 1
+            }
+            return list
+        }
+        pub fun getPoolBorrowerList(): [Address] {
+            return LendingPool.accountBorrows.keys
+        }
+        pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
+            pre {
+                from <= to && to < UInt64(LendingPool.accountBorrows.length): "index out of range"
+            }
+            let borrowers: &[Address] = &LendingPool.accountBorrows.keys as &[Address]
+            let list: [Address] = []
+            var i = from
+            while i <= to {
+                list.append(borrowers[i])
+                i = i + 1
+            }
+            return list
+        }
         pub fun getPoolBorrowAprScaled(): UInt256 {
             let scaledBorrowRatePerBlock =
                 LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
@@ -570,7 +601,6 @@ pub contract LendingPool {
             let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
             return scaledBorrowRatePerBlock * blocksPerYear
         }
-
         pub fun getPoolSupplyAprScaled(): UInt256 {
             let scaledSupplyRatePerBlock =
                 LendingPool.interestRateModelCap!.borrow()!.getSupplyRate(
@@ -582,7 +612,6 @@ pub contract LendingPool {
             let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
             return scaledSupplyRatePerBlock * blocksPerYear
         }
-
         pub fun accrueInterest(): UInt8 {
             let ret = LendingPool.accrueInterest()
             return ret.rawValue
