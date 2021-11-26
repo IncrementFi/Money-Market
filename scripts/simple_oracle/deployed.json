@@ -1,5 +1,6 @@
 {
     "testnet": {
+        "accessNode": "https://access-testnet.onflow.org",
         "interfacesContract": "0xa914b5106275c637",
         "oracleContract": "0x00bb0ede202e2a11",
         "updaterAccount": "0xed8eaa1512ba24aa",
