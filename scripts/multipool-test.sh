@@ -1,7 +1,7 @@
 #!/bin/bash -i
 
 SignerAddrA=0xe03daebed8ca0615
-SignerAddrA=0x045a1763c93006ca
+SignerAddrB=0x045a1763c93006ca
 
 SignerA=emulator-user-A
 SignerB=emulator-user-B
@@ -20,12 +20,12 @@ borrow="flow transactions send ./cadence/transactions/User/autogen/user_borrow_F
 repay="flow transactions send ./cadence/transactions/User/autogen/user_repay_FUSD.cdc -f flow_multipool.json"
 # test case1
 eval $faucet_fusd --signer $SignerA --arg UFix64:"100.0"
-eval $faucet_fusd --signer $SignerB --arg UFix64:"100000.0"
+eval $faucet_fusd --signer $SignerB --arg UFix64:"1999999999.09999999"
 
 eval $deposit --signer $SignerA --arg UFix64:"10.0"
-eval $deposit --signer $SignerB --arg UFix64:"100000.0"
+eval $deposit --signer $SignerB --arg UFix64:"999999999.09999999"
 
-eval $borrow --signer $SignerB --arg UFix64:"50000.0"
+#eval $borrow --signer $SignerB --arg UFix64:"50000.0"
 
 eval $next_block --signer $SignerAudit
 eval $next_block --signer $SignerAudit
