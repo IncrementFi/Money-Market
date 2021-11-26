@@ -39,6 +39,11 @@
 > input: userAddr, vaultPublicPath
 * FUSD: flow scripts execute ./cadence/scripts/Query/query_vault_balance.cdc --args-json '[{"type": "Address", "value": "0xe03daebed8ca0615"}, {"type": "Path", "value": {"domain": "public", "identifier": "fusdBalance"}}]'
 
+#### 查询用户名下的最新的totalSupply与totalBorrow
+> input: userAddr, comptroller地址
+flow scripts execute ./cadence/scripts/Query/query_user_position.cdc e03daebed8ca0615 0xf8d6e0586b0a20c7
+
+
 ## Transactions
 #### 水龙头:
 * FlowToken: flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc 0x收款地址 --signer emulator-account
