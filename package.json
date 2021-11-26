@@ -5,6 +5,7 @@
     "@onflow/fcl": "^0.0.76",
     "@onflow/types": "^0.0.6",
     "babel-jest": "^27.2.0",
+    "bignumber.js": "^9.0.1",
     "flow-js-testing": "^0.1.13",
     "jest": "^27.2.0"
   },

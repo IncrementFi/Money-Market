@@ -245,6 +245,11 @@ scriptsCodePath = [
         'path': './cadence/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
+    {
+        'path': './cadence/scripts/Query/query_user_position.cdc',
+        'name': 'QueryUserPosition'
+    },
+    
     
 ]
 for item in scriptsCodePath:
