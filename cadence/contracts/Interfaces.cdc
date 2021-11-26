@@ -35,6 +35,10 @@ pub contract interface Interfaces {
         pub fun getPoolBorrowAprScaled(): UInt256
         pub fun getPoolSupplierCount(): UInt256
         pub fun getPoolBorrowerCount(): UInt256
+        pub fun getPoolSupplierList(): [Address]
+        pub fun getPoolBorrowerList(): [Address]
+        pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
+        pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
         
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest(): UInt8

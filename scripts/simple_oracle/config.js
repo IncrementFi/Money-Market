@@ -1,8 +1,9 @@
 const deployed = require('./deployed.json');
 
 const network = 'testnet';
+
 module.exports = {
-  accessNode: 'https://access-testnet.onflow.org',
+  accessNode: deployed[network].accessNode,
   interfacesContract: deployed[network].interfacesContract,
   oracleContract: deployed[network].oracleContract,
   updaterAccount: deployed[network].updaterAccount,
