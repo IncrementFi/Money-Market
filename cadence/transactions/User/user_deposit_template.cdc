@@ -7,7 +7,7 @@ transaction(amountDeposit: UFix64) {
     let supplierAddress: Address
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_deposit_flow")
+        log("Transaction Start --------------- user_deposit_flowToken")
         log("Test deposit FlowToken ".concat(amountDeposit.toString()))
 
         let flowTokenStoragePath = /storage/flowTokenVault
@@ -26,7 +26,7 @@ transaction(amountDeposit: UFix64) {
         let inUnderlyingVault <- self.flowTokenVault.withdraw(amount: amountDeposit)
         LendingPool.supply(supplierAddr: self.supplierAddress, inUnderlyingVault: <-inUnderlyingVault)
 
-        log("User left flow ".concat(self.flowTokenVault.balance.toString()))
+        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
         log("End -----------------------------")
     }
 }
