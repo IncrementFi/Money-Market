@@ -11,7 +11,7 @@ transaction(amountBorrow: UFix64) {
     let userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_borrow_flow")
+        log("Transaction Start --------------- user_borrow_flowToken")
 
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
@@ -21,8 +21,8 @@ transaction(amountBorrow: UFix64) {
             signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
         }
         self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
-        log("User left flow ".concat(self.flowTokenVault.balance.toString()))
-        log("User borrow flow ".concat(amountBorrow.toString()))
+        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
+        log("User borrow flowToken ".concat(amountBorrow.toString()))
 
         // Get protocol-issued user certificate
         if (signer.borrow<&{Interfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil) {
@@ -37,7 +37,7 @@ transaction(amountBorrow: UFix64) {
         let borrowVault <- LendingPool.borrow(userCertificateCap: self.userCertificateCap, borrowAmount: amountBorrow)
         self.flowTokenVault.deposit(from: <-borrowVault)
 
-        log("User left flow ".concat(self.flowTokenVault.balance.toString()))
+        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
         log("End -----------------------------")
     }
 }

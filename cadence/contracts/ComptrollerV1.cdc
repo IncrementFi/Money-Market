@@ -189,7 +189,15 @@ pub contract ComptrollerV1 {
                 }
             }
 
-            // 2. Hypothetical account liquidity check after underlying was borrowed
+            // 2. Add to user markets list
+            if (self.accountMarketsIn.containsKey(borrowerAddress) == false) {
+                self.accountMarketsIn[borrowerAddress] = [poolAddress]
+            } else if (self.accountMarketsIn[borrowerAddress]!.contains(poolAddress) == false) {
+                self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
+            }
+
+
+            // 3. Hypothetical account liquidity check after underlying was borrowed
             // liquidity[0] - cross-market collateral value
             // liquidity[1] - cross-market borrow value
             let scaledLiquidity: [UInt256; 2] = self.getHypotheticalAccountLiquidity(
@@ -202,12 +210,6 @@ pub contract ComptrollerV1 {
                 return Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
 
-            // 3. Add to user markets list
-            if (self.accountMarketsIn.containsKey(borrowerAddress) == false) {
-                self.accountMarketsIn[borrowerAddress] = [poolAddress]
-            } else if (self.accountMarketsIn[borrowerAddress]!.contains(poolAddress) == false) {
-                self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
-            }
 
             ///// 4. TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
