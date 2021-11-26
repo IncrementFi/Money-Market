@@ -525,8 +525,8 @@ pub contract LendingPool {
         }
         pub fun getUnderlyingTypeString(): String {
             let underlyingType = LendingPool.getUnderlyingAssetType()
-            // "A.1654653399040a61.FlowToken" => "FlowToken"
-            return underlyingType.slice(from: 19, upTo: underlyingType.length)
+            // "A.1654653399040a61.FlowToken.Vault" => "FlowToken"
+            return underlyingType.slice(from: 19, upTo: underlyingType.length - 6)
         }
         pub fun getUnderlyingToLpTokenRateScaled(): UInt256 {
             return LendingPool.underlyingToLpTokenRateSnapshotScaled()
