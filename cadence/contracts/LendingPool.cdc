@@ -537,11 +537,27 @@ pub contract LendingPool {
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256 {
             return LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: account)
         }
-        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3] {
+        pub fun getAccountBorrowPrincipalSnapshotScaled(account: Address): UInt256 {
+            if (LendingPool.accountBorrows.containsKey(account) == false) {
+                return 0
+            } else {
+                return LendingPool.accountBorrows[account]!.scaledPrincipal
+            }
+        }
+        pub fun getAccountBorrowIndexSnapshotScaled(account: Address): UInt256 {
+            if (LendingPool.accountBorrows.containsKey(account) == false) {
+                return 0
+            } else {
+                return LendingPool.accountBorrows[account]!.scaledInterestIndex
+            }
+        }
+        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5] {
             return [
                 self.getUnderlyingToLpTokenRateScaled(),
                 self.getAccountLpTokenBalanceScaled(account: account),
-                self.getAccountBorrowBalanceScaled(account: account)
+                self.getAccountBorrowBalanceScaled(account: account),
+                self.getAccountBorrowPrincipalSnapshotScaled(account: account),
+                self.getAccountBorrowIndexSnapshotScaled(account: account)
             ]
         }
         pub fun getPoolTotalBorrowsScaled(): UInt256 {

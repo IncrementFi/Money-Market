@@ -25,8 +25,8 @@ pub contract interface Interfaces {
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
         // Return snapshot of account borrowed balance in scaled UInt256 format
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
-        // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance]
-        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 3]
+        // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance, scaledAccountBorrowPrincipal, scaledAccountBorrowIndex]
+        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5]
 
         pub fun getPoolTotalBorrowsScaled(): UInt256
         pub fun getPoolTotalSupplyScaled(): UInt256
