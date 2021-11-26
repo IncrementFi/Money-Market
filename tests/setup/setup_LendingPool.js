@@ -9,7 +9,7 @@ import {
     getInterestRateModelAddress,
     getComptrollerAddress,
     getSimpleOracleAddress,    
-} from "../setup/setup_Deployment";
+} from "./setup_Deployment";
 
 export const queryPoolInfo = async () => {
     const poolAddr = await getLendingPoolAddress()
@@ -52,6 +52,14 @@ export const queryCurrentBlockId = async () => {
     return executeScript({ code, args });
 }
 
+export const queryFlowTokenInterestRate = async () => {
+    const modelAddr = await getInterestRateModelAddress()
+    const name = "Test/query_interest_rates_template";
+    const args = [modelAddr];
+    return executeScript({ name, args });
+}
+
+
 /**
  * 
  * @returns {Promise<*>}
@@ -71,5 +79,27 @@ export const queryCurrentBlockId = async () => {
     const name = "User/user_redeem_template"
     const signers = [userAddr]
     const args = [redeemAmount]
+    return sendTransaction({ name, args, signers })
+}
+
+/**
+ * 
+ * @returns {Promise<*>}
+ */
+ export const borrow = async (userAddr, borrowAmount) => {
+    const name = "User/user_borrow_template"
+    const signers = [userAddr]
+    const args = [borrowAmount]
+    return sendTransaction({ name, args, signers })
+}
+
+/**
+ * 
+ * @returns {Promise<*>}
+ */
+ export const repay = async (userAddr, repayAmount) => {
+    const name = "User/user_repay_template"
+    const signers = [userAddr]
+    const args = [repayAmount]
     return sendTransaction({ name, args, signers })
 }
