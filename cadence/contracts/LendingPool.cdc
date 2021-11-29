@@ -66,7 +66,7 @@ pub contract LendingPool {
     // Event emitted when interest is accrued
     pub event AccrueInterest(_ scaledCashPrior: UInt256, _ scaledInterestAccumulated: UInt256, _ scaledBorrowIndexNew: UInt256, _ scaledTotalBorrowsNew: UInt256)
     // Event emitted when underlying asset is deposited into pool
-    pub event Supply(scaledSuppliedUnderlyingAmount: UInt256, scaledMintedLpTokenAmount: UInt256)
+    pub event Supply(supplier: Address, scaledSuppliedUnderlyingAmount: UInt256, scaledMintedLpTokenAmount: UInt256)
     // Event emitted when virtual lpToken is burnt and redeemed for underlying asset
     pub event Redeem(redeemer: Address, scaledLpTokenToRedeem: UInt256, scaledRedeemedUnderlyingAmount: UInt256)
     // Event emitted when user borrows underlying from the pool
@@ -78,7 +78,7 @@ pub contract LendingPool {
     // Event emitted when pool reserves is reduced
     pub event ReservesReduced(scaledReduceAmount: UInt256, scaledNewTotalReserves: UInt256)
     // Event emitted when liquidation happenes
-    pub event LiquidateBorrow(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
+    pub event Liquidate(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
     // Event emitted when interestRateModel is changed
     pub event NewInterestRateModel(_ oldInterestRateModelAddress: Address?, _ newInterestRateModelAddress: Address)
     // Event emitted when the reserveFactor is changed
@@ -187,7 +187,7 @@ pub contract LendingPool {
         self.scaledTotalSupply = self.scaledTotalSupply + scaledMintVirtualAmount
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
-        emit Supply(scaledSuppliedUnderlyingAmount: scaledAmount, scaledMintedLpTokenAmount: scaledMintVirtualAmount)
+        emit Supply(supplier: supplierAddr, scaledSuppliedUnderlyingAmount: scaledAmount, scaledMintedLpTokenAmount: scaledMintVirtualAmount)
     }
 
     access(self) fun redeemInternal(
@@ -439,7 +439,7 @@ pub contract LendingPool {
             )
         }
 
-        emit LiquidateBorrow(
+        emit Liquidate(
             liquidator: liquidator,
             borrower: borrower,
             scaledActualRepaidUnderlying: scaledActualRepayAmount,
