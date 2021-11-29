@@ -118,7 +118,16 @@ pub contract ComptrollerV1 {
         access(self) let accountMarketsIn: {Address: [Address]}
 
         // Return 0 for Error.NO_ERROR, i.e. supply allowed
-        pub fun supplyAllowed(poolAddress: Address, supplierAddress: Address, supplyUnderlyingAmountScaled: UInt256): UInt8 {
+        pub fun supplyAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolAddress: Address,
+            supplierAddress: Address,
+            supplyUnderlyingAmountScaled: UInt256): UInt8
+        {
+            if (self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress) != 0 ) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            }
+
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
@@ -138,10 +147,15 @@ pub contract ComptrollerV1 {
 
         // Return 0 for Error.NO_ERROR, i.e. redeem allowed
         pub fun redeemAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
         ): UInt8 {
+            if (self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress) != 0 ) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            }
+
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
@@ -173,10 +187,15 @@ pub contract ComptrollerV1 {
         }
 
         pub fun borrowAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
         ): UInt8 {
+            if (self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress) != 0 ) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            }
+
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
@@ -218,7 +237,16 @@ pub contract ComptrollerV1 {
             return Error.NO_ERROR.rawValue
         }
 
-        pub fun repayAllowed(poolAddress: Address, borrowerAddress: Address, repayUnderlyingAmountScaled: UInt256): UInt8 {
+        pub fun repayAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolAddress: Address,
+            borrowerAddress: Address,
+            repayUnderlyingAmountScaled: UInt256): UInt8
+        {
+            if (self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress) != 0 ) {
+                return Error.INVALID_CALLER_CERTIFICATE.rawValue
+            }
+            
             if (self.markets[poolAddress]?.isOpen != true) {
                 return Error.MARKET_NOT_OPEN.rawValue
             }
