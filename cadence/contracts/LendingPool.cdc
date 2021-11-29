@@ -173,6 +173,7 @@ pub contract LendingPool {
         // 2. Check whether or not supplyAllowed()
         let scaledAmount = Config.UFix64ToScaledUInt256(inUnderlyingVault.balance)
         let ret = self.comptrollerCap!.borrow()!.supplyAllowed(
+            poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             supplierAddress: supplierAddr,
             supplyUnderlyingAmountScaled: scaledAmount
@@ -229,6 +230,7 @@ pub contract LendingPool {
         assert(scaledLpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
 
         let ret = self.comptrollerCap!.borrow()!.redeemAllowed(
+            poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             redeemerAddress: redeemer,
             redeemLpTokenAmountScaled: scaledLpTokenToRedeem,
@@ -319,6 +321,7 @@ pub contract LendingPool {
         // 3. Check whether or not borrowAllowed()
         let borrower = userCertificateCap.borrow()!.owner!.address
         let ret = self.comptrollerCap!.borrow()!.borrowAllowed(
+            poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             borrowUnderlyingAmountScaled: scaledBorrowAmount
@@ -340,6 +343,7 @@ pub contract LendingPool {
         let scaledAccountTotalBorrows = self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
         let scaledActualRepayAmount = scaledAccountTotalBorrows > scaledRepayAmount ? scaledRepayAmount : scaledAccountTotalBorrows
         let ret = self.comptrollerCap!.borrow()!.repayAllowed(
+            poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             repayUnderlyingAmountScaled: scaledActualRepayAmount
