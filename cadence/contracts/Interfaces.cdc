@@ -68,24 +68,28 @@ pub contract interface Interfaces {
 
     pub resource interface ComptrollerPublic {
         pub fun supplyAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
         ): UInt8
 
         pub fun redeemAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
         ): UInt8
 
         pub fun borrowAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
         ): UInt8
         
         pub fun repayAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
