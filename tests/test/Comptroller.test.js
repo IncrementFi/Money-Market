@@ -36,7 +36,7 @@ import { exportAllDeclaration } from "@babel/types";
 
 
 // We need to set timeout for a higher number, because some transactions might take up some time
-jest.setTimeout(100000)
+jest.setTimeout(600000)
 
 describe("LendingPool Testsuites", () => {
     beforeEach(async () => {
@@ -52,7 +52,7 @@ describe("LendingPool Testsuites", () => {
         await initOracle()
         await initComptroller()
         await initPool(0.01, 0.028)
-        await addMarket(0.8, 100000000.0, true, true)
+        await addMarket(0.05, 0.8, 100000000.0, true, true)
     });
     // Stop emulator, so it could be restarted
     afterEach(async () => {
@@ -66,7 +66,7 @@ describe("LendingPool Testsuites", () => {
         await shallPass( supply( userAddr1, "50" ) )
         await shallPass( borrow( userAddr1, "20" ) )
 
-        await configMarket(0.8, 100000000.0, false, true)
+        await configMarket(0.05, 0.8, 100000000.0, false, true)
 
         await shallRevert( supply( userAddr1, "1" ) )
         await shallRevert( borrow( userAddr1, "1" ) )
@@ -78,7 +78,7 @@ describe("LendingPool Testsuites", () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(0.8, 100000000.0, true, true)
+        await configMarket(0.05, 0.8, 100000000.0, true, true)
 
         await supply( userAddr1, "100" )
         await borrow( userAddr1, "20" )
@@ -93,7 +93,7 @@ describe("LendingPool Testsuites", () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(0.8, 100000000.0, true, true)
+        await configMarket(0.05, 0.8, 100000000.0, true, true)
 
         await supply( userAddr1, "100" )
         await borrow( userAddr1, "20" )
@@ -151,7 +151,7 @@ describe("LendingPool Testsuites", () => {
 
         await supply( userAddr1, "100" )
 
-        await configMarket(0.8, 10.0, true, true)
+        await configMarket(0.05, 0.8, 10.0, true, true)
 
         await shallRevert( borrow( userAddr1, "11" ) )
         await shallPass( borrow( userAddr1, "10" ) )
