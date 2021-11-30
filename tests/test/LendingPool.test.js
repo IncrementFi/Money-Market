@@ -85,7 +85,7 @@ describe("LendingPool Testsuites", () => {
         await initOracle()
         await initComptroller()
         await initPool(0.01, 0.028)
-        await addMarket(0.8, 100000000.0, true, true)
+        await addMarket(0.05, 0.8, 100000000.0, true, true)
     });
     // Stop emulator, so it could be restarted
     afterEach(async () => {
