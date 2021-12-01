@@ -48,7 +48,7 @@ describe("LendingPool Testsuites", () => {
 
         await shallPass(initPool(0.01, 0.028))
 
-        await shallPass(addMarket(0.75, 10000.0, true, true))
+        await shallPass(addMarket(0.05, 0.75, 10000.0, true, true))
     });
     
     
