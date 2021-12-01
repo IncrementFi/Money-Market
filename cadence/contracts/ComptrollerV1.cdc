@@ -17,14 +17,14 @@ pub contract ComptrollerV1 {
     // Path for creating private capability of UserCertificate resource
     pub let UserCertificatePrivatePath: PrivatePath
 
-    pub event MarketAdded(market: Address, marketType: String, collateralFactor: UFix64)
+    pub event MarketAdded(market: Address, marketType: String, liquidationPenalty: UFix64, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
     pub event NewCloseFactor(_ oldCloseFactor: UFix64, _ newCloseFactor: UFix64)
-    pub event NewLiquidationIncentive(_ oldLiquidationIncentive: UFix64, _ newLiquidationIncentive: UFix64)
     pub event ConfigMarketParameters(
         market: Address,
         oldIsOpen: Bool?, newIsOpen: Bool?,
         oldIsMining: Bool?, newIsMining: Bool?,
+        oldLiquidationPenalty: UFix64?, newLiquidationPenalty: UFix64?,
         oldCollateralFactor: UFix64?, newCollateralFactor: UFix64?,
         oldBorrowCap: UFix64?, newBorrowCap: UFix64?
     )
@@ -47,6 +47,11 @@ pub contract ComptrollerV1 {
         pub var isOpen: Bool
         // Whether or not liquidity mining is enabled for this market
         pub var isMining: Bool
+        // When liquidation happenes, liquidators repay part of the borrowed amount on behalf of the borrower,
+        // and in return they receive corresponding amount of collateral with an additional incentive.
+        // It's an incentive for the liquidator but a penalty for the liquidated borrower.
+        // Must be in [0.0, 1.0] x scaleFactor
+        pub var scaledLiquidationPenalty: UInt256
         // The most one can borrow against his collateral in this market
         // Must be in [0.0, 1.0] x scaleFactor
         pub var scaledCollateralFactor: UInt256
@@ -63,6 +68,15 @@ pub contract ComptrollerV1 {
         pub fun setMiningStatus(isMining: Bool) {
             if (self.isMining != isMining) { 
                 self.isMining = isMining
+            }
+        }
+        pub fun setLiquidationPenalty(newLiquidationPenalty: UFix64) {
+            pre {
+                newLiquidationPenalty <= 1.0: "newLiquidationPenalty out of range 1.0"
+            }
+            let scaledNewLiquidationPenalty = Config.UFix64ToScaledUInt256(newLiquidationPenalty)
+            if (self.scaledLiquidationPenalty != scaledNewLiquidationPenalty) {
+                self.scaledLiquidationPenalty = scaledNewLiquidationPenalty
             }
         }
         pub fun setCollateralFactor(newCollateralFactor: UFix64) {
@@ -84,6 +98,7 @@ pub contract ComptrollerV1 {
             poolPublicCap: Capability<&{Interfaces.PoolPublic}>,
             isOpen: Bool,
             isMining: Bool,
+            liquidationPenalty: UFix64,
             collateralFactor: UFix64,
             borrowCap: UFix64
         ) {
@@ -93,6 +108,7 @@ pub contract ComptrollerV1 {
             self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
             self.isMining = isMining
+            self.scaledLiquidationPenalty = Config.UFix64ToScaledUInt256(liquidationPenalty)
             self.scaledCollateralFactor = Config.UFix64ToScaledUInt256(collateralFactor)
             self.scaledBorrowCap = Config.UFix64ToScaledUInt256(borrowCap)
         }
@@ -110,8 +126,6 @@ pub contract ComptrollerV1 {
         access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0] x scaleFactor
         access(self) var scaledCloseFactor: UInt256
-        // Multiplier representing the discount on collateral that a liquidator receives. [0.0, 1.0] x scaleFactor
-        access(self) var scaledLiquidationIncentive: UInt256
         // { poolAddress => Market States }
         access(self) let markets: {Address: Market}
         // { accountAddress => markets the account has either provided liquidity to or borrowed from }
@@ -215,7 +229,6 @@ pub contract ComptrollerV1 {
                 self.accountMarketsIn[borrowerAddress]!.append(poolAddress)
             }
 
-
             // 3. Hypothetical account liquidity check after underlying was borrowed
             // liquidity[0] - cross-market collateral value
             // liquidity[1] - cross-market borrow value
@@ -228,7 +241,6 @@ pub contract ComptrollerV1 {
             if (scaledLiquidity[1] > scaledLiquidity[0]) {
                 return Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER.rawValue
             }
-
 
             ///// 4. TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
@@ -326,13 +338,14 @@ pub contract ComptrollerV1 {
 
             // 2. Calculate collateralPool lpTokenSeizedAmount
             let scaledCollateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublicCap.borrow()!.getUnderlyingToLpTokenRateScaled()
+            let scaledCollateralPoolLiquidationIncentive = self.markets[collateralPool]!.scaledLiquidationPenalty
             let scaledBorrowPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
             let scaledCollateralPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
             let scaleFactor = Config.scaleFactor
             // collatetalPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD x collateralPoolUnderlyingToLpTokenRate
             // seizedCollateralPoolLpTokenAmount = repaidBorrowWithIncentiveInUSD / collatetalPoolLpTokenPriceUSD
             let scaledActualRepaidBorrowWithIncentiveInUSD =
-                scaledBorrowPoolUnderlyingPriceUSD * (scaleFactor + self.scaledLiquidationIncentive) / scaleFactor *
+                scaledBorrowPoolUnderlyingPriceUSD * (scaleFactor + scaledCollateralPoolLiquidationIncentive) / scaleFactor *
                     actualRepaidBorrowAmountScaled / scaleFactor
             let scaledCollateralPoolLpTokenPriceUSD = scaledCollateralPoolUnderlyingPriceUSD * scaledCollateralUnderlyingToLpTokenRate / scaleFactor
             let scaledCollateralLpTokenSeizedAmount = scaledActualRepaidBorrowWithIncentiveInUSD * scaleFactor / scaledCollateralPoolLpTokenPriceUSD
@@ -441,7 +454,7 @@ pub contract ComptrollerV1 {
             return [sumScaledCollateralWithEffectsNormalized, sumScaledBorrowWithEffectsNormalized]
         }
 
-        access(contract) fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
+        access(contract) fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             pre {
                 self.markets.containsKey(poolAddress) == false:
                     "pool has already been added"
@@ -453,16 +466,17 @@ pub contract ComptrollerV1 {
             assert(poolPublicCap.check() == true, message: "cannot borrow reference to PoolPublic interface")
 
             self.markets[poolAddress] =
-                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, collateralFactor: 0.0, borrowCap: 0.0)
+                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: 0.0)
             emit MarketAdded(
                 market: poolAddress,
                 marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
+                liquidationPenalty: liquidationPenalty,
                 collateralFactor: collateralFactor
             )
         }
 
         // Tune parameters of an already-listed market
-        access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+        access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool): "pool has not been supported yet"
             }
@@ -474,9 +488,13 @@ pub contract ComptrollerV1 {
             if (isMining != nil) {
                 self.markets[pool]!.setMiningStatus(isMining: isMining!)
             }
-            let oldCollateralFactor = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            let oldLiquidationPenalty = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
             if (collateralFactor != nil) {
                 self.markets[pool]!.setCollateralFactor(newCollateralFactor: collateralFactor!)
+            }
+            let oldCollateralFactor = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            if (liquidationPenalty != nil) {
+                self.markets[pool]!.setLiquidationPenalty(newLiquidationPenalty: liquidationPenalty!)
             }
             let oldBorrowCap = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
             if (borrowCap != nil) {
@@ -486,6 +504,7 @@ pub contract ComptrollerV1 {
                 market: pool,
                 oldIsOpen: oldOpen, newIsOpen: self.markets[pool]?.isOpen,
                 oldIsMining: oldMining, newIsMining: self.markets[pool]?.isMining,
+                oldLiquidationPenalty: oldLiquidationPenalty, newLiquidationPenalty: liquidationPenalty,
                 oldCollateralFactor: oldCollateralFactor, newCollateralFactor: collateralFactor,
                 oldBorrowCap: oldBorrowCap, newBorrowCap: borrowCap
             )
@@ -504,15 +523,6 @@ pub contract ComptrollerV1 {
             let oldCloseFactor = Config.ScaledUInt256ToUFix64(self.scaledCloseFactor)
             self.scaledCloseFactor = Config.UFix64ToScaledUInt256(newCloseFactor)
             emit NewCloseFactor(oldCloseFactor, newCloseFactor)
-        }
-
-        access(contract) fun setLiquidationIncentive(newLiquidationIncentive: UFix64) {
-            pre {
-                newLiquidationIncentive <= 1.0: "value out of range 1.0"
-            }
-            let oldLiquidationIncentive = Config.ScaledUInt256ToUFix64(self.scaledLiquidationIncentive)
-            self.scaledLiquidationIncentive = Config.UFix64ToScaledUInt256(newLiquidationIncentive)
-            emit NewLiquidationIncentive(oldLiquidationIncentive, newLiquidationIncentive)
         }
 
         pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {
@@ -546,6 +556,7 @@ pub contract ComptrollerV1 {
                 "marketReserveScaled": poolRef.getPoolTotalReservesScaled().toString(),
                 "marketSupplyApr": poolRef.getPoolSupplyAprScaled().toString(),
                 "marketBorrowApr": poolRef.getPoolBorrowAprScaled().toString(),
+                "marketLiquidationPenalty": market.scaledLiquidationPenalty.toString(),
                 "marketCollateralFactor": market.scaledCollateralFactor.toString(),
                 "marketBorrowCap": market.scaledBorrowCap.toString(),
                 "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice).toString(),
@@ -593,7 +604,6 @@ pub contract ComptrollerV1 {
         init() {
             self.oracleCap = nil
             self.scaledCloseFactor = 0
-            self.scaledLiquidationIncentive = 0
             self.markets = {}
             self.accountMarketsIn = {}
         }
@@ -602,17 +612,18 @@ pub contract ComptrollerV1 {
     pub resource Admin {
         // Admin function to list a new asset pool to the lending market
         // Note: Do not list a new asset pool before the oracle feed is ready
-        pub fun addMarket(poolAddress: Address, collateralFactor: UFix64) {
+        pub fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
-            comptrollerRef.addMarket(poolAddress: poolAddress, collateralFactor: collateralFactor)
+            comptrollerRef.addMarket(poolAddress: poolAddress, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         }
         // Admin function to config parameters of a listed-market
-        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
             comptrollerRef.configMarket(
                 pool: pool,
                 isOpen: isOpen,
                 isMining: isMining,
+                liquidationPenalty: liquidationPenalty,
                 collateralFactor: collateralFactor,
                 borrowCap: borrowCap
             )
@@ -626,11 +637,6 @@ pub contract ComptrollerV1 {
         pub fun setCloseFactor(closeFactor: UFix64) {
             let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
             comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)
-        }
-        // Admin function to set liquidationIncentive
-        pub fun setLiquidationIncentive(liquidationIncentive: UFix64) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
-            comptrollerRef.setLiquidationIncentive(newLiquidationIncentive: liquidationIncentive)
         }
     }
 
