@@ -116,6 +116,7 @@ cadence/transactions/Pool/autogen
 cadence/transactions/Test/autogen
 cadence/transactions/User/autogen
 cadence/scripts/Query/autogen
+cadence/scripts/Test/autogen
 *.pyc
-scripts/emulator/__pycache__
 deploy.config.emulator.json
+*__pycache__*
