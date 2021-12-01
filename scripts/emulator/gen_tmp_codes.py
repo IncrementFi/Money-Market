@@ -15,6 +15,9 @@ if os.path.exists('./cadence/transactions/User/autogen'):
     shutil.rmtree('./cadence/transactions/User/autogen')
 if os.path.exists('./cadence/scripts/Query/autogen'):
     shutil.rmtree('./cadence/scripts/Query/autogen')
+if os.path.exists('./cadence/scripts/Test/autogen'):
+    shutil.rmtree('./cadence/scripts/Test/autogen')
+    
 
 if len(sys.argv) > 1 and sys.argv[1] == '1':
     os.system('rm flow_multipool*')
@@ -81,6 +84,21 @@ for name in setting.FakePoolNames:
         fw.write(fusd_vault)
 
 # generate init_pool_Apple.cdc, using template init_pool_template.cdc
+with open('./cadence/scripts/Test/query_pool_state_template.cdc', 'r') as f:
+    transaction_template = f.read()
+for name in setting.PoolNames+setting.FakePoolNames:
+    path = './cadence/scripts/Test/autogen'
+    lendingPoolName = 'LendingPool_'+name
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+'/query_pool_state_{0}.cdc'.format(name), 'w') as fw:
+        fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
+        fusd_vault = fusd_vault.replace('LendingPool', lendingPoolName)
+        fusd_vault = fusd_vault.replace('../../../contracts/LendingPool', '../../../contracts/autogen/LendingPool')
+        fw.write(fusd_vault)
+
+# generate query_pool_state, using template init_pool_template.cdc
 with open('./cadence/transactions/Pool/init_pool_template.cdc', 'r') as f:
     transaction_template = f.read()
 for name in setting.PoolNames+setting.FakePoolNames:
@@ -94,8 +112,6 @@ for name in setting.PoolNames+setting.FakePoolNames:
         fusd_vault = fusd_vault.replace('LendingPool', lendingPoolName)
         fusd_vault = fusd_vault.replace('../../../contracts/', '../../../contracts/autogen/')
         fw.write(fusd_vault)
-
-
 
 # generate test mint transactions
 with open('./cadence/transactions/Test/mint_fusd_for_user.cdc', 'r') as f:

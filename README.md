@@ -18,10 +18,11 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 ```
 
 
-### Deploy multipool to emulator:
+### Deploy multipools to emulator:
 1. Run `flow emulator -v` to start emulator
 2. Run `./scripts/multipool-deploy.sh` to deploy accounts and contracts.
 3. Run `./scripts/multipool-test.sh` for testing.
+   or Run `python ./scripts/testbot/UserRandomEmulator.py 10` for multiple users simulation.
 ###### pool setting:
 ./scripts/emulator/multipool_setting.py can be modified to support various pools.
 ###### clear tmp codes:
