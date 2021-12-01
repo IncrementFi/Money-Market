@@ -90,7 +90,7 @@ with open("./flow_multipool_env.json", 'w') as fw:
 # deposit base flow token on account
 for deployName in flow_dict['deployments']['emulator']:
     addr = setting.DictDeployNameToAddr[deployName]
-    os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} --signer emulator-account'.format(addr))
+    os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} "100.0" --signer emulator-account'.format(addr))
 
 
 # deploy env contracts: tokens
@@ -170,14 +170,14 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
 
 # test mint for user
 userAddr = '0xe03daebed8ca0615'
-os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} --signer emulator-account'.format(userAddr))
+os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} "100.0" --signer emulator-account'.format(userAddr))
 os.system('flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A --arg UFix64:\"100.0\"')
 #for fakeName in setting.FakePoolNames:
 #    os.system('flow transactions send ./cadence/transactions/Test/autogen/mint_{0}_for_user.cdc -f flow_multipool.json --signer emulator-user-A'.format(fakeName))
 
 
 
-# generate current config json
+# generate config json
 configJson = {}
 configJson["ContractAddress"] = {}
 for deployer in flow_dict["deployments"]["emulator"]:
@@ -185,6 +185,7 @@ for deployer in flow_dict["deployments"]["emulator"]:
         configJson["ContractAddress"][contract] = setting.DictDeployNameToAddr[deployer]
 configJson["ContractAddress"]["FungibleToken"] = "0xee82856bf20e2aa6"
 configJson["ContractAddress"]["FlowToken"] = "0x0ae53cb6e3f42a79"
+configJson["ContractAddress"]["ChainAdmin"] = "0xf8d6e0586b0a20c7"
 
 configJson["PoolAddress"] = {}
 configJson["PoolName"] = {}
@@ -294,7 +295,8 @@ for item in poolCodePath:
             codeMapping = AddressMapping(code)
             codeMapping = codeMapping.replace('0xLendingPool', configJson['PoolName'][poolName]['PoolAddress'])
             configJson["Codes"]["Transactions"][name][poolName] = codeMapping
-                           
+
+#                      
 configJson["Codes"]["Transactions"]["Test"] = {}
 with open("./cadence/transactions/Test/test_next_block.cdc", 'r') as f:
     code = f.read()
@@ -310,7 +312,16 @@ for poolName in configJson['PoolName']:
         codeMapping = AddressMapping(code)
     configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = codeMapping
 
+with open("./cadence/transactions/Test/emulator_flow_transfer.cdc", 'r') as f:
+    code = f.read()
+    codeMapping = AddressMapping(code)
+    configJson["Codes"]["Transactions"]["Test"]["MintFlowToken"] = codeMapping
 
+
+###
 with open("./deploy.config.emulator.json", 'w') as fw:
+    json_str = json.dumps(configJson, indent=2)
+    fw.write(json_str)
+with open("./scripts/testbot/deploy.config.emulator.json", 'w') as fw:
     json_str = json.dumps(configJson, indent=2)
     fw.write(json_str)
