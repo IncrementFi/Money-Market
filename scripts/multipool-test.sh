@@ -41,7 +41,7 @@ eval $query_user_pool $SignerAddrA $fusdAddr $auditAddr
 #flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc $userA $fusdAddr $auditAddr
 
 # borrow
-#flow transactions send ./cadence/transactions/User/autogen/user_borrow_FUSD.cdc -f flow_multipool.json --arg UFix64:"2.0" --signer emulator-user-A
+flow transactions send ./cadence/transactions/User/autogen/user_borrow_FUSD.cdc -f flow_multipool.json --arg UFix64:"2.0" --signer emulator-user-A
 
 
 
