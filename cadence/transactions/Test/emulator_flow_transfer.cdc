@@ -2,17 +2,17 @@ import FungibleToken from "../../contracts/FungibleToken.cdc"
 import FlowToken from "../../contracts/FlowToken.cdc"
 
 
-transaction(to: Address) {
+transaction(to: Address, amount: UFix64) {
     prepare(signer: AuthAccount) {
         log("Transaction Start --------------- emulator_flow_transfer")
 
-        log("account deposit 100.0 FlowToken")
+        log("account deposit FlowToken".concat(amount.toString()))
         // Get a reference to the signer's stored vault
         let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)
           ?? panic("Could not borrow reference to the owner's Vault!")
 
         // Withdraw tokens from the signer's stored vault
-        let sentVault <- vaultRef.withdraw(amount: 100.0)
+        let sentVault <- vaultRef.withdraw(amount: amount)
 
         // Get a reference to the recipient's Receiver
         let receiverRef =  getAccount(to)

@@ -37,16 +37,16 @@
 
 #### 查询用户本地underlying vault的余额
 > input: userAddr, vaultPublicPath
-* FUSD: flow scripts execute ./cadence/scripts/Query/query_vault_balance.cdc --args-json '[{"type": "Address", "value": "0xe03daebed8ca0615"}, {"type": "Path", "value": {"domain": "public", "identifier": "fusdBalance"}}]'
+* FUSD: flow scripts execute ./cadence/scripts/Query/query_vault_balance.cdc --args-json '[{"type": "Address", "value": "0x045a1763c93006ca"}, {"type": "Path", "value": {"domain": "public", "identifier": "fusdBalance"}}]'
 
 #### 查询用户名下的最新的totalSupply与totalBorrow
 > input: userAddr, comptroller地址
-flow scripts execute ./cadence/scripts/Query/query_user_position.cdc e03daebed8ca0615 0xf8d6e0586b0a20c7
+flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c93006ca 0xf8d6e0586b0a20c7
 
 
 ## Transactions
 #### 水龙头:
-* FlowToken: flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc 0x收款地址 --signer emulator-account
+* FlowToken: flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc --arg Address:0xe03daebed8ca0615 --arg UFix64:"100.0" --signer emulator-account
 * FUSD: flow transactions send ./cadence/transactions/Test/mint_fusd_for_user.cdc --signer emulator-user-A --arg UFix64:"100.0"
 * 伪造的临时Token: flow transactions send ./cadence/transactions/Test/autogen/mint_Token名字_for_user.cdc -f flow_multipool.json --signer emulator-user-A
 

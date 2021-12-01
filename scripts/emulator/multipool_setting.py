@@ -15,7 +15,7 @@ PoolNames = ['FUSD', 'FlowToken']
 
 # FakePool's token contract will be generated automatically
 # FakePoolNames = ['Apple', 'Banana', 'Peach']
-FakePoolNames = ['Apple']
+FakePoolNames = ['Apple', 'Banana']
 
 
 
