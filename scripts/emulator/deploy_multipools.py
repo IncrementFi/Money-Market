@@ -159,10 +159,11 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
     collateralFactor = 0.75
     borrowCap = 100.0
     if poolName in setting.PoolParams:
+        liquidationPenalty = setting.PoolParams[poolName]['liquidationPenalty']
         collateralFactor = setting.PoolParams[poolName]['collateralFactor']
         borrowCap = setting.PoolParams[poolName]['borrowCap']
-    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg Bool:true --arg Bool:true --signer emulator-account'.format(
-        poolAddr, collateralFactor, borrowCap
+    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg UFix64:{3} --arg Bool:true --arg Bool:true --signer emulator-account'.format(
+        poolAddr, liquidationPenalty, collateralFactor, borrowCap
     )
     print(cmd)
     os.system(cmd)
