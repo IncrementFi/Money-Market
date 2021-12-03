@@ -123,7 +123,7 @@ flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c
 ```
 1. 使用率 = borrows / (cash + borrows - reserves)
 2. borrow曲线公式:
-X轴: 当前使用率
+X轴: 当前使用率 0% - 100% 比如 38%的使用率的 X = 0.38 * 放大因子(1e18)
 Y轴: 
 a. 如果 X <= 折线拐点使用率:
 > Y = (一段斜率 * X / 放大因子 + 基础利率)
@@ -131,7 +131,7 @@ b. 如果 X > 折线拐点使用率:
 > Y = (X - 折线拐点使用率) * 二段斜率 / 放大因子 + 一段斜率 * 折线拐点使用率 / 放大因子 + 基础利率
 
 3. supply曲线公式:
-X轴: 当前使用率
+X轴: 当前使用率 (比如 0.38 * 1e18)
 Borrow利率 = BorrowRate(X) [上面的公式]
 Reserve因子 = 取自pool info接口的 "marketReserveFactor"参数
 Y轴: 
