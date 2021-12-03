@@ -251,6 +251,10 @@ scriptsCodePath = [
         'path': './cadence/scripts/Query/query_user_position.cdc',
         'name': 'QueryUserPosition'
     },
+    {
+        'path': './cadence/scripts/Query/query_market_interestrate_model_params.cdc',
+        'name': 'QueryMarketInterestRateModelParams'
+    },
     
     
 ]
