@@ -15,14 +15,14 @@ PoolNames = ['FUSD', 'FlowToken']
 
 # FakePool's token contract will be generated automatically
 # FakePoolNames = ['Apple', 'Banana', 'Peach']
-FakePoolNames = ['Apple', 'Banana']
+FakePoolNames = []
 
 
 
 PoolParams = {}
-PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':100000000.0 }
-PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':100000000.0 }
-PoolParams['Apple']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':10.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':100000000.0 }
+PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
+PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
+PoolParams['Apple']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':10.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
 
 
 

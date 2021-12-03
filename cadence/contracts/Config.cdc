@@ -23,6 +23,51 @@ pub contract Config {
     // 100_000_000.0, i.e. 1.0e8
     pub let ufixScale: UFix64
 
+    pub enum Error: UInt8 {
+        pub case NO_ERROR
+        // Common errors:
+        pub case INVALID_PARAMETERS
+        pub case INVALID_USER_CERTIFICATE
+        pub case INVALID_POOL_CERTIFICATE
+        pub case CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+        pub case CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
+        pub case CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
+        pub case LIST_OUT_OF_RANGE
+        pub case DUPLICATED_INITIALIZATION
+        // Pool related:
+        pub case LOST_INTEREST_RATE_MODEL_CAP_IN_POOL
+        pub case SET_RESERVE_FACTOR_OUT_OF_RANGE
+        pub case SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
+        pub case EMPTY_INPUT_FUNGIBLETOKEN_VAULT
+        pub case MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
+        pub case INSUFFICIENT_POOL_LIQUIDITY
+
+        pub case REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
+        pub case SAME_LIQUIDATOR_AND_BORROWER
+        pub case CANNOT_CALL_EXTERNAL_SEIZE_POOLSELF
+        pub case EXCEED_TOTAL_RESERVES
+        // Comptroller:
+        pub case ORACLE_PRICE_ERROR
+        pub case ADD_MARKET_DUPLICATED
+        pub case ADD_MARKET_FAILED_LOST_ORACLE_PRICE
+        pub case UNKNOWN_MARKET
+        pub case MARKET_NOT_OPEN
+        pub case LIQUIDATION_NOT_ALLOWED_EXCEED_BORROWER_COLLATERAL        
+        pub case REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER
+        pub case BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP
+        pub case BORROW_NOT_ALLOWED_POSITION_UNDER_WATER
+        
+        
+        pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
+        pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
+        pub case SET_VALUE_OUT_OF_RANGE
+    }
+
+    pub fun ErrorEncode(msg: String, err: Error): String {
+        return "[IncErrorMsg:".concat(msg).concat("]").concat(
+               "[IncErrorCode:").concat(err.rawValue.toString()).concat("]")
+    }
+
     // Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
     // e.g. 184467440737.09551615 (UFix64.max) => 184467440737095516150000000000
     pub fun UFix64ToScaledUInt256(_ f: UFix64): UInt256 {

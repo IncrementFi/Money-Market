@@ -1,0 +1,126 @@
+{
+  "0": {
+    "eng": "NO_ERROR",
+    "chn": "NO_ERROR的喵"
+  },
+  "1": {
+    "eng": "INVALID_PARAMETERS",
+    "chn": "INVALID_PARAMETERS的喵"
+  },
+  "2": {
+    "eng": "INVALID_USER_CERTIFICATE",
+    "chn": "INVALID_USER_CERTIFICATE的喵"
+  },
+  "3": {
+    "eng": "INVALID_POOL_CERTIFICATE",
+    "chn": "INVALID_POOL_CERTIFICATE的喵"
+  },
+  "4": {
+    "eng": "CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY",
+    "chn": "CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY的喵"
+  },
+  "5": {
+    "eng": "CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY",
+    "chn": "CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY的喵"
+  },
+  "6": {
+    "eng": "CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY",
+    "chn": "CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY的喵"
+  },
+  "7": {
+    "eng": "LIST_OUT_OF_RANGE",
+    "chn": "LIST_OUT_OF_RANGE的喵"
+  },
+  "8": {
+    "eng": "DUPLICATED_INITIALIZATION",
+    "chn": "DUPLICATED_INITIALIZATION的喵"
+  },
+  "9": {
+    "eng": "LOST_INTEREST_RATE_MODEL_CAP_IN_POOL",
+    "chn": "LOST_INTEREST_RATE_MODEL_CAP_IN_POOL的喵"
+  },
+  "10": {
+    "eng": "SET_RESERVE_FACTOR_OUT_OF_RANGE",
+    "chn": "SET_RESERVE_FACTOR_OUT_OF_RANGE的喵"
+  },
+  "11": {
+    "eng": "SET_POOL_SEIZE_SHARE_OUT_OF_RANGE",
+    "chn": "SET_POOL_SEIZE_SHARE_OUT_OF_RANGE的喵"
+  },
+  "12": {
+    "eng": "EMPTY_INPUT_FUNGIBLETOKEN_VAULT",
+    "chn": "EMPTY_INPUT_FUNGIBLETOKEN_VAULT的喵"
+  },
+  "13": {
+    "eng": "MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL",
+    "chn": "MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL的喵"
+  },
+  "14": {
+    "eng": "INSUFFICIENT_POOL_LIQUIDITY",
+    "chn": "INSUFFICIENT_POOL_LIQUIDITY的喵"
+  },
+  "15": {
+    "eng": "REDEEM_FAILED_NO_ENOUGH_LP_TOKEN",
+    "chn": "REDEEM_FAILED_NO_ENOUGH_LP_TOKEN的喵"
+  },
+  "16": {
+    "eng": "SAME_LIQUIDATOR_AND_BORROWER",
+    "chn": "SAME_LIQUIDATOR_AND_BORROWER的喵"
+  },
+  "17": {
+    "eng": "CANNOT_CALL_EXTERNAL_SEIZE_POOLSELF",
+    "chn": "CANNOT_CALL_EXTERNAL_SEIZE_POOLSELF的喵"
+  },
+  "18": {
+    "eng": "EXCEED_TOTAL_RESERVES",
+    "chn": "EXCEED_TOTAL_RESERVES的喵"
+  },
+  "19": {
+    "eng": "ORACLE_PRICE_ERROR",
+    "chn": "ORACLE_PRICE_ERROR的喵"
+  },
+  "20": {
+    "eng": "ADD_MARKET_DUPLICATED",
+    "chn": "ADD_MARKET_DUPLICATED的喵"
+  },
+  "21": {
+    "eng": "ADD_MARKET_FAILED_LOST_ORACLE_PRICE",
+    "chn": "ADD_MARKET_FAILED_LOST_ORACLE_PRICE的喵"
+  },
+  "22": {
+    "eng": "UNKNOWN_MARKET",
+    "chn": "UNKNOWN_MARKET的喵"
+  },
+  "23": {
+    "eng": "MARKET_NOT_OPEN",
+    "chn": "MARKET_NOT_OPEN的喵"
+  },
+  "24": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_EXCEED_BORROWER_COLLATERAL",
+    "chn": "LIQUIDATION_NOT_ALLOWED_EXCEED_BORROWER_COLLATERAL的喵"
+  },
+  "25": {
+    "eng": "REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER",
+    "chn": "REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER的喵"
+  },
+  "26": {
+    "eng": "BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP",
+    "chn": "BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP的喵"
+  },
+  "27": {
+    "eng": "BORROW_NOT_ALLOWED_POSITION_UNDER_WATER",
+    "chn": "BORROW_NOT_ALLOWED_POSITION_UNDER_WATER的喵"
+  },
+  "28": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER",
+    "chn": "LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER的喵"
+  },
+  "29": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY",
+    "chn": "LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY的喵"
+  },
+  "30": {
+    "eng": "SET_VALUE_OUT_OF_RANGE",
+    "chn": "SET_VALUE_OUT_OF_RANGE的喵"
+  }
+}
