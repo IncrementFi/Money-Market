@@ -48,6 +48,11 @@
   返回json中需要注意的是: marketType字段是string类型，比如：“A.XXXXX_FUSD”，它的字符串结尾以‘_’可以切割出token的名称
 * flow scripts execute ./cadence/scripts/Query/query_market_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
 
+#### 查询pool 利率模型参数，用于利率模型曲线绘制:
+> input: poolAddr
+> output: json
+* 代码:  deploy.config.emulator.json --> Codes.scripts.QueryMarketInterestRateModelParams  0x192440c99cb17282
+
 #### 查询用户有参与的所有pool的地址
 > input: userAddr, comptroller地址
 > output: [pooladdr1, pooladdr2]
@@ -103,22 +108,31 @@ flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c
 * flow transactions send ./cadence/transactions/Test/test_next_block.cdc --signer emulator-account
 
 
+## 利率模型曲线绘制:
+利用QueryMarketInterestRateModelParams接口获取到的利率模型参数之后:
+```js
+{
+    "modelName": Name,
+    "blocksPerYear": B,
+    "scaleFactor": 放大因子 (1e18),
+    "scaledBaseRatePerBlock": 基础利率,
+    "scaledBaseMultiplierPerBlock": 一段斜率,
+    "scaledJumpMultiplierPerBlock": 二段斜率,
+    "scaledCriticalUtilRate": 折线拐点使用率
+}
+```
+1. 使用率 = borrows / (cash + borrows - reserves)
+2. borrow曲线公式:
+X轴: 当前使用率
+Y轴: 
+a. 如果 X <= 折线拐点使用率:
+> Y = (一段斜率 * X / 放大因子 + 基础利率)
+b. 如果 X > 折线拐点使用率:
+> Y = (X - 折线拐点使用率) * 二段斜率 / 放大因子 + 一段斜率 * 折线拐点使用率 / 放大因子 + 基础利率
 
-## 以下废弃：
-#### query整个产品的balance (total supply & total borrow)
-* flow scripts execute ./cadence/scripts/Query/query_universe_balance.cdc
-利用返回的每个pool的supple和usd的汇率计算加和
-
-#### query用户名下当前的存款美元量, 借款美元量, Net APY, 抵押率 (UI有高刷新率)
-* flow scripts execute ./cadence/scripts/Query/query_user_total_balance.cdc 0x01cf0e2f2f715450
-total的前端加和
-
-#### 用户开启 关闭 pool collateral
-* 打开fusd开关
-* flow transactions send ./cadence/transactions/User/user_collateral_fusd.cdc --arg Bool:"true" --signer emulatorA
-* flow transactions send ./cadence/transactions/User/user_collateral_fusd.cdc --arg Bool:"false" --signer emulatorA
-    >如果直接borrow, 默认会自动打开
-
-
-
-
+3. supply曲线公式:
+X轴: 当前使用率
+Borrow利率 = BorrowRate(X) [上面的公式]
+Reserve因子 = 取自pool info接口的 "marketReserveFactor"参数
+Y轴: 
+> Y = (放大因子 - Reserve因子) * Borrow利率 / 放大因子 * X / 放大因子

@@ -637,7 +637,8 @@ pub contract ComptrollerV1 {
                 "marketBorrowCap": market.scaledBorrowCap.toString(),
                 "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice).toString(),
                 "marketSupplierCount": poolRef.getPoolSupplierCount().toString(),
-                "marketBorrowerCount": poolRef.getPoolBorrowerCount().toString()
+                "marketBorrowerCount": poolRef.getPoolBorrowerCount().toString(),
+                "marketReserveFactor": poolRef.getPoolReserveFactorScaled().toString()
             }
         }
 
