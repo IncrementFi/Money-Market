@@ -12,6 +12,29 @@
 ## JS-api
 * TODO
 
+## Error Code:
+> 如果Flow合约的错误返回是字符串，正则匹配出ErrorCode 或是 ErrorMsg
+> ErrorCode的描述json在 ./increment.errorcode.json
+```js
+  var msg = "xx[IncErrorMsg:Invailid comptroller cap.][IncErrorCode:5]xx"
+  var reg_increment_error = /\[IncErrorMsg:(.*)\]\[IncErrorCode:(\d+)\]/
+  var reg_cadence_error = /error:(.*)/
+
+  res = msg.match(reg_increment_error)
+  if(res != null) {
+      // 这是上层合约能捕捉到的错误代码
+      var incrementErrorMsg = res[1]
+      var incrementErrorCode = res[2]
+      // check this error code in increment.errorcode.json
+      
+  } else {
+      // 底层的错误msg，可能暂时无法捕捉
+      res = msg.match(reg_cadence_error)
+      if(res != null) {
+          var cadenceErrorMsg = res[1]
+      }
+  }
+```
 
 ## Scripts
 #### 查询所有pool的address

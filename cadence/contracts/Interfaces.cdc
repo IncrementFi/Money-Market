@@ -41,7 +41,7 @@ pub contract interface Interfaces {
         pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
         
         // Accrue pool interest and checkpoint latest data to pool states
-        pub fun accrueInterest(): UInt8
+        pub fun accrueInterest()
         pub fun getPoolCertificateType(): Type
         // Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
         // so that this public seize function can only be invoked by another LendingPool contract
@@ -72,43 +72,45 @@ pub contract interface Interfaces {
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
-        ): UInt8
+        )
 
         pub fun redeemAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
-        ): UInt8
+        )
 
         pub fun borrowAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
-        ): UInt8
+        )
         
         pub fun repayAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
-        ): UInt8
+        )
 
         pub fun liquidateAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             poolBorrowed: Address,
             poolCollateralized: Address,
             borrower: Address,
             repayUnderlyingAmountScaled: UInt256
-        ): UInt8
+        )
 
         pub fun seizeAllowed(
+            poolCertificate: @{Interfaces.IdentityCertificate},
             borrowPool: Address,
             collateralPool: Address,
             liquidator: Address,
             borrower: Address,
             seizeCollateralPoolLpTokenAmountScaled: UInt256
-        ): UInt8
+        )
 
         pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address,
@@ -119,10 +121,10 @@ pub contract interface Interfaces {
 
         pub fun getUserCertificateType(): Type
 
-        pub fun callerAllowed(
+        pub fun poolCallerAllowed(
             callerCertificate: @{Interfaces.IdentityCertificate},
             callerAddress: Address
-        ): UInt8
+        )
 
         pub fun getPoolPublicRef(poolAddr: Address): &{PoolPublic}
         pub fun getAllMarkets(): [Address]

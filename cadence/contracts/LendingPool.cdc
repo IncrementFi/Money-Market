@@ -8,15 +8,6 @@ pub contract LendingPool {
     pub let PoolPublicStoragePath: StoragePath
     pub let PoolPublicPublicPath: PublicPath
 
-    pub enum Error: UInt8 {
-        pub case NO_ERROR
-        pub case CURRENT_INTEREST_RATE_MODEL_NULL
-        pub case SET_INTEREST_RATE_MODEL_ACCRUE_INTEREST_FAILED
-        pub case SET_RESERVE_FACTOR_ACCRUE_INTEREST_FAILED
-        pub case SET_RESERVE_FACTOR_OUT_OF_RANGE
-        pub case SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
-    }
-
     // Account address the pool is deployed to, i.e. the pool 'contract address'
     pub let poolAddress: Address
     // Initial exchange rate (when LendingPool.totalSupply == 0) between the virtual lpToken and pool underlying token
@@ -100,21 +91,25 @@ pub contract LendingPool {
 
     // Calculates interest accrued from the last checkpointed block to the current block and 
     // applies to total borrows, total reserves, borrow index.
-    pub fun accrueInterest(): Error {
+    pub fun accrueInterest() {
+        pre {
+            self.interestRateModelCap != nil && self.interestRateModelCap!.check() == true:
+                Config.ErrorEncode (
+                    msg: "Invalid interest rate model cap in pool ".concat(LendingPool.poolAddress.toString()),
+                    err: Config.Error.LOST_INTEREST_RATE_MODEL_CAP_IN_POOL
+                )
+        }
         let currentBlockNumber = UInt256(getCurrentBlock().height)
         let accrualBlockNumberPrior = self.accrualBlockNumber
         // Return early if accrue 0 interest
         if (currentBlockNumber == accrualBlockNumberPrior) {
-            return Error.NO_ERROR
+            return
         }
         let scaledCashPrior = self.getPoolCash()
         let scaledBorrowPrior = self.scaledTotalBorrows
         let scaledReservesPrior = self.scaledTotalReserves
         let scaledBorrowIndexPrior = self.scaledBorrowIndex
 
-        if (self.interestRateModelCap == nil || self.interestRateModelCap!.check() == false) {
-            return Error.CURRENT_INTEREST_RATE_MODEL_NULL
-        }
         // Get scaled borrow interest rate per block
         let scaledBorrowRatePerBlock =
             self.interestRateModelCap!.borrow()!.getBorrowRate(cash: scaledCashPrior, borrows: scaledBorrowPrior, reserves: scaledReservesPrior)
@@ -133,7 +128,7 @@ pub contract LendingPool {
         self.scaledTotalReserves = scaledTotalReservesNew
 
         emit AccrueInterest(scaledCashPrior, scaledInterestAccumulated, scaledBorrowIndexNew, scaledTotalBorrowsNew);
-        return Error.NO_ERROR
+        return
     }
 
     // Calculates the exchange rate from the underlying to virtual lpToken (i.e. how many UnderlyingToken per virtual lpToken)
@@ -163,23 +158,30 @@ pub contract LendingPool {
     // Supplier deposits underlying asset's Vault into the pool
     pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
         pre {
-            inUnderlyingVault.balance > 0.0: "Supplied empty underlying Vault"
-            inUnderlyingVault.isInstance(self.underlyingAssetType): "supplied vault and pool underlying type mismatch, revert"
+            inUnderlyingVault.balance > 0.0: 
+                Config.ErrorEncode (
+                    msg: "Supplied empty underlying Vault.",
+                    err: Config.Error.EMPTY_INPUT_FUNGIBLETOKEN_VAULT
+                )
+            inUnderlyingVault.isInstance(self.underlyingAssetType):
+                Config.ErrorEncode (
+                    msg: "Supplied vault and pool underlying type mismatch, revert.",
+                    err: Config.Error.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
+                )
         }
         // 1. Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "SUPPLY_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         // 2. Check whether or not supplyAllowed()
         let scaledAmount = Config.UFix64ToScaledUInt256(inUnderlyingVault.balance)
-        let ret = self.comptrollerCap!.borrow()!.supplyAllowed(
+        
+        self.comptrollerCap!.borrow()!.supplyAllowed(
             poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             supplierAddress: supplierAddr,
             supplyUnderlyingAmountScaled: scaledAmount
         )
-        assert(ret == 0, message: "supply not allowed, error reason: ".concat(ret.toString()))
-
+        
         // 3. Deposit into underlying vault and mint corresponding PoolTokens 
         let underlyingToken2LpTokenRateScaled = self.underlyingToLpTokenRateSnapshotScaled()
         let scaledMintVirtualAmount = scaledAmount * Config.scaleFactor / underlyingToken2LpTokenRateScaled
@@ -196,13 +198,20 @@ pub contract LendingPool {
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
-            numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0: "numLpTokenToRedeem or numUnderlyingToRedeem must be 0.0"
-            self.accountLpTokens.containsKey(redeemer): "redeemer has no liquidity, nothing to redeem"
+            numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0:
+                Config.ErrorEncode (
+                    msg: "numLpTokenToRedeem or numUnderlyingToRedeem must be 0.0.",
+                    err: Config.Error.INVALID_PARAMETERS
+                )
+            self.accountLpTokens.containsKey(redeemer):
+                Config.ErrorEncode (
+                    msg: "redeemer has no liquidity, nothing to redeem.",
+                    err: Config.Error.REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
+                )
         }
 
         // 1. Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "REDEEM_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         // 2. Check whether or not redeemAllowed()
         var scaledLpTokenToRedeem: UInt256 = 0
@@ -227,18 +236,27 @@ pub contract LendingPool {
             scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
         }
         
-        assert(scaledLpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: "REDEEM_FAILED_REDEEMER_NOT_ENOUGH_LP_TOKEN")
+        assert(scaledLpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: 
+            Config.ErrorEncode (
+                msg: "Redeemer does not have enough lp tokens to redeem.",
+                err: Config.Error.REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
+            )
+        )
 
-        let ret = self.comptrollerCap!.borrow()!.redeemAllowed(
+        self.comptrollerCap!.borrow()!.redeemAllowed(
             poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             redeemerAddress: redeemer,
             redeemLpTokenAmountScaled: scaledLpTokenToRedeem,
         )
-        assert(ret == 0, message: "redeem not allowed, error reason: ".concat(ret.toString()))
-
+        
         // 3. Burn virtual lpTokens, withdraw from underlying vault and return it
-        assert(scaledUnderlyingToRedeem <= self.getPoolCash(), message: "REDEEM_FAILED_NOT_ENOUGH_UNDERLYING_BALANCE")
+        assert(scaledUnderlyingToRedeem <= self.getPoolCash(), message:
+            Config.ErrorEncode (
+                msg: "The liquidity of pool is temporarily insufficient for redeem.",
+                err: Config.Error.INSUFFICIENT_POOL_LIQUIDITY
+            )
+        )
 
         self.scaledTotalSupply = self.scaledTotalSupply - scaledLpTokenToRedeem
         if (self.accountLpTokens[redeemer] == scaledLpTokenToRedeem) {
@@ -265,9 +283,21 @@ pub contract LendingPool {
         numLpTokenToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
-            numLpTokenToRedeem > 0.0: "Redeemed zero-balanced lpToken"
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid UserCertificate"
-            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
+            numLpTokenToRedeem > 0.0:
+                Config.ErrorEncode (
+                    msg: "Redeemed zero-balanced lpToken.",
+                    err: Config.Error.INVALID_PARAMETERS
+                )
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+                Config.ErrorEncode (
+                    msg: "Cannot borrow reference to invalid UserCertificate.",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
+            self.checkUserCertificateType(certCap: userCertificateCap):
+                Config.ErrorEncode (
+                    msg: "Certificate not issued by system",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
         }
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         return <- self.redeemInternal(
@@ -285,9 +315,17 @@ pub contract LendingPool {
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
-            numUnderlyingToRedeem > 0.0: "Redeemed zero-balanced underlying"
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid UserCertificate"
-            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
+            numUnderlyingToRedeem > 0.0: Config.ErrorEncode ( msg: "Redeemed zero-balanced underlying", err: Config.Error.INVALID_PARAMETERS )
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+                Config.ErrorEncode (
+                    msg: "Cannot borrow reference to invalid UserCertificate.",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
+            self.checkUserCertificateType(certCap: userCertificateCap):
+                Config.ErrorEncode (
+                    msg: "Certificate not issued by system",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
         }
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         return <- self.redeemInternal(
@@ -306,28 +344,40 @@ pub contract LendingPool {
         borrowAmount: UFix64,
     ): @FungibleToken.Vault {
         pre {
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil: "Cannot borrow reference to invalid userCertificate"
-            self.checkUserCertificateType(certCap: userCertificateCap): "Certificate not issued by system"
-            borrowAmount > 0.0: "borrowAmount zero"
+            borrowAmount > 0.0: Config.ErrorEncode ( msg: "borrowAmount zero", err: Config.Error.INVALID_PARAMETERS )
+            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+                Config.ErrorEncode (
+                    msg: "Cannot borrow reference to invalid UserCertificate.",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
+            self.checkUserCertificateType(certCap: userCertificateCap):
+                Config.ErrorEncode (
+                    msg: "Certificate not issued by system",
+                    err: Config.Error.INVALID_USER_CERTIFICATE
+                )
         }
         // 1. Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "BORROW_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         // 2. Pool liquidity check
         let scaledBorrowAmount = Config.UFix64ToScaledUInt256(borrowAmount)
-        assert(scaledBorrowAmount <= self.getPoolCash(), message: "Pool not enough underlying balance for borrow")
+        assert(scaledBorrowAmount <= self.getPoolCash(), message:
+            Config.ErrorEncode (
+                msg: "The liquidity of pool is temporarily insufficient for borrow.",
+                err: Config.Error.INSUFFICIENT_POOL_LIQUIDITY
+            )
+        )
 
         // 3. Check whether or not borrowAllowed()
         let borrower = userCertificateCap.borrow()!.owner!.address
-        let ret = self.comptrollerCap!.borrow()!.borrowAllowed(
+        
+        self.comptrollerCap!.borrow()!.borrowAllowed(
             poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             borrowUnderlyingAmountScaled: scaledBorrowAmount
         )
-        assert(ret == 0, message: "borrow not allowed, error reason: ".concat(ret.toString()))
-
+        
         // 4. Updates borrow states, withdraw from pool underlying vault and deposits into borrower's account
         self.scaledTotalBorrows = self.scaledTotalBorrows + scaledBorrowAmount
         let scaledBorrowBalanceNew = scaledBorrowAmount + self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
@@ -342,14 +392,14 @@ pub contract LendingPool {
         let scaledRepayAmount = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
         let scaledAccountTotalBorrows = self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
         let scaledActualRepayAmount = scaledAccountTotalBorrows > scaledRepayAmount ? scaledRepayAmount : scaledAccountTotalBorrows
-        let ret = self.comptrollerCap!.borrow()!.repayAllowed(
+        
+        self.comptrollerCap!.borrow()!.repayAllowed(
             poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
             borrowerAddress: borrower,
             repayUnderlyingAmountScaled: scaledActualRepayAmount
         )
-        assert(ret == 0, message: "repay not allowed, error reason: ".concat(ret.toString()))
-
+        
         // Updates borrow states, deposit repay Vault into pool underlying vault and return any remaining Vault
         let scaledAccountTotalBorrowsNew = scaledAccountTotalBorrows > scaledRepayAmount ? scaledAccountTotalBorrows - scaledRepayAmount : (0 as UInt256)
         self.underlyingVault.deposit(from: <-repayUnderlyingVault)
@@ -370,12 +420,19 @@ pub contract LendingPool {
     // this is allowed as there's no safety issue to do so.
     pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
         pre {
-            repayUnderlyingVault.balance > 0.0: "repayed with empty underlying Vault"
-            repayUnderlyingVault.isInstance(self.underlyingAssetType): "repayed vault and pool underlying type mismatch, revert"
+            repayUnderlyingVault.balance > 0.0:
+                Config.ErrorEncode (
+                    msg: "Repayed with empty underlying Vault",
+                    err: Config.Error.EMPTY_INPUT_FUNGIBLETOKEN_VAULT
+                )
+            repayUnderlyingVault.isInstance(self.underlyingAssetType):
+                Config.ErrorEncode (
+                    msg: "Repayed vault and pool underlying type mismatch, revert",
+                    err: Config.Error.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
+                )
         }
         // Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "REPAY_BORROW_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         return <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
     }
@@ -387,25 +444,34 @@ pub contract LendingPool {
         repayUnderlyingVault: @FungibleToken.Vault
     ): @FungibleToken.Vault? {
         pre {
-            repayUnderlyingVault.isInstance(self.underlyingAssetType): "liquidator repayed vault and pool underlying type mismatch, revert"
+            repayUnderlyingVault.isInstance(self.underlyingAssetType):
+                Config.ErrorEncode (
+                    msg: "Liquidator repayed vault and pool underlying type mismatch, revert",
+                    err: Config.Error.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
+                )
         }
-
         // 1. Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "LIQUIDATE_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         // 2. Check whether or not liquidateAllowed()
         let scaledUnderlyingAmountToRepay = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
-        let ret = self.comptrollerCap!.borrow()!.liquidateAllowed(
+
+        self.comptrollerCap!.borrow()!.liquidateAllowed(
+            poolCertificate: <- create PoolCertificate(),
             poolBorrowed: self.poolAddress,
             poolCollateralized: poolCollateralizedToSeize,
             borrower: borrower,
             repayUnderlyingAmountScaled: scaledUnderlyingAmountToRepay
         )
-        assert(ret == 0, message: "liquidate not allowed, error reason: ".concat(ret.toString()))
 
         // 3. Liquidator repays on behave of borrower
-        assert(liquidator != borrower, message: "LIQUIDATE_LIQUIDATOR_IS_BORROWER")
+        assert(liquidator != borrower, message:
+            Config.ErrorEncode (
+                msg: "Liquidator and borrower can not be the same person.",
+                err: Config.Error.SAME_LIQUIDATOR_AND_BORROWER
+            )
+        )
+
         let remainingVault <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
         let scaledRemainingAmount = Config.UFix64ToScaledUInt256(remainingVault?.balance ?? 0.0)
         let scaledActualRepayAmount = scaledUnderlyingAmountToRepay - scaledRemainingAmount
@@ -428,8 +494,13 @@ pub contract LendingPool {
         } else {
             // Seize external
             let externalPoolPublicRef = getAccount(poolCollateralizedToSeize)
-                .getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
-                .borrow() ?? panic("Cannot borrow reference to external PoolPublic")
+                .getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow() 
+                    ?? panic(
+                        Config.ErrorEncode (
+                            msg: "Cannot borrow reference to external PoolPublic",
+                            err: Config.Error.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                        ) 
+                    )
             externalPoolPublicRef.seize(
                 seizerPoolCertificate: <- create PoolCertificate(),
                 seizerPool: self.poolAddress,
@@ -459,18 +530,20 @@ pub contract LendingPool {
         scaledBorrowerCollateralLpTokenToSeize: UInt256
     ) {
         pre {
-            seizerPool != self.poolAddress: "external seize only, seizerPool cannot be current"
+            seizerPool != self.poolAddress:
+                Config.ErrorEncode (
+                    msg: "External seize only, seizerPool cannot be current",
+                    err: Config.Error.CANNOT_CALL_EXTERNAL_SEIZE_POOLSELF
+                )
         }
         // Check and verify caller from another LendingPool contract
-        let ret = self.comptrollerCap!.borrow()!.callerAllowed(
+        self.comptrollerCap!.borrow()!.poolCallerAllowed(
             callerCertificate: <- seizerPoolCertificate,
             callerAddress: seizerPool
         )
-        assert(ret == 0, message: "external seize not allowed, error reason: ".concat(ret.toString()))
 
         // 2. Accrues interests and checkpoints latest states
-        let err = self.accrueInterest()
-        assert(err == Error.NO_ERROR, message: "SEIZE_ACCRUE_INTEREST_FAILED")
+        self.accrueInterest()
 
         // 3. seizeInternal
         self.seizeInternal(
@@ -489,16 +562,21 @@ pub contract LendingPool {
         scaledBorrowerLpTokenToSeize: UInt256
     ) {
         pre {
-            liquidator != borrower: "seize: liquidator is borrower, revert"
+            liquidator != borrower:
+                Config.ErrorEncode (
+                    msg: "seize: liquidator is borrower, revert",
+                    err: Config.Error.SAME_LIQUIDATOR_AND_BORROWER
+                )
         }
-        let ret = self.comptrollerCap!.borrow()!.seizeAllowed(
+        
+        self.comptrollerCap!.borrow()!.seizeAllowed(
+            poolCertificate: <- create PoolCertificate(),
             borrowPool: borrowPool,
             collateralPool: self.poolAddress,
             liquidator: liquidator,
             borrower: borrower,
             seizeCollateralPoolLpTokenAmountScaled: scaledBorrowerLpTokenToSeize
         )
-        assert(ret == 0, message: "seize not allowed, error reason: ".concat(ret.toString()))
 
         // accountLpTokens[borrower] -= collateralPoolLpTokenToSeize
         // LendingPool.totalReserves += collateralPoolLpTokenToSeize * LendingPool.poolSeizeShare
@@ -584,7 +662,11 @@ pub contract LendingPool {
         }
         pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
-                from <= to && to < UInt64(LendingPool.accountLpTokens.length): "index out of range"
+                from <= to && to < UInt64(LendingPool.accountLpTokens.length):
+                    Config.ErrorEncode (
+                        msg: "Index out of range",
+                        err: Config.Error.LIST_OUT_OF_RANGE
+                    )
             }
             let borrowers: &[Address] = &LendingPool.accountLpTokens.keys as &[Address]
             let list: [Address] = []
@@ -600,7 +682,11 @@ pub contract LendingPool {
         }
         pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
-                from <= to && to < UInt64(LendingPool.accountBorrows.length): "index out of range"
+                from <= to && to < UInt64(LendingPool.accountBorrows.length):
+                    Config.ErrorEncode (
+                        msg: "Index out of range",
+                        err: Config.Error.LIST_OUT_OF_RANGE
+                    )
             }
             let borrowers: &[Address] = &LendingPool.accountBorrows.keys as &[Address]
             let list: [Address] = []
@@ -632,9 +718,8 @@ pub contract LendingPool {
             let blocksPerYear = LendingPool.interestRateModelCap!.borrow()!.getBlocksPerYear()
             return scaledSupplyRatePerBlock * blocksPerYear
         }
-        pub fun accrueInterest(): UInt8 {
+        pub fun accrueInterest() {
             let ret = LendingPool.accrueInterest()
-            return ret.rawValue
         }
         pub fun getPoolCertificateType(): Type {
             return Type<@LendingPool.PoolCertificate>()
@@ -658,11 +743,9 @@ pub contract LendingPool {
 
     pub resource PoolAdmin {
         // Admin function to call accrueInterest() to checkpoint latest states, and then update the interest rate model
-        pub fun setInterestRateModel(newInterestRateModelAddress: Address): Error {
-            let err = LendingPool.accrueInterest()
-            if (err != Error.NO_ERROR) {
-                return Error.SET_INTEREST_RATE_MODEL_ACCRUE_INTEREST_FAILED
-            }
+        pub fun setInterestRateModel(newInterestRateModelAddress: Address) {
+            LendingPool.accrueInterest()
+            
             if (newInterestRateModelAddress != LendingPool.interestRateModelAddress) {
                 let oldInterestRateModelAddress = LendingPool.interestRateModelAddress
                 LendingPool.interestRateModelAddress = newInterestRateModelAddress
@@ -670,39 +753,51 @@ pub contract LendingPool {
                     .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
                 emit NewInterestRateModel(oldInterestRateModelAddress, newInterestRateModelAddress)
             }
-            return Error.NO_ERROR
+            return
         }
 
         // Admin function to call accrueInterest() to checkpoint latest states, and then update reserveFactor
-        pub fun setReserveFactor(newReserveFactor: UFix64): Error {
-            let err = LendingPool.accrueInterest()
-            if (err != Error.NO_ERROR) {
-                return Error.SET_RESERVE_FACTOR_ACCRUE_INTEREST_FAILED
+        pub fun setReserveFactor(newReserveFactor: UFix64) {
+            pre {
+                newReserveFactor <= 1.0:
+                Config.ErrorEncode (
+                    msg: "Reserve factor should be less than 1.0.",
+                    err: Config.Error.SET_RESERVE_FACTOR_OUT_OF_RANGE
+                )
             }
-            if (newReserveFactor > 1.0) {
-                return Error.SET_RESERVE_FACTOR_OUT_OF_RANGE
-            }
+            LendingPool.accrueInterest()
+            
             let oldReserveFactor = Config.ScaledUInt256ToUFix64(LendingPool.scaledReserveFactor)
             LendingPool.scaledReserveFactor = Config.UFix64ToScaledUInt256(newReserveFactor)
+
             emit NewReserveFactor(oldReserveFactor, newReserveFactor);
-            return Error.NO_ERROR
+            return
         }
 
         // Admin function to update poolSeizeShare
-        pub fun setPoolSeizeShare(newPoolSeizeShare: UFix64): Error {
-            if (newPoolSeizeShare > 1.0) {
-                return Error.SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
+        pub fun setPoolSeizeShare(newPoolSeizeShare: UFix64) {
+            pre {
+                newPoolSeizeShare <= 1.0:
+                Config.ErrorEncode (
+                    msg: "Pool seize share factor should be less than 1.0.",
+                    err: Config.Error.SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
+                )
             }
             let oldPoolSeizeShare = Config.ScaledUInt256ToUFix64(LendingPool.scaledPoolSeizeShare)
             LendingPool.scaledPoolSeizeShare = Config.UFix64ToScaledUInt256(newPoolSeizeShare)
+
             emit NewPoolSeizeShare(oldPoolSeizeShare, newPoolSeizeShare);
-            return Error.NO_ERROR
+            return
         }
 
         // Admin function to set comptroller
         pub fun setComptroller(newComptrollerAddress: Address) {
             post {
-                LendingPool.comptrollerCap != nil && LendingPool.comptrollerCap!.check() == true: "Set new Comptroller fail."
+                LendingPool.comptrollerCap != nil && LendingPool.comptrollerCap!.check() == true:
+                    Config.ErrorEncode (
+                        msg: "Set new Comptroller fail.",
+                        err: Config.Error.CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
+                    )
             }
             
             if (newComptrollerAddress != LendingPool.comptrollerAddress) {
@@ -722,11 +817,23 @@ pub contract LendingPool {
             interestRateModelAddress: Address
         ) {
             pre {
-                LendingPool.accrualBlockNumber == 0 && LendingPool.scaledBorrowIndex == 0: "Pool can only be initialized once"
-                reserveFactor <= 1.0 && poolSeizeShare <= 1.0: "reserveFactor | poolSeizeShare out of range 1.0"
+                LendingPool.accrualBlockNumber == 0 && LendingPool.scaledBorrowIndex == 0:
+                    Config.ErrorEncode (
+                        msg: "Pool can only be initialized once",
+                        err: Config.Error.DUPLICATED_INITIALIZATION
+                    )
+                reserveFactor <= 1.0 && poolSeizeShare <= 1.0:
+                    Config.ErrorEncode (
+                        msg: "ReserveFactor | poolSeizeShare out of range 1.0",
+                        err: Config.Error.INVALID_PARAMETERS
+                    )
             }
             post {
-                LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true: "InterestRateModel not properly initialized"
+                LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true:
+                    Config.ErrorEncode (
+                        msg: "InterestRateModel not properly initialized",
+                        err: Config.Error.CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
+                    )
             }
             LendingPool.accrualBlockNumber = UInt256(getCurrentBlock().height)
             LendingPool.scaledBorrowIndex = Config.scaleFactor
@@ -739,13 +846,21 @@ pub contract LendingPool {
 
         // Admin function to withdraw pool reserve
         pub fun withdrawReserves(reduceAmount: UFix64): @FungibleToken.Vault {
-            let err = LendingPool.accrueInterest()
-            assert(err == Error.NO_ERROR, message: "WITHDRAW_RESERVES_ACCRUE_INTEREST_FAILED")
-
+            LendingPool.accrueInterest()
+            
             let reduceAmountScaled = reduceAmount == UFix64.max ? LendingPool.scaledTotalReserves : Config.UFix64ToScaledUInt256(reduceAmount)
-            assert(reduceAmountScaled <= LendingPool.scaledTotalReserves, message: "Exceed pool reserve amount")
-            assert(reduceAmountScaled <= LendingPool.getPoolCash(), message: "Exceed pool liquidity")
-
+            assert(reduceAmountScaled <= LendingPool.scaledTotalReserves, message:
+                Config.ErrorEncode (
+                    msg: "Exceed pool reserve amount",
+                    err: Config.Error.EXCEED_TOTAL_RESERVES
+                )
+            )
+            assert(reduceAmountScaled <= LendingPool.getPoolCash(), message:
+                Config.ErrorEncode (
+                    msg: "Exceed pool liquidity",
+                    err: Config.Error.INSUFFICIENT_POOL_LIQUIDITY
+                )
+            )
             LendingPool.scaledTotalReserves = LendingPool.scaledTotalReserves - reduceAmountScaled
             
             emit ReservesReduced(scaledReduceAmount: reduceAmountScaled, scaledNewTotalReserves: LendingPool.scaledTotalReserves)
@@ -778,7 +893,7 @@ pub contract LendingPool {
         self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath)
             ?? panic("Deployer should own zero-balanced underlying asset vault first")
         self.underlyingAssetType = self.underlyingVault.getType()
-        assert(self.underlyingVault.balance == 0.0, message: "must initialize pool with zero-balanced underlying asset vault")
+        assert(self.underlyingVault.balance == 0.0, message: "Must initialize pool with zero-balanced underlying asset vault")
 
         // save pool admin
         destroy <-self.account.load<@AnyResource>(from: self.PoolAdminStoragePath)
