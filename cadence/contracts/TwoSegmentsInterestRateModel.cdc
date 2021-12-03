@@ -8,8 +8,6 @@ pub contract TwoSegmentsInterestRateModel {
     pub let InterestRateModelStoragePath: StoragePath
     // The private path for the capability to InterestRateModel which is for admin to update model parameters
     pub let InterestRateModelPrivatePath: PrivatePath
-    // The public path for the capability restricted to InterestRateModelInterface
-    pub let InterestRateModelPublicPath: PublicPath
 
     // Event which is emitted when Interest Rate Model is created or model parameter gets updated
     pub event InterestRateModelUpdated(
@@ -195,7 +193,6 @@ pub contract TwoSegmentsInterestRateModel {
         self.InterestRateModelAdminStoragePath = /storage/InterestRateModelAdmin
         self.InterestRateModelStoragePath = /storage/InterestRateModel
         self.InterestRateModelPrivatePath = /private/InterestRateModel
-        self.InterestRateModelPublicPath = /public/InterestRateModel
 
         destroy <-self.account.load<@AnyResource>(from: self.InterestRateModelAdminStoragePath)
         self.account.save(<-create Admin(), to: self.InterestRateModelAdminStoragePath)

@@ -642,6 +642,12 @@ pub contract LendingPool {
                 self.getAccountBorrowIndexSnapshotScaled(account: account)
             ]
         }
+        pub fun getPoolReserveFactorScaled(): UInt256 {
+            return LendingPool.scaledReserveFactor
+        }
+        pub fun getInterestRateModelAddress(): Address {
+            return LendingPool.interestRateModelAddress!
+        }
         pub fun getPoolTotalBorrowsScaled(): UInt256 {
             return LendingPool.scaledTotalBorrows
         }
