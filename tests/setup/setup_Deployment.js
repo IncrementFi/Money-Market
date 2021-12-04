@@ -1,5 +1,5 @@
 import { deployContractByName, getAccountAddress, executeScript, mintFlow, sendTransaction, getTemplate, getScriptCode } from "flow-js-testing"
-import { getLendingPoolDeployerAddress } from "./setup_common"
+import { getLendingPoolDeployerAddress, toUFix64 } from "./setup_common"
 import { createInterestRateModel, } from "./setup_TwoSegmentsInterestRateModel";
 
 export const getLendingPoolAddress = async () => { return await getLendingPoolDeployerAddress() }
@@ -94,7 +94,7 @@ export const initOracle = async() => {
         const args = [testYToken1, 3];
         await sendTransaction({ name, args, signers });    
     }
-    return updateOraclePrice(35.5)
+    return updateOraclePrice(toUFix64(35.5))
 }
 
 export const updateOraclePrice = async(price) => {

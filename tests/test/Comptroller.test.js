@@ -1,7 +1,7 @@
 import path from "path";
 import BigNumber from "bignumber.js";
 import { emulator, init, mintFlow, getAccountAddress, shallPass, shallRevert, getFlowBalance } from "flow-js-testing";
-import { ScaleFactor } from "../setup/setup_common";
+import { ScaleFactor, toUFix64 } from "../setup/setup_common";
 import {
     deployLendingPoolContract,
     //
@@ -51,8 +51,8 @@ describe("LendingPool Testsuites", () => {
         await initInterestRateModel()
         await initOracle()
         await initComptroller()
-        await initPool(0.01, 0.028)
-        await addMarket(0.05, 0.8, 100000000.0, true, true)
+        await initPool(toUFix64(0.01), toUFix64(0.028))
+        await addMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
     });
     // Stop emulator, so it could be restarted
     afterEach(async () => {
@@ -63,44 +63,44 @@ describe("LendingPool Testsuites", () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
         
-        await shallPass( supply( userAddr1, "50" ) )
-        await shallPass( borrow( userAddr1, "20" ) )
+        await shallPass( supply( userAddr1, toUFix64(50) ) )
+        await shallPass( borrow( userAddr1, toUFix64(20) ) )
 
-        await configMarket(0.05, 0.8, 100000000.0, false, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), false, true)
 
-        await shallRevert( supply( userAddr1, "1" ) )
-        await shallRevert( borrow( userAddr1, "1" ) )
-        await shallRevert( redeem( userAddr1, "1" ) )
-        await shallRevert( repay( userAddr1, "1" ) )
+        await shallRevert( supply( userAddr1, toUFix64(1) ) )
+        await shallRevert( borrow( userAddr1, toUFix64(1) ) )
+        await shallRevert( redeem( userAddr1, toUFix64(1) ) )
+        await shallRevert( repay( userAddr1, toUFix64(1) ) )
     });
 
     it("Redeem allowed should check the user's liquidity and pool's collateral.", async () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(0.05, 0.8, 100000000.0, true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
 
-        await supply( userAddr1, "100" )
-        await borrow( userAddr1, "20" )
+        await supply( userAddr1, toUFix64(100) )
+        await borrow( userAddr1, toUFix64(20) )
 
         //const liquidity = await queryUserLiquidity(userAddr1)
-        await shallRevert( redeem( userAddr1, "75" ) )
+        await shallRevert( redeem( userAddr1, toUFix64(75) ) )
 
-        await shallPass( redeem( userAddr1, "74" ) )
+        await shallPass( redeem( userAddr1, toUFix64(74) ) )
     });
 
     it("Borrow allowed should check the user's liquidity and pool's collateral.", async () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(0.05, 0.8, 100000000.0, true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
 
-        await supply( userAddr1, "100" )
-        await borrow( userAddr1, "20" )
+        await supply( userAddr1, toUFix64(100) )
+        await borrow( userAddr1, toUFix64(20) )
         
-        await shallRevert( borrow( userAddr1, "61" ) )
+        await shallRevert( borrow( userAddr1, toUFix64(61) ) )
 
-        await shallPass( borrow( userAddr1, "59.99" ) )
+        await shallPass( borrow( userAddr1, toUFix64(59.99) ) )
     });
 
     it("User's market record should be removed correctly after redeeming all deposit.", async () => {
@@ -108,10 +108,10 @@ describe("LendingPool Testsuites", () => {
         const poolAddr = await getLendingPoolAddress()
         await mintFlow(userAddr1, "100.0")
 
-        await supply( userAddr1, "100" )
+        await supply( userAddr1, toUFix64(100) )
         const prePools = await queryUserAllPools(userAddr1)
 
-        await redeem( userAddr1, "100" )
+        await redeem( userAddr1, toUFix64(100) )
         const aftPools = await queryUserAllPools(userAddr1)
         
         expect(prePools).toContain(poolAddr)
@@ -124,10 +124,10 @@ describe("LendingPool Testsuites", () => {
         const poolAddr = await getLendingPoolAddress()
         await mintFlow(userAddr1, "100.0")
 
-        await supply( userAddr1, "100" )
-        await borrow( userAddr1, "50" )
+        await supply( userAddr1, toUFix64(100) )
+        await borrow( userAddr1, toUFix64(50) )
         
-        await updateOraclePrice(1.0)
+        await updateOraclePrice(toUFix64(1.0))
         const liquidity = await queryUserLiquidity(userAddr1)
 
         // collateral value
@@ -149,11 +149,11 @@ describe("LendingPool Testsuites", () => {
         const poolAddr = await getLendingPoolAddress()
         await mintFlow(userAddr1, "100.0")
 
-        await supply( userAddr1, "100" )
+        await supply( userAddr1, toUFix64(100) )
 
-        await configMarket(0.05, 0.8, 10.0, true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(10.0), true, true)
 
-        await shallRevert( borrow( userAddr1, "11" ) )
-        await shallPass( borrow( userAddr1, "10" ) )
+        await shallRevert( borrow( userAddr1, toUFix64(11) ) )
+        await shallPass( borrow( userAddr1, toUFix64(10) ) )
     });
 });
