@@ -25,42 +25,32 @@ pub contract Config {
 
     pub enum Error: UInt8 {
         pub case NO_ERROR
-        // Common errors:
+        // Pool related:
         pub case INVALID_PARAMETERS
         pub case INVALID_USER_CERTIFICATE
         pub case INVALID_POOL_CERTIFICATE
         pub case CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
         pub case CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
         pub case CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
-        pub case LIST_OUT_OF_RANGE
-        pub case DUPLICATED_INITIALIZATION
-        // Pool related:
-        pub case LOST_INTEREST_RATE_MODEL_CAP_IN_POOL
-        pub case SET_RESERVE_FACTOR_OUT_OF_RANGE
-        pub case SET_POOL_SEIZE_SHARE_OUT_OF_RANGE
-        pub case EMPTY_INPUT_FUNGIBLETOKEN_VAULT
+        pub case POOL_INITIALIZED
+        pub case EMPTY_FUNGIBLE_TOKEN_VAULT
         pub case MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
         pub case INSUFFICIENT_POOL_LIQUIDITY
-
         pub case REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
         pub case SAME_LIQUIDATOR_AND_BORROWER
-        pub case CANNOT_CALL_EXTERNAL_SEIZE_POOLSELF
+        pub case EXTERNAL_SEIZE_FROM_SELF
         pub case EXCEED_TOTAL_RESERVES
         // Comptroller:
-        pub case ORACLE_PRICE_ERROR
         pub case ADD_MARKET_DUPLICATED
-        pub case ADD_MARKET_FAILED_LOST_ORACLE_PRICE
+        pub case ADD_MARKET_NO_ORACLE_PRICE
         pub case UNKNOWN_MARKET
         pub case MARKET_NOT_OPEN
-        pub case LIQUIDATION_NOT_ALLOWED_EXCEED_BORROWER_COLLATERAL        
         pub case REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER
         pub case BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP
         pub case BORROW_NOT_ALLOWED_POSITION_UNDER_WATER
-        
-        
+        pub case LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
         pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
-        pub case SET_VALUE_OUT_OF_RANGE
     }
 
     pub fun ErrorEncode(msg: String, err: Error): String {

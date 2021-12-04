@@ -123,16 +123,12 @@ pub contract ComptrollerV1 {
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
-            supplyUnderlyingAmountScaled: UInt256)
-        {
-            pre {
-                self.markets[poolAddress]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open ".concat(poolAddress.toString()),
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+            supplyUnderlyingAmountScaled: UInt256
+        ): String? {
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
+            if (err != nil) {
+                return err
             }
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
 
             // Add to user markets list
             if (self.accountMarketsIn.containsKey(supplierAddress) == false) {
@@ -144,7 +140,7 @@ pub contract ComptrollerV1 {
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(poolAddress);
             ///// distributeSupplierComp(poolAddress, supplierAddress);
-            return
+            return nil
         }
 
         pub fun redeemAllowed(
@@ -152,16 +148,11 @@ pub contract ComptrollerV1 {
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
-        ) {
-            pre {
-                self.markets[poolAddress]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open ".concat(poolAddress.toString()),
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+        ): String? {
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
+            if (err != nil) {
+                return err
             }
-            
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
 
             // Hypothetical account liquidity check if virtual lpToken was redeemed
             // liquidity[0] - cross-market collateral value
@@ -172,13 +163,9 @@ pub contract ComptrollerV1 {
                 scaledAmountLPTokenToRedeem: redeemLpTokenAmountScaled,
                 scaledAmountUnderlyingToBorrow: 0
             )
-
-            assert(scaledLiquidity[1] <= scaledLiquidity[0], message:
-                Config.ErrorEncode (
-                    msg: "Redeem failed due to insufficient postion.",
-                    err: Config.Error.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER
-                )
-            )
+            if (scaledLiquidity[1] > scaledLiquidity[0]) {
+                return Config.ErrorEncode(msg: "redeem too much", err: Config.Error.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER)
+            }
 
             // Remove pool out of user markets list if necessary
             self.removePoolFromAccountMarketsOnCondition(
@@ -190,7 +177,7 @@ pub contract ComptrollerV1 {
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(poolAddress);
             ///// distributeSupplierComp(poolAddress, redeemerAddress);
-            return
+            return nil
         }
 
         pub fun borrowAllowed(
@@ -198,26 +185,19 @@ pub contract ComptrollerV1 {
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
-        ) {
-            pre {
-                self.markets[poolAddress]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open ".concat(poolAddress.toString()),
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+        ): String? {
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
+            if (err != nil) {
+                return err
             }
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
-            
+
             // 1. totalBorrows limit check if not unlimited borrowCap
             let scaledBorrowCap = self.markets[poolAddress]!.scaledBorrowCap
             if (scaledBorrowCap != 0) {
                 let scaledTotalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrowsScaled() + borrowUnderlyingAmountScaled
-                assert(scaledTotalBorrowsNew <= scaledBorrowCap, message:
-                    Config.ErrorEncode (
-                        msg: "Borrow failed due to exceeding pool's borrow cap.",
-                        err: Config.Error.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP
-                    )
-                )
+                if (scaledTotalBorrowsNew > scaledBorrowCap) {
+                    return Config.ErrorEncode(msg: "borrow too much, exceed market borrowCap", err: Config.Error.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP)
+                }
             }
 
             // 2. Add to user markets list
@@ -236,34 +216,27 @@ pub contract ComptrollerV1 {
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: borrowUnderlyingAmountScaled
             )
-            assert(scaledLiquidity[1] <= scaledLiquidity[0], message:
-                Config.ErrorEncode (
-                    msg: "Borrow failed due to insufficient postion.",
-                    err: Config.Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER
-                )
-            )
+            if (scaledLiquidity[1] > scaledLiquidity[0]) {
+                return Config.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: Config.Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
+            }
             
             ///// 4. TODO: Keep the flywheel moving
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
             ///// updateCompBorrowIndex(poolAddress, borrowIndex);
             ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
-            return
+            return nil
         }
 
         pub fun repayAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
-            repayUnderlyingAmountScaled: UInt256)
-        {
-            pre {
-                self.markets[poolAddress]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open ".concat(poolAddress.toString()),
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+            repayUnderlyingAmountScaled: UInt256
+        ): String? {
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
+            if (err != nil) {
+                return err
             }
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
 
             // Remove pool out of user markets list if necessary
             self.removePoolFromAccountMarketsOnCondition(
@@ -276,7 +249,7 @@ pub contract ComptrollerV1 {
             ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
             ///// updateCompBorrowIndex(poolAddress, borrowIndex);
             ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
-            return
+            return nil
         }
 
         pub fun liquidateAllowed(
@@ -285,15 +258,15 @@ pub contract ComptrollerV1 {
             poolCollateralized: Address,
             borrower: Address,
             repayUnderlyingAmountScaled: UInt256
-        ) {
+        ): String? {
             pre {
-                self.markets[poolBorrowed]?.isOpen == true && self.markets[poolCollateralized]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open in liquidation.",
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+                self.markets[poolCollateralized]?.isOpen == true: Config.ErrorEncode(msg: "collateral market not open", err: Config.Error.MARKET_NOT_OPEN)
             }
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolBorrowed)
+
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolBorrowed)
+            if (err != nil) {
+                return err
+            }
 
             // Current account liquidity check
             // liquidity[0] - cross-market collateral value
@@ -304,23 +277,17 @@ pub contract ComptrollerV1 {
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: 0
             )
-            assert(scaledLiquidity[0] < scaledLiquidity[1], message:
-                Config.ErrorEncode (
-                    msg: "The position does not need to be liquidated.",
-                    err: Config.Error.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
-                )
-            )
+            if (scaledLiquidity[0] >= scaledLiquidity[1]) {
+                return Config.ErrorEncode(msg: "borrower account fully collaterized", err: Config.Error.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER)
+            }
             
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
-            assert(repayUnderlyingAmountScaled <= scaledBorrowBalance * self.scaledCloseFactor / Config.scaleFactor, message:
-                Config.ErrorEncode (
-                    msg: "Too much repay in liqudation.",
-                    err: Config.Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
-                )
-            )
-            
-            return
+            if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / Config.scaleFactor) {
+                return Config.ErrorEncode(msg: "liquidator repaid more than closeFactor * accountBorrow", err: Config.Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY)
+            }
+
+            return nil
         }
 
         pub fun seizeAllowed(
@@ -330,21 +297,21 @@ pub contract ComptrollerV1 {
             liquidator: Address,
             borrower: Address,
             seizeCollateralPoolLpTokenAmountScaled: UInt256
-        ) {
+        ): String? {
             pre {
-                self.markets[borrowPool]?.isOpen == true && self.markets[collateralPool]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open in liquidation.",
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+                self.markets[collateralPool]?.isOpen == true: Config.ErrorEncode(msg: "Collateral market not open", err: Config.Error.MARKET_NOT_OPEN)
             }
-            self.poolCallerAllowed(callerCertificate: <- poolCertificate, callerAddress: borrowPool)
+
+            let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: borrowPool)
+            if (err != nil) {
+                return err
+            }
 
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(collateralPool);
             ///// distributeSupplierComp(collateralPool, borrower);
             ///// distributeSupplierComp(collateralPool, liquidator);
-            return
+            return nil
         }
 
         // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
@@ -356,13 +323,14 @@ pub contract ComptrollerV1 {
             actualRepaidBorrowAmountScaled: UInt256
         ): UInt256 {
             let borrowPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: borrowPool)
+            assert(
+                borrowPoolUnderlyingPriceUSD != 0.0,
+                message: Config.ErrorEncode(msg: "Price feed not available for market ".concat(borrowPool.toString()), err: Config.Error.UNKNOWN_MARKET)
+            )
             let collateralPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: collateralPool)
             assert(
-                borrowPoolUnderlyingPriceUSD != 0.0 && collateralPoolUnderlyingPriceUSD != 0.0, message:
-                    Config.ErrorEncode (
-                        msg: "Price feed for market not available, abort",
-                        err: Config.Error.ORACLE_PRICE_ERROR
-                    )
+                collateralPoolUnderlyingPriceUSD != 0.0,
+                message: Config.ErrorEncode(msg: "Price feed not available for market ".concat(collateralPool.toString()), err: Config.Error.UNKNOWN_MARKET)
             )
             // 1. Accrue interests first to use latest collateralPool states to do calculation
             self.markets[collateralPool]!.poolPublicCap.borrow()!.accrueInterest()
@@ -383,10 +351,11 @@ pub contract ComptrollerV1 {
 
             // 3. borrower collateralPool lpToken balance check
             let scaledLpTokenAmount = self.markets[collateralPool]!.poolPublicCap.borrow()!.getAccountLpTokenBalanceScaled(account: borrower)
-            assert(scaledCollateralLpTokenSeizedAmount <= scaledLpTokenAmount, message:
-                Config.ErrorEncode (
-                    msg: "Liquidate: borrower's collateralPoolLpToken seized too much",
-                    err: Config.Error.LIQUIDATION_NOT_ALLOWED_EXCEED_BORROWER_COLLATERAL
+            assert(
+                scaledCollateralLpTokenSeizedAmount <= scaledLpTokenAmount,
+                message: Config.ErrorEncode(
+                    msg: "Liquidation seized too much, more than borrower collateralPool supply balance",
+                    err: Config.Error.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
                 )
             )
             return scaledCollateralLpTokenSeizedAmount
@@ -396,28 +365,22 @@ pub contract ComptrollerV1 {
             return Type<@ComptrollerV1.UserCertificate>()
         }
 
-        pub fun poolCallerAllowed(
+        pub fun callerAllowed(
             callerCertificate: @{Interfaces.IdentityCertificate},
             callerAddress: Address
-        ) {
-            pre {
-                self.markets[callerAddress]?.isOpen == true:
-                    Config.ErrorEncode (
-                        msg: "Market is not open.",
-                        err: Config.Error.MARKET_NOT_OPEN
-                    )
+        ): String? {
+            if (self.markets[callerAddress]?.isOpen != true) {
+                destroy callerCertificate
+                return Config.ErrorEncode(msg: "Market not open", err: Config.Error.MARKET_NOT_OPEN)
             }
-            
             let callerPoolCertificateType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
-
-            assert(callerCertificate.isInstance(callerPoolCertificateType), message:
-                Config.ErrorEncode (
-                    msg: "Caller certificate failed.",
-                    err: Config.Error.INVALID_POOL_CERTIFICATE
-                )
-            )
-
-            destroy callerCertificate
+            if (callerCertificate.isInstance(callerPoolCertificateType)) {
+                destroy callerCertificate
+                return nil
+            } else {
+                destroy callerCertificate
+                return Config.ErrorEncode(msg: "not called from valid market contract", err: Config.Error.INVALID_POOL_CERTIFICATE)
+            }
         }
 
         // Remove pool out of user markets list if necessary
@@ -499,23 +462,23 @@ pub contract ComptrollerV1 {
         access(contract) fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             pre {
                 self.markets.containsKey(poolAddress) == false:
-                    Config.ErrorEncode (
-                        msg: "Pool has already been added",
+                    Config.ErrorEncode(
+                        msg: "Market has already been added",
                         err: Config.Error.ADD_MARKET_DUPLICATED
                     )
                     
                 self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress) != 0.0:
-                    Config.ErrorEncode (
-                        msg: "Price feed for the market is not available yet, abort listing",
-                        err: Config.Error.ADD_MARKET_FAILED_LOST_ORACLE_PRICE
+                    Config.ErrorEncode(
+                        msg: "Price feed for market is not available yet",
+                        err: Config.Error.ADD_MARKET_NO_ORACLE_PRICE
                     )
                     
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
             let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message:
-                Config.ErrorEncode (
-                    msg: "Cannot borrow reference to PoolPublic interface",
+                Config.ErrorEncode(
+                    msg: "Cannot borrow reference to PoolPublic resource",
                     err: Config.Error.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
             )
@@ -534,8 +497,8 @@ pub contract ComptrollerV1 {
         access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool):
-                    Config.ErrorEncode (
-                        msg: "Pool has not been supported yet",
+                    Config.ErrorEncode(
+                        msg: "Market has not been added yet",
                         err: Config.Error.UNKNOWN_MARKET
                     )
             }
@@ -578,8 +541,8 @@ pub contract ComptrollerV1 {
         access(contract) fun setCloseFactor(newCloseFactor: UFix64) {
             pre {
                 newCloseFactor <= 1.0:
-                    Config.ErrorEncode (
-                        msg: "Value out of range 1.0",
+                    Config.ErrorEncode(
+                        msg: "newCloseFactor out of range 1.0",
                         err: Config.Error.INVALID_PARAMETERS
                     )
             }
@@ -591,13 +554,13 @@ pub contract ComptrollerV1 {
         pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode (
-                        msg: "Invalid market address.",
+                    Config.ErrorEncode(
+                        msg: "Invalid market address",
                         err: Config.Error.UNKNOWN_MARKET
                     )
             }
             return self.markets[poolAddr]!.poolPublicCap.borrow() ?? panic(
-                Config.ErrorEncode (
+                Config.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic",
                     err: Config.Error.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
@@ -611,8 +574,8 @@ pub contract ComptrollerV1 {
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode (
-                        msg: "Invalid market address.",
+                    Config.ErrorEncode(
+                        msg: "Invalid market address",
                         err: Config.Error.UNKNOWN_MARKET
                     )
             }
@@ -665,8 +628,8 @@ pub contract ComptrollerV1 {
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode (
-                        msg: "Invalid market address.",
+                    Config.ErrorEncode(
+                        msg: "Invalid market address",
                         err: Config.Error.UNKNOWN_MARKET
                     )
             }

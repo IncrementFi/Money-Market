@@ -1,7 +1,7 @@
 import path from "path";
 import BigNumber from "bignumber.js";
 import { emulator, init, mintFlow, getAccountAddress, shallPass, shallRevert, getFlowBalance } from "flow-js-testing";
-import { ScaleFactor } from "../setup/setup_common";
+import { ScaleFactor, toUFix64 } from "../setup/setup_common";
 import {
     deployLendingPoolContract,
     //
@@ -59,12 +59,12 @@ const RandomEvnMaker = async() => {
     const user2 = await getAccountAddress("user_adi")
     await mintFlow(user1, "100.0")
     await mintFlow(user2, "1000.0")
-    await supply(user1, 20.0)
-    await supply(user2, 50.0)
-    await redeem(user2, 1.0)
-    await borrow(user2, 1.0)
-    await repay(user2, 1.0)
-    await borrow(user1, 10.0)
+    await supply(user1, toUFix64(20.0))
+    await supply(user2, toUFix64(50.0))
+    await redeem(user2, toUFix64(1.0))
+    await borrow(user2, toUFix64(1.0))
+    await repay(user2, toUFix64(1.0))
+    await borrow(user1, toUFix64(10.0))
 }
 
 
@@ -84,8 +84,8 @@ describe("LendingPool Testsuites", () => {
         await initInterestRateModel()
         await initOracle()
         await initComptroller()
-        await initPool(0.01, 0.028)
-        await addMarket(0.05, 0.8, 100000000.0, true, true)
+        await initPool(toUFix64(0.01), toUFix64(0.028))
+        await addMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
     });
     // Stop emulator, so it could be restarted
     afterEach(async () => {
@@ -283,7 +283,7 @@ describe("LendingPool Testsuites", () => {
         const borrowAmountScaled = borrowAmount.times(ScaleFactor)
         await mintFlow( userAddr1, totalAmount.toFixed(8) )
         await supply( userAddr1, depositAmount.toFixed(8) )
-        await borrow( userAddr1, "1.0" )
+        await borrow( userAddr1, toUFix64(1.0) )
         await nextBlock()
 
         

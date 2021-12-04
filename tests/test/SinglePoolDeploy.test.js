@@ -46,9 +46,9 @@ describe("LendingPool Testsuites", () => {
         
         await shallPass(initComptroller())
 
-        await shallPass(initPool(0.01, 0.028))
+        await shallPass(initPool(toUFix64(0.01), toUFix64(0.028)))
 
-        await shallPass(addMarket(0.05, 0.75, 10000.0, true, true))
+        await shallPass(addMarket(toUFix64(0.05), toUFix64(0.75), toUFix64(10000.0), true, true))
     });
     
     
