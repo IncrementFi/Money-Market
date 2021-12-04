@@ -68,33 +68,34 @@ pub contract interface Interfaces {
     }
 
     pub resource interface ComptrollerPublic {
+        // Return error string on condition (or nil)
         pub fun supplyAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
-        )
+        ): String?
 
         pub fun redeemAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
-        )
+        ): String?
 
         pub fun borrowAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
-        )
+        ): String?
         
         pub fun repayAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
-        )
+        ): String?
 
         pub fun liquidateAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
@@ -102,7 +103,7 @@ pub contract interface Interfaces {
             poolCollateralized: Address,
             borrower: Address,
             repayUnderlyingAmountScaled: UInt256
-        )
+        ): String?
 
         pub fun seizeAllowed(
             poolCertificate: @{Interfaces.IdentityCertificate},
@@ -111,7 +112,12 @@ pub contract interface Interfaces {
             liquidator: Address,
             borrower: Address,
             seizeCollateralPoolLpTokenAmountScaled: UInt256
-        )
+        ): String?
+
+        pub fun callerAllowed(
+            callerCertificate: @{Interfaces.IdentityCertificate},
+            callerAddress: Address
+        ): String?
 
         pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address,
@@ -121,12 +127,6 @@ pub contract interface Interfaces {
         ): UInt256
 
         pub fun getUserCertificateType(): Type
-
-        pub fun poolCallerAllowed(
-            callerCertificate: @{Interfaces.IdentityCertificate},
-            callerAddress: Address
-        )
-
         pub fun getPoolPublicRef(poolAddr: Address): &{PoolPublic}
         pub fun getAllMarkets(): [Address]
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
