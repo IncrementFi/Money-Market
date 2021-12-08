@@ -49,9 +49,8 @@ with open('./cadence/contracts/LendingPool.cdc', 'r') as f:
 for name in setting.PoolNames+setting.FakePoolNames:
     poolContractName = 'LendingPool_'+name
     pool_fusd = pool_template
-    pool_fusd = pool_fusd.replace('./FungibleToken.cdc', '../../contracts/FungibleToken.cdc')
-    pool_fusd = pool_fusd.replace('./Interfaces.cdc', '../../contracts/Interfaces.cdc')
-    pool_fusd = pool_fusd.replace('./Config.cdc', '../../contracts/Config.cdc')
+    pool_fusd = pool_fusd.replace('from \"./', 'from \"../')
+    
     pool_fusd = pool_fusd.replace('LendingPool', poolContractName)
     path = './cadence/contracts/autogen'
     if not os.path.exists(path):
@@ -69,6 +68,9 @@ for name in setting.PoolNames:
         os.makedirs(path)
     with open(path+'/prepare_{0}_vault_for_pool.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD': lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('flowToken', lowerName)
         fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
         fusd_vault = fusd_vault.replace('FlowToken', name)
         fw.write(fusd_vault)

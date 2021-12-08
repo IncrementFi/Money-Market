@@ -7,6 +7,7 @@ transaction(updater: Address) {
     prepare(adminAccount: AuthAccount) {
         // Note!: Admin needs to keep track of this updaterCapability paths
         self.capabilityPrivatePath = /private/oracleUpdater_001
+        adminAccount.unlink(self.capabilityPrivatePath)
         self.updaterCapability = adminAccount.link<&SimpleOracle.Oracle{SimpleOracle.DataUpdater}>(
             self.capabilityPrivatePath,
             target: SimpleOracle.OracleStoragePath

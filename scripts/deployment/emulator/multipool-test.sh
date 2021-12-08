@@ -23,9 +23,9 @@ eval $faucet_fusd --signer $SignerA --arg UFix64:"100.0"
 eval $faucet_fusd --signer $SignerB --arg UFix64:"1999999999.09999999"
 
 eval $deposit --signer $SignerA --arg UFix64:"10.0"
-eval $deposit --signer $SignerB --arg UFix64:"99999.09999999"
+eval $deposit --signer $SignerB --arg UFix64:"999999999.09999999"
 
-eval $borrow --signer $SignerB --arg UFix64:"79000.0"
+eval $borrow --signer $SignerB --arg UFix64:"699999999.0"
 
 eval $next_block --signer $SignerAudit
 eval $next_block --signer $SignerAudit
