@@ -111,12 +111,10 @@ dist
 #project related
 flow_multipool.json
 flow_multipool_env.json
-cadence/contracts/autogen
-cadence/transactions/Pool/autogen
-cadence/transactions/Test/autogen
-cadence/transactions/User/autogen
-cadence/scripts/Query/autogen
-cadence/scripts/Test/autogen
-*.pyc
 deploy.config.emulator.json
+deploy.config.testnet.json
+*.pyc
 *__pycache__*
+*autogen*
+*cadence_unreadable*
+*cadence_empty*
