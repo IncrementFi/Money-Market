@@ -53,7 +53,7 @@ pub contract TwoSegmentsInterestRateModel {
 
         // Get the supply interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256 {
-            assert(reserveFactor < Config.scaleFactor, message: "reserveFactor should always be less than 1.0 * scaleFactor")
+            assert(reserveFactor < Config.scaleFactor, message: "reserveFactor should always be less than 1.0 x scaleFactor")
 
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
             let scaledBorrowRate = self.getBorrowRate(cash: cash, borrows: borrows, reserves: reserves)

@@ -121,7 +121,7 @@ flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c
     "scaledCriticalUtilRate": 折线拐点使用率
 }
 ```
-1. 使用率 = borrows / (cash + borrows - reserves)
+1. 使用率 = borrows * 放大因子 / (cash + borrows - reserves)
 2. borrow曲线公式:
 X轴: 当前使用率 0% - 100% 比如 38%的使用率的 X = 0.38 * 放大因子(1e18)
 Y轴: 

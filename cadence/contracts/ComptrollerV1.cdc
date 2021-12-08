@@ -1,6 +1,7 @@
 import FungibleToken from "./FungibleToken.cdc"
 import Interfaces from "./Interfaces.cdc"
 import Config from "./Config.cdc"
+import Error from "./Error.cdc"
 
 pub contract ComptrollerV1 {
     // The storage path for the Admin resource
@@ -60,7 +61,7 @@ pub contract ComptrollerV1 {
         }
         pub fun setLiquidationPenalty(newLiquidationPenalty: UFix64) {
             pre {
-                newLiquidationPenalty <= 1.0: Config.ErrorEncode(msg: "newLiquidationPenalty out of range 1.0", err: Config.Error.INVALID_PARAMETERS)
+                newLiquidationPenalty <= 1.0: Error.ErrorEncode(msg: "newLiquidationPenalty out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
             }
             let scaledNewLiquidationPenalty = Config.UFix64ToScaledUInt256(newLiquidationPenalty)
             if (self.scaledLiquidationPenalty != scaledNewLiquidationPenalty) {
@@ -69,7 +70,7 @@ pub contract ComptrollerV1 {
         }
         pub fun setCollateralFactor(newCollateralFactor: UFix64) {
             pre {
-                newCollateralFactor <= 1.0: Config.ErrorEncode(msg: "newCollateralFactor out of range 1.0", err: Config.Error.INVALID_PARAMETERS)
+                newCollateralFactor <= 1.0: Error.ErrorEncode(msg: "newCollateralFactor out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
             }
             let scaledNewCollateralFactor = Config.UFix64ToScaledUInt256(newCollateralFactor)
             if (self.scaledCollateralFactor != scaledNewCollateralFactor) {
@@ -91,7 +92,7 @@ pub contract ComptrollerV1 {
             borrowCap: UFix64
         ) {
             pre {
-                collateralFactor <= 1.0: Config.ErrorEncode(msg: "collateralFactor out of range 1.0", err: Config.Error.INVALID_PARAMETERS)
+                collateralFactor <= 1.0: Error.ErrorEncode(msg: "collateralFactor out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
             }
             self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
@@ -164,7 +165,7 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: 0
             )
             if (scaledLiquidity[1] > scaledLiquidity[0]) {
-                return Config.ErrorEncode(msg: "redeem too much", err: Config.Error.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER)
+                return Error.ErrorEncode(msg: "redeem too much", err: Error.ErrorCode.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER)
             }
 
             // Remove pool out of user markets list if necessary
@@ -196,7 +197,7 @@ pub contract ComptrollerV1 {
             if (scaledBorrowCap != 0) {
                 let scaledTotalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrowsScaled() + borrowUnderlyingAmountScaled
                 if (scaledTotalBorrowsNew > scaledBorrowCap) {
-                    return Config.ErrorEncode(msg: "borrow too much, exceed market borrowCap", err: Config.Error.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP)
+                    return Error.ErrorEncode(msg: "borrow too much, exceed market borrowCap", err: Error.ErrorCode.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP)
                 }
             }
 
@@ -217,7 +218,7 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: borrowUnderlyingAmountScaled
             )
             if (scaledLiquidity[1] > scaledLiquidity[0]) {
-                return Config.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: Config.Error.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
+                return Error.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: Error.ErrorCode.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
             }
             
             ///// 4. TODO: Keep the flywheel moving
@@ -260,7 +261,7 @@ pub contract ComptrollerV1 {
             repayUnderlyingAmountScaled: UInt256
         ): String? {
             pre {
-                self.markets[poolCollateralized]?.isOpen == true: Config.ErrorEncode(msg: "collateral market not open", err: Config.Error.MARKET_NOT_OPEN)
+                self.markets[poolCollateralized]?.isOpen == true: Error.ErrorEncode(msg: "collateral market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
             }
 
             let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolBorrowed)
@@ -278,13 +279,13 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: 0
             )
             if (scaledLiquidity[0] >= scaledLiquidity[1]) {
-                return Config.ErrorEncode(msg: "borrower account fully collaterized", err: Config.Error.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER)
+                return Error.ErrorEncode(msg: "borrower account fully collaterized", err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER)
             }
             
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
             if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / Config.scaleFactor) {
-                return Config.ErrorEncode(msg: "liquidator repaid more than closeFactor * accountBorrow", err: Config.Error.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY)
+                return Error.ErrorEncode(msg: "liquidator repaid more than closeFactor x accountBorrow", err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY)
             }
 
             return nil
@@ -299,7 +300,7 @@ pub contract ComptrollerV1 {
             seizeCollateralPoolLpTokenAmountScaled: UInt256
         ): String? {
             pre {
-                self.markets[collateralPool]?.isOpen == true: Config.ErrorEncode(msg: "Collateral market not open", err: Config.Error.MARKET_NOT_OPEN)
+                self.markets[collateralPool]?.isOpen == true: Error.ErrorEncode(msg: "Collateral market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
             }
 
             let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: borrowPool)
@@ -325,12 +326,12 @@ pub contract ComptrollerV1 {
             let borrowPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: borrowPool)
             assert(
                 borrowPoolUnderlyingPriceUSD != 0.0,
-                message: Config.ErrorEncode(msg: "Price feed not available for market ".concat(borrowPool.toString()), err: Config.Error.UNKNOWN_MARKET)
+                message: Error.ErrorEncode(msg: "Price feed not available for market ".concat(borrowPool.toString()), err: Error.ErrorCode.UNKNOWN_MARKET)
             )
             let collateralPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: collateralPool)
             assert(
                 collateralPoolUnderlyingPriceUSD != 0.0,
-                message: Config.ErrorEncode(msg: "Price feed not available for market ".concat(collateralPool.toString()), err: Config.Error.UNKNOWN_MARKET)
+                message: Error.ErrorEncode(msg: "Price feed not available for market ".concat(collateralPool.toString()), err: Error.ErrorCode.UNKNOWN_MARKET)
             )
             // 1. Accrue interests first to use latest collateralPool states to do calculation
             self.markets[collateralPool]!.poolPublicCap.borrow()!.accrueInterest()
@@ -353,9 +354,9 @@ pub contract ComptrollerV1 {
             let scaledLpTokenAmount = self.markets[collateralPool]!.poolPublicCap.borrow()!.getAccountLpTokenBalanceScaled(account: borrower)
             assert(
                 scaledCollateralLpTokenSeizedAmount <= scaledLpTokenAmount,
-                message: Config.ErrorEncode(
+                message: Error.ErrorEncode(
                     msg: "Liquidation seized too much, more than borrower collateralPool supply balance",
-                    err: Config.Error.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
+                    err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
                 )
             )
             return scaledCollateralLpTokenSeizedAmount
@@ -371,7 +372,7 @@ pub contract ComptrollerV1 {
         ): String? {
             if (self.markets[callerAddress]?.isOpen != true) {
                 destroy callerCertificate
-                return Config.ErrorEncode(msg: "Market not open", err: Config.Error.MARKET_NOT_OPEN)
+                return Error.ErrorEncode(msg: "Market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
             }
             let callerPoolCertificateType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
             if (callerCertificate.isInstance(callerPoolCertificateType)) {
@@ -379,7 +380,7 @@ pub contract ComptrollerV1 {
                 return nil
             } else {
                 destroy callerCertificate
-                return Config.ErrorEncode(msg: "not called from valid market contract", err: Config.Error.INVALID_POOL_CERTIFICATE)
+                return Error.ErrorEncode(msg: "not called from valid market contract", err: Error.ErrorCode.INVALID_POOL_CERTIFICATE)
             }
         }
 
@@ -462,24 +463,24 @@ pub contract ComptrollerV1 {
         access(contract) fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             pre {
                 self.markets.containsKey(poolAddress) == false:
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Market has already been added",
-                        err: Config.Error.ADD_MARKET_DUPLICATED
+                        err: Error.ErrorCode.ADD_MARKET_DUPLICATED
                     )
                     
                 self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress) != 0.0:
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Price feed for market is not available yet",
-                        err: Config.Error.ADD_MARKET_NO_ORACLE_PRICE
+                        err: Error.ErrorCode.ADD_MARKET_NO_ORACLE_PRICE
                     )
                     
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
             let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message:
-                Config.ErrorEncode(
+                Error.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic resource",
-                    err: Config.Error.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                    err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
             )
 
@@ -497,9 +498,9 @@ pub contract ComptrollerV1 {
         access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool):
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Market has not been added yet",
-                        err: Config.Error.UNKNOWN_MARKET
+                        err: Error.ErrorCode.UNKNOWN_MARKET
                     )
             }
             let oldOpen = self.markets[pool]?.isOpen
@@ -541,9 +542,9 @@ pub contract ComptrollerV1 {
         access(contract) fun setCloseFactor(newCloseFactor: UFix64) {
             pre {
                 newCloseFactor <= 1.0:
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "newCloseFactor out of range 1.0",
-                        err: Config.Error.INVALID_PARAMETERS
+                        err: Error.ErrorCode.INVALID_PARAMETERS
                     )
             }
             let oldCloseFactor = Config.ScaledUInt256ToUFix64(self.scaledCloseFactor)
@@ -554,15 +555,15 @@ pub contract ComptrollerV1 {
         pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Config.Error.UNKNOWN_MARKET
+                        err: Error.ErrorCode.UNKNOWN_MARKET
                     )
             }
             return self.markets[poolAddr]!.poolPublicCap.borrow() ?? panic(
-                Config.ErrorEncode(
+                Error.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic",
-                    err: Config.Error.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                    err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
             )
         }
@@ -574,9 +575,9 @@ pub contract ComptrollerV1 {
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Config.Error.UNKNOWN_MARKET
+                        err: Error.ErrorCode.UNKNOWN_MARKET
                     )
             }
             let market = self.markets[poolAddr]!
@@ -628,9 +629,9 @@ pub contract ComptrollerV1 {
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Config.ErrorEncode(
+                    Error.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Config.Error.UNKNOWN_MARKET
+                        err: Error.ErrorCode.UNKNOWN_MARKET
                     )
             }
             if (self.accountMarketsIn.containsKey(userAddr) == false || self.accountMarketsIn[userAddr]!.contains(poolAddr) == false) {
@@ -657,12 +658,12 @@ pub contract ComptrollerV1 {
         // Admin function to list a new asset pool to the lending market
         // Note: Do not list a new asset pool before the oracle feed is ready
         pub fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.addMarket(poolAddress: poolAddress, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         }
         // Admin function to config parameters of a listed-market
         pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configMarket(
                 pool: pool,
                 isOpen: isOpen,
@@ -674,12 +675,12 @@ pub contract ComptrollerV1 {
         }
         // Admin function to set a new oracle
         pub fun configOracle(oracleAddress: Address) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configOracle(oracleAddress: oracleAddress)
         }
         // Admin function to set closeFactor
         pub fun setCloseFactor(closeFactor: UFix64) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller.")
+            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)
         }
     }
@@ -698,6 +699,7 @@ pub contract ComptrollerV1 {
         
         destroy <-self.account.load<@AnyResource>(from: self.ComptrollerStoragePath)
         self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
+        self.account.unlink(self.ComptrollerPublicPath)
         self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }
