@@ -4,26 +4,26 @@
   },
   "contracts": {
     "FungibleToken": {
-      "source": "./cadence/contracts/FungibleToken.cdc",
+      "source": "./scripts/deployment/testnet/cadence_empty/contracts/FungibleToken.cdc",
       "aliases": { "emulator": "0xee82856bf20e2aa6", "testnet": "0x9a0766d93b6608b7", "mainnet": "0xf233dcee88fe0abe" }
     },
     "FlowToken" : {
-      "source": "./cadence/contracts/FlowToken.cdc",
+      "source": "./scripts/deployment/testnet/cadence_empty/contracts/FlowToken.cdc",
       "aliases": { "emulator": "0x0ae53cb6e3f42a79", "testnet": "0x7e60df042a9c0868", "mainnet": "0x1654653399040a61" }
     },
     "FUSD" : {
-      "source": "./cadence/contracts/FUSD.cdc",
+      "source": "./scripts/deployment/testnet/cadence_empty/contracts/FUSD.cdc",
       "aliases": { "testnet": "0xe223d8a629e49c68", "mainnet": "0x3c5959b568896393" }
     },
 
-    "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
-    "Config":                         "./cadence/contracts/Config.cdc",
-    "Error":                          "./cadence/contracts/Error.cdc",
-    "Kibble":                         "./cadence/contracts/Kibble.cdc",
-    "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
-    "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
+    "dmbelOdmjgxS":                   "./scripts/deployment/testnet/cadence_empty/contracts/dmbelOdmjgxS.cdc",
+    "mdbeeldnhI":                     "./scripts/deployment/testnet/cadence_empty/contracts/mdbeeldnhI.cdc",
+    "jxehiC":                         "./scripts/deployment/testnet/cadence_empty/contracts/jxehiC.cdc",
+    "lillE":                          "./scripts/deployment/testnet/cadence_empty/contracts/lillE.cdc",
+    "Kibble":                         "./scripts/deployment/testnet/cadence_empty/contracts/Kibble.cdc",
+    "mdciMdneRnmdldnhImnhdgjdSiaT":   "./scripts/deployment/testnet/cadence_empty/contracts/mdciMdneRnmdldnhImnhdgjdSiaT.cdc",
+    "iVldmmilnjgiC":                  "./scripts/deployment/testnet/cadence_empty/contracts/iVldmmilnjgiC.cdc",
+    "miiPjhxchdL":                    "./scripts/deployment/testnet/cadence_empty/contracts/miiPjhxchdL.cdc"
   },
   "networks": {
     "emulator": "127.0.0.1:3569",
@@ -103,27 +103,27 @@
       "emulator-account": [
         "FUSD",
         "Kibble",
-        "Error",
-        "Interfaces",
-        "Config",
-        "TwoSegmentsInterestRateModel",
-        "ComptrollerV1"
+        "lillE",
+        "mdbeeldnhI",
+        "jxehiC",
+        "mdciMdneRnmdldnhImnhdgjdSiaT",
+        "iVldmmilnjgiC"
       ],
       "emulator-oracle-deployer": [
-        "SimpleOracle"
+        "dmbelOdmjgxS"
       ],
       "emulator-pool-template": [
-        "LendingPool"
+        "miiPjhxchdL"
       ]
     },
     "testnet": {
       "testnet-interface-deployer": [
-        "Config",
-        "Error",
-        "Interfaces"
+        "jxehiC",
+        "lillE",
+        "mdbeeldnhI"
       ],
       "testnet-comptroller-deployer": [
-        "ComptrollerV1"
+        "iVldmmilnjgiC"
       ],
       "testnet-interest-rate-FlowToken-deployer": [
       ],
@@ -134,7 +134,7 @@
       "testnet-pool-FUSD-deployer": [
       ],
       "testnet-oracle-deployer": [
-        "SimpleOracle"
+        "dmbelOdmjgxS"
       ]
     }
   }

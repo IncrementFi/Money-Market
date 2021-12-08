@@ -26,11 +26,13 @@ transaction(modelName: String, blocksPerYear: UInt256, scaledZeroUtilInterestRat
         )
         adminAccount.save(<-newModel, to: TwoSegmentsInterestRateModel.InterestRateModelStoragePath)
         // Create a private capability to InterestRateModel resource, which is only used for adminAccount to update parameters
+        adminAccount.unlink(TwoSegmentsInterestRateModel.InterestRateModelPrivatePath)
         adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel>(
             TwoSegmentsInterestRateModel.InterestRateModelPrivatePath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
         // Create a public capability to InterestRateModel resource that only exposes ModelPublic
+        adminAccount.unlink(Config.InterestRateModelPublicPath)
         adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{Interfaces.InterestRateModelPublic}>(
             Config.InterestRateModelPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath

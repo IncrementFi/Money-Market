@@ -9,7 +9,7 @@ setting.DictDeployNameToAddr = {}
 setting.DictPoolNameToDeployName = {}
 
 # create accounts which will be deployed on flow emulator
-for addr in setting.BuildinAddr:
+for addr in setting.EmulatorDeployerAddrs:
     os.popen('flow accounts create --key 99c7b442680230664baab83c4bc7cdd74fb14fb21cce3cceb962892c06d73ab9988568b8edd08cb6779a810220ad9353f8e713bc0cb8b81e06b68bcb9abb551e --sig-algo "ECDSA_secp256k1"  --signer "emulator-account"').read()
 
 # create multiple pool accounts
