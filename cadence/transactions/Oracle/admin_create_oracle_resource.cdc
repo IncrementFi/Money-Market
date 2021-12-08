@@ -15,11 +15,13 @@ transaction() {
         adminAccount.save(<-adminRef.createOracleResource(), to: SimpleOracle.OracleStoragePath)
 
         // Create a public capability to Oracle resource that only exposes {OraclePublic} interface to public.
+        adminAccount.unlink(SimpleOracle.OraclePublicPath)
         adminAccount.link<&SimpleOracle.Oracle{Interfaces.OraclePublic}>(
             SimpleOracle.OraclePublicPath,
             target: SimpleOracle.OracleStoragePath
         )
         // Create a private capability to Oracle resource for adminAccount to modify data feeds.
+        adminAccount.unlink(SimpleOracle.OraclePrivatePath)
         adminAccount.link<&SimpleOracle.Oracle>(
             SimpleOracle.OraclePrivatePath,
             target: SimpleOracle.OracleStoragePath

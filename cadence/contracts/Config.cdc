@@ -23,41 +23,6 @@ pub contract Config {
     // 100_000_000.0, i.e. 1.0e8
     pub let ufixScale: UFix64
 
-    pub enum Error: UInt8 {
-        pub case NO_ERROR
-        // Pool related:
-        pub case INVALID_PARAMETERS
-        pub case INVALID_USER_CERTIFICATE
-        pub case INVALID_POOL_CERTIFICATE
-        pub case CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
-        pub case CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
-        pub case CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
-        pub case POOL_INITIALIZED
-        pub case EMPTY_FUNGIBLE_TOKEN_VAULT
-        pub case MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
-        pub case INSUFFICIENT_POOL_LIQUIDITY
-        pub case REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
-        pub case SAME_LIQUIDATOR_AND_BORROWER
-        pub case EXTERNAL_SEIZE_FROM_SELF
-        pub case EXCEED_TOTAL_RESERVES
-        // Comptroller:
-        pub case ADD_MARKET_DUPLICATED
-        pub case ADD_MARKET_NO_ORACLE_PRICE
-        pub case UNKNOWN_MARKET
-        pub case MARKET_NOT_OPEN
-        pub case REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER
-        pub case BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP
-        pub case BORROW_NOT_ALLOWED_POSITION_UNDER_WATER
-        pub case LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
-        pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
-        pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
-    }
-
-    pub fun ErrorEncode(msg: String, err: Error): String {
-        return "[IncErrorMsg:".concat(msg).concat("]").concat(
-               "[IncErrorCode:").concat(err.rawValue.toString()).concat("]")
-    }
-
     // Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
     // e.g. 184467440737.09551615 (UFix64.max) => 184467440737095516150000000000
     pub fun UFix64ToScaledUInt256(_ f: UFix64): UInt256 {
