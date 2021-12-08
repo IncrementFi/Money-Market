@@ -1,1 +1,102 @@
-{}
+{
+  "0": {
+    "eng": "NO_ERROR",
+    "chn": "NO_ERROR的喵"
+  },
+  "1": {
+    "eng": "INVALID_PARAMETERS",
+    "chn": "INVALID_PARAMETERS的喵"
+  },
+  "2": {
+    "eng": "INVALID_USER_CERTIFICATE",
+    "chn": "INVALID_USER_CERTIFICATE的喵"
+  },
+  "3": {
+    "eng": "INVALID_POOL_CERTIFICATE",
+    "chn": "INVALID_POOL_CERTIFICATE的喵"
+  },
+  "4": {
+    "eng": "CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY",
+    "chn": "CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY的喵"
+  },
+  "5": {
+    "eng": "CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY",
+    "chn": "CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY的喵"
+  },
+  "6": {
+    "eng": "CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY",
+    "chn": "CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY的喵"
+  },
+  "7": {
+    "eng": "POOL_INITIALIZED",
+    "chn": "POOL_INITIALIZED的喵"
+  },
+  "8": {
+    "eng": "EMPTY_FUNGIBLE_TOKEN_VAULT",
+    "chn": "EMPTY_FUNGIBLE_TOKEN_VAULT的喵"
+  },
+  "9": {
+    "eng": "MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL",
+    "chn": "MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL的喵"
+  },
+  "10": {
+    "eng": "INSUFFICIENT_POOL_LIQUIDITY",
+    "chn": "INSUFFICIENT_POOL_LIQUIDITY的喵"
+  },
+  "11": {
+    "eng": "REDEEM_FAILED_NO_ENOUGH_LP_TOKEN",
+    "chn": "REDEEM_FAILED_NO_ENOUGH_LP_TOKEN的喵"
+  },
+  "12": {
+    "eng": "SAME_LIQUIDATOR_AND_BORROWER",
+    "chn": "SAME_LIQUIDATOR_AND_BORROWER的喵"
+  },
+  "13": {
+    "eng": "EXTERNAL_SEIZE_FROM_SELF",
+    "chn": "EXTERNAL_SEIZE_FROM_SELF的喵"
+  },
+  "14": {
+    "eng": "EXCEED_TOTAL_RESERVES",
+    "chn": "EXCEED_TOTAL_RESERVES的喵"
+  },
+  "15": {
+    "eng": "ADD_MARKET_DUPLICATED",
+    "chn": "ADD_MARKET_DUPLICATED的喵"
+  },
+  "16": {
+    "eng": "ADD_MARKET_NO_ORACLE_PRICE",
+    "chn": "ADD_MARKET_NO_ORACLE_PRICE的喵"
+  },
+  "17": {
+    "eng": "UNKNOWN_MARKET",
+    "chn": "UNKNOWN_MARKET的喵"
+  },
+  "18": {
+    "eng": "MARKET_NOT_OPEN",
+    "chn": "MARKET_NOT_OPEN的喵"
+  },
+  "19": {
+    "eng": "REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER",
+    "chn": "REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER的喵"
+  },
+  "20": {
+    "eng": "BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP",
+    "chn": "BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP的喵"
+  },
+  "21": {
+    "eng": "BORROW_NOT_ALLOWED_POSITION_UNDER_WATER",
+    "chn": "BORROW_NOT_ALLOWED_POSITION_UNDER_WATER的喵"
+  },
+  "22": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE",
+    "chn": "LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE的喵"
+  },
+  "23": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER",
+    "chn": "LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER的喵"
+  },
+  "24": {
+    "eng": "LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY",
+    "chn": "LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY的喵"
+  }
+}
