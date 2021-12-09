@@ -7,19 +7,11 @@ const path = require('path');
 const t = require('@onflow/types');
 const config = require('./config');
 const utils = require('./utils');
+const DeployConfigTestnet = require('../../deploy.config.testnet.json')
 
 /// [Imported code start] - Related cadence transactions/scripts used in this script.
-const simpleOracleImportPath = '"../../contracts/SimpleOracle.cdc"';
-const InterfacesImportPath = '"../../contracts/Interfaces.cdc"';
-const uploadFeedDataFile = '../../cadence/transactions/Oracle/updater_upload_feed_data.cdc';
-const getFeedLatestResultFile = '../../cadence/scripts/Oracle/get_feed_latest_result.cdc';
-const uploadFeedDataTxCode = fs
-  .readFileSync(path.resolve(__dirname, uploadFeedDataFile), "utf8")
-  .replace(simpleOracleImportPath, config.oracleContract);
-const getFeedLatestResultScriptCode = fs
-  .readFileSync(path.resolve(__dirname, getFeedLatestResultFile), "utf8")
-  .replace(InterfacesImportPath, config.interfacesContract)
-  .replace(simpleOracleImportPath, config.oracleContract);
+const uploadFeedDataTxCode = DeployConfigTestnet['Codes']['Transactions']['SimpleOracle']['UpdaterUploadFeedData']
+const getFeedLatestResultScriptCode = DeployConfigTestnet['Codes']['Scripts']['GetSimpleOracleFeedLatestResult']
 /// [Imported code end]
 
 /// [DATA STRUCTURE start] - Local data structure used in this script.

@@ -1,10 +1,9 @@
 {
     "testnet": {
         "accessNode": "https://access-testnet.onflow.org",
-        "interfacesContract": "0xa914b5106275c637",
-        "oracleContract": "0x00bb0ede202e2a11",
-        "updaterAccount": "0xed8eaa1512ba24aa",
-        "updaterKeyIndex": 1,
+        "oracleContract": "0xb9ea46f9e5fc5504",
+        "updaterAccount": "0x078095ae53d01b36",
+        "updaterKeyIndex": 0,
         "feeds": [
             {
                 "id": "bitcoin",
