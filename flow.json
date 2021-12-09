@@ -51,51 +51,57 @@
     "testnet-pool-FUSD-deployer":      {"address": "0xd3fb2fefb96d9643", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
   },
   "pools" : {
-    "testnet-pool-FlowToken-deployer": {
-      "poolName": "FlowToken",
-      "tokenName": "Flow",
-      "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
-      "reserveFactor": 0.01,
-      "poolSeizeShare": 0.028,
-      "liquidationPenalty": 0.05,
-      "collateralFactor": 0.75,
-      "borrowCap": 0.0,
-      "isOpen": true,
-      "isMining": true,
-      "oracleCap": 100.0,
-      "oracleInitialPrice": 48.0
-    },
-    "testnet-pool-FUSD-deployer": {
-      "poolName": "FUSD",
-      "tokenName": "FUSD",
-      "interestRateModelDeployer": "testnet-interest-rate-FUSD-deployer",
-      "reserveFactor": 0.02,
-      "poolSeizeShare": 0.048,
-      "liquidationPenalty": 0.05,
-      "collateralFactor": 0.8,
-      "borrowCap": 0.0,
-      "isOpen": true,
-      "isMining": true,
-      "oracleCap": 100.0,
-      "oracleInitialPrice": 1.0
+    "testnet": {
+      "testnet-pool-FlowToken-deployer": {
+        "poolName": "FlowToken",
+        "tokenName": "Flow",
+        "tokenNameLower": "flowToken",
+        "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
+        "reserveFactor": 0.01,
+        "poolSeizeShare": 0.028,
+        "liquidationPenalty": 0.05,
+        "collateralFactor": 0.75,
+        "borrowCap": 0.0,
+        "isOpen": true,
+        "isMining": true,
+        "oracleCap": 10,
+        "oracleInitialPrice": 48.0
+      },
+      "testnet-pool-FUSD-deployer": {
+        "poolName": "FUSD",
+        "tokenName": "FUSD",
+        "tokenNameLower": "fusd",
+        "interestRateModelDeployer": "testnet-interest-rate-FUSD-deployer",
+        "reserveFactor": 0.02,
+        "poolSeizeShare": 0.048,
+        "liquidationPenalty": 0.05,
+        "collateralFactor": 0.8,
+        "borrowCap": 0.0,
+        "isOpen": true,
+        "isMining": true,
+        "oracleCap": 10,
+        "oracleInitialPrice": 1.0
+      }
     }
   },
   "interest-rate-models": {
-    "testnet-interest-rate-FlowToken-deployer" : {
-      "modelName" : "Unstable interest rate model",
-      "blocksPerYear": 12614400,
-      "scaledZeroUtilInterestRatePerYear": 0,
-      "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
-      "scaledFullUtilInterestRatePerYear": 350000000000000000,
-      "scaledCriticalUtilRate": 800000000000000000
-    },
-    "testnet-interest-rate-FUSD-deployer" : {
-      "modelName" : "Stable interest rate model",
-      "blocksPerYear": 12614400,
-      "scaledZeroUtilInterestRatePerYear": 0,
-      "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
-      "scaledFullUtilInterestRatePerYear": 350000000000000000,
-      "scaledCriticalUtilRate": 800000000000000000
+    "testnet": {
+      "testnet-interest-rate-FlowToken-deployer" : {
+        "modelName" : "Unstable interest rate model",
+        "blocksPerYear": 12614400,
+        "scaledZeroUtilInterestRatePerYear": 0,
+        "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
+        "scaledFullUtilInterestRatePerYear": 350000000000000000,
+        "scaledCriticalUtilRate": 800000000000000000
+      },
+      "testnet-interest-rate-FUSD-deployer" : {
+        "modelName" : "Stable interest rate model",
+        "blocksPerYear": 12614400,
+        "scaledZeroUtilInterestRatePerYear": 0,
+        "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
+        "scaledFullUtilInterestRatePerYear": 350000000000000000,
+        "scaledCriticalUtilRate": 800000000000000000
+      }
     }
   },
   "deployments": {

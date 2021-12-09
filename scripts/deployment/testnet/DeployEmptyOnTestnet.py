@@ -8,8 +8,8 @@ import ConfigTestnet
 # Deploy empty contracts without pools
 os.system('flow project deploy -f ./scripts/deployment/testnet/flow.empty.json --update --network testnet')
 # Extracts all pool Deployers
-PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers()
-InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers()
+PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
+InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 # Pool contract name
 poolContractName = ConfigTestnet.Encrypt('LendingPool')
 interestModelContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
