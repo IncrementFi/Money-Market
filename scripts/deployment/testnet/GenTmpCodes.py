@@ -172,8 +172,8 @@ for path, dir_list, file_list in replace_files:
                     replace_line.startswith(']') or \
                     replace_line.startswith('}'):
                     end_char = ''
-                elif replace_line.startswith('--let ') or \
-                    replace_line.startswith('--pub') or \
+                elif replace_line.startswith('let ') or \
+                    replace_line.startswith('pub') or \
                     replace_line.startswith('var ') or \
                     replace_line.startswith('{{{{') or \
                     replace_line.startswith('self.') or \
@@ -285,22 +285,23 @@ with open('./scripts/deployment/testnet/flow.empty.json', 'w') as fw:
             fw.write(line)
 
 
-PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers()
-InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers()
+PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
+InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
 ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./scripts/deployment/testnet/flow.unreadable.json')
-PoolNameToAddr = ConfigTestnet.ExtractPoolNames()
-poolContractName = ConfigTestnet.Encrypt('LendingPool')
-interestContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
+PoolNameToAddr = ConfigTestnet.ExtractPoolNames('testnet')
+PoolContractName = ConfigTestnet.Encrypt('LendingPool')
+ComptrollerContractName = ConfigTestnet.Encrypt('ComptrollerV1')
+InterestContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
 
 
 # gen contracts: InterestRateModel with address
 gen_base_path = ConfigTestnet.UnreadablePath + '/contracts'
-with open(gen_base_path + '/'+interestContractName+'.cdc', 'r') as f:
+with open(gen_base_path + '/'+InterestContractName+'.cdc', 'r') as f:
     code_template = f.read()
 write_path = gen_base_path + '/autogen'
 if not os.path.exists(write_path): os.makedirs(write_path)
-with open(write_path+'/{0}.cdc.addr'.format(interestContractName), 'w') as fw:
+with open(write_path+'/{0}.cdc.addr'.format(InterestContractName), 'w') as fw:
     code = code_template
     code = ConfigTestnet.ReplaceImportPathTo0xName(code)
     code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
@@ -322,7 +323,7 @@ for interestDeployer in InterestDeployerNameToAddr:
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
         tmpDict = ContractNameToAddress.copy()
         # specify the interest contract addr
-        tmpDict[interestContractName] = InterestDeployerNameToAddr[interestDeployer]
+        tmpDict[InterestContractName] = InterestDeployerNameToAddr[interestDeployer]
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
         
         fw.write(code)
@@ -342,7 +343,7 @@ for poolDeployer in PoolDeployerNameToAddr:
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
         tmpDict = ContractNameToAddress.copy()
         # specify the interest contract addr
-        tmpDict[poolContractName] = PoolDeployerNameToAddr[poolDeployer]
+        tmpDict[PoolContractName] = PoolDeployerNameToAddr[poolDeployer]
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
         
         fw.write(code)
@@ -361,19 +362,19 @@ for poolDeployer in PoolDeployerNameToAddr:
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
         tmpDict = ContractNameToAddress.copy()
         # specify the interest contract addr
-        tmpDict[poolContractName] = PoolDeployerNameToAddr[poolDeployer]
+        tmpDict[PoolContractName] = PoolDeployerNameToAddr[poolDeployer]
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
         
         fw.write(code)
 
 # gen contracts: LendingPool with addr
 gen_base_path = ConfigTestnet.UnreadablePath + '/contracts'
-with open(gen_base_path + '/'+poolContractName+'.cdc', 'r') as f:
+with open(gen_base_path + '/'+PoolContractName+'.cdc', 'r') as f:
     code_template = f.read()
 write_path = gen_base_path + '/autogen'
 if not os.path.exists(write_path): os.makedirs(write_path)
 
-with open(write_path+'/{0}.cdc.addr'.format(poolContractName), 'w') as fw:
+with open(write_path+'/{0}.cdc.addr'.format(PoolContractName), 'w') as fw:
     code = code_template
     code = ConfigTestnet.ReplaceImportPathTo0xName(code)
     code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
@@ -386,20 +387,22 @@ with open('./scripts/deployment/testnet/flow.unreadable.json', 'r') as f:
     flow_dict = json.load(f)
 configJson = {}
 #
+configJson["ComptrollerAddress"] = ContractNameToAddress[ComptrollerContractName]
+#
 configJson["ContractAddress"] = {}
 for contract in ContractNameToAddress:
     configJson["ContractAddress"][contract] = ContractNameToAddress[contract]
 #
 configJson["PoolAddress"] = {}
 configJson["PoolName"] = {}
+
 for poolName in PoolNameToAddr:
+    poolConfig = ConfigTestnet.ExtractPoolConfigByPoolName(poolName, 'testnet')
     poolAddr = PoolNameToAddr[poolName]
-    poolContract = poolContractName
+    poolContract = PoolContractName
     poolTokenName = poolName
     if poolName == "FlowToken": poolTokenName = "Flow"
-    lowerPoolName = poolName[:1].lower() + poolName[1:]
-    if poolName == 'FUSD':
-        lowerPoolName = lowerPoolName.lower()
+    lowerPoolName = poolConfig['tokenNameLower']
     info = {
         "PoolContract": poolContract,
         "PoolName": poolName,
@@ -488,7 +491,7 @@ for item in poolCodePath:
             
             tmpDict = ContractNameToAddress.copy()
             # specify the pool contract addr
-            tmpDict[poolContractName] = PoolNameToAddr[poolName]
+            tmpDict[PoolContractName] = PoolNameToAddr[poolName]
             code = ConfigTestnet.ReplaceImportPathTo0xName(code)
             code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
             

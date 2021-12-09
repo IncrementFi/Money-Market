@@ -5,8 +5,8 @@ import shutil
 import re
 import ConfigTestnet
 
-PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers()
-InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers()
+PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
+InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
 OracleDeployer = ConfigTestnet.ExtractOracleDeployer()
 OracleUpdater = ConfigTestnet.ExtractOracleUpdater()
@@ -19,7 +19,7 @@ PoolContractName = ConfigTestnet.Encrypt('LendingPool')
 InterestModelContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
 ComptrollerContractName = ConfigTestnet.Encrypt('ComptrollerV1')
 
-
+"""
 # Deploy contracts without pools & interest models
 os.system('flow project deploy -f ./scripts/deployment/testnet/flow.unreadable.json --update --network testnet')
 
@@ -36,7 +36,7 @@ for interestDeployer in InterestDeployerNameToAddr:
 # Init interest rate model
 for interestDeployer in InterestDeployerNameToAddr:
     print('\n===============>', 'init interest model', interestDeployer)
-    interestConfig = ConfigTestnet.ExtractInterestConfig(interestDeployer)
+    interestConfig = ConfigTestnet.ExtractInterestConfig(interestDeployer, 'testnet')
     cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/InterestRateModel/autogen/create_interest_rate_model.cdc.{0}.tmp '.format(interestDeployer) + \
           '--arg String:"{0}" '.format(interestConfig['modelName']) + \
           '--arg UInt256:"{0}" '.format(interestConfig['blocksPerYear']) + \
@@ -69,7 +69,7 @@ for poolDeployer in PoolDeployerNameToAddr:
         PoolContractName, poolDeployer))
     os.system('flow accounts add-contract {0} {1}/contracts/autogen/{2}.cdc.addr --signer {3} --network testnet'.format(
         PoolContractName, ConfigTestnet.UnreadablePath, PoolContractName, poolDeployer))
-
+"""
 # Oracle
 # 1.Deploy and setup oracle resource
 print('===============>', 'Oracle setup oracle resource')
@@ -101,7 +101,7 @@ os.system(cmd)
 # 3. Oracle add price feed
 for poolDeployer in PoolDeployerNameToAddr:
     poolAddr = PoolDeployerNameToAddr[poolDeployer]
-    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer)
+    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
     print('===============>', 'add oracle price feed ::: ', poolAddr)
     cmd = 'flow transactions send {0}/transactions/Oracle/admin_add_price_feed.cdc '.format(ConfigTestnet.UnreadablePath) + \
           '--arg Address:{0} '.format(poolAddr) + \
@@ -135,7 +135,7 @@ os.system(cmd)
 # Init pools
 for poolDeployer in PoolDeployerNameToAddr:
     poolAddr = PoolDeployerNameToAddr[poolDeployer]
-    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer)
+    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
     print('===============>', 'Init pool', poolDeployer)
     cmd = 'flow transactions send {0}/transactions/Pool/autogen/init_pool_template.cdc.{1}.tmp '.format(ConfigTestnet.UnreadablePath, poolDeployer) + \
           '--arg Address:{0} --arg Address:{1} --arg UFix64:{2} --arg UFix64:{3} '.format(
@@ -153,7 +153,7 @@ for poolDeployer in PoolDeployerNameToAddr:
 # Add markets
 for poolDeployer in PoolDeployerNameToAddr:
     poolAddr = PoolDeployerNameToAddr[poolDeployer]
-    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer)
+    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
     print('===============>', 'add market', poolDeployer)
     cmd = 'flow transactions send {0}/transactions/Comptroller/add_market.cdc '.format(ConfigTestnet.UnreadablePath) + \
           '--arg Address:{0} '.format(poolAddr) + \
