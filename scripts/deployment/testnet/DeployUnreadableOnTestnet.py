@@ -15,11 +15,11 @@ ComptrollerDeployer = ConfigTestnet.ExtractComptrollerDeployer()
 ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./scripts/deployment/testnet/flow.unreadable.json')
 DeployerToAddress = ConfigTestnet.ExtractDeployerToAddress('./scripts/deployment/testnet/flow.unreadable.json')
 
-PoolContractName = ConfigTestnet.Encrypt('LendingPool')
-InterestModelContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
-ComptrollerContractName = ConfigTestnet.Encrypt('ComptrollerV1')
+PoolContractName = ConfigTestnet.GetLendingPoolContractName()
+InterestModelContractName = ConfigTestnet.GetInterestContractName()
+ComptrollerContractName = ConfigTestnet.GetComptrollerContractName()
 
-"""
+
 # Deploy contracts without pools & interest models
 os.system('flow project deploy -f ./scripts/deployment/testnet/flow.unreadable.json --update --network testnet')
 
@@ -69,7 +69,7 @@ for poolDeployer in PoolDeployerNameToAddr:
         PoolContractName, poolDeployer))
     os.system('flow accounts add-contract {0} {1}/contracts/autogen/{2}.cdc.addr --signer {3} --network testnet'.format(
         PoolContractName, ConfigTestnet.UnreadablePath, PoolContractName, poolDeployer))
-"""
+
 # Oracle
 # 1.Deploy and setup oracle resource
 print('===============>', 'Oracle setup oracle resource')
