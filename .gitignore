@@ -111,8 +111,6 @@ dist
 #project related
 flow_multipool.json
 flow_multipool_env.json
-deploy.config.emulator.json
-deploy.config.testnet.json
 *.pyc
 *__pycache__*
 *autogen*
