@@ -16,8 +16,8 @@ PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
 InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
 # Pool contract name
-poolContractName = ConfigTestnet.Encrypt('LendingPool')
-interestContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
+poolContractName = ConfigTestnet.GetLendingPoolContractName()
+interestContractName = ConfigTestnet.GetInterestContractName()
 
 with open('./scripts/deployment/testnet/flow.empty.json', 'r') as f:
     flow_empty_dict = json.load(f)

@@ -4,7 +4,6 @@ const network = 'testnet';
 
 module.exports = {
   accessNode: deployed[network].accessNode,
-  interfacesContract: deployed[network].interfacesContract,
   oracleContract: deployed[network].oracleContract,
   updaterAccount: deployed[network].updaterAccount,
   updaterKeyIndex: deployed[network].updaterKeyIndex,
