@@ -180,6 +180,7 @@ os.system('flow transactions send ./cadence/transactions/Test/mint_fusd_for_user
 
 # generate config json
 configJson = {}
+configJson['ComptrollerAddress'] = setting.DictDeployNameToAddr['emulator-account']
 configJson["ContractAddress"] = {}
 for deployer in flow_dict["deployments"]["emulator"]:
     for contract in flow_dict["deployments"]["emulator"][deployer]:

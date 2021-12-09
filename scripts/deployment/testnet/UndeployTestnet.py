@@ -12,8 +12,8 @@ if len(sys.argv) > 1:
 
 
 # Extracts all pool&interestRate Deployers
-PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers()
-InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers()
+PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
+InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
 # Pool contract name
 poolContractName = ConfigTestnet.Encrypt('LendingPool')
