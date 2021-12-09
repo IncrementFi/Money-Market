@@ -21,30 +21,30 @@ def Encrypt(w):
         ww = ww.replace(P[i], C[i])
     return ww
 
-def ExtractPoolDeployers():
+def ExtractPoolDeployers(network):
     PoolDeployerNameToAddr = {}
     with open('./flow.json', 'r') as f:
         flow_dict = json.load(f)
-        for deployer in flow_dict['pools']:
+        for deployer in flow_dict['pools'][network]:
             PoolDeployerNameToAddr[deployer] = flow_dict['accounts'][deployer]['address']
     return PoolDeployerNameToAddr
 
-def ExtractPoolNames():
+def ExtractPoolNames(network):
     PoolNameToAddr = {}
     with open('./flow.json', 'r') as f:
         flow_dict = json.load(f)
-        for deployer in flow_dict['pools']:
-            poolName = flow_dict['pools'][deployer]['poolName']
+        for deployer in flow_dict['pools'][network]:
+            poolName = flow_dict['pools'][network][deployer]['poolName']
             PoolNameToAddr[poolName] = flow_dict['accounts'][deployer]['address']
 
     return PoolNameToAddr
 
 
-def ExtractInterestDeployers():
+def ExtractInterestDeployers(network):
     InterestDeployerNameToAddr = {}
     with open('./flow.json', 'r') as f:
         flow_dict = json.load(f)
-        for deployer in flow_dict['interest-rate-models']:
+        for deployer in flow_dict['interest-rate-models'][network]:
             InterestDeployerNameToAddr[deployer] = flow_dict['accounts'][deployer]['address']
     return InterestDeployerNameToAddr
 
@@ -57,15 +57,24 @@ def ExtractOracleUpdater():
 def ExtractComptrollerDeployer():
     return 'testnet-comptroller-deployer'
 
-def ExtractPoolConfig(poolDeployer):
+def ExtractPoolConfig(poolDeployer, network):
     with open('./flow.json', 'r') as f:
         flow_dict = json.load(f)
-        return flow_dict["pools"][poolDeployer]
+        return flow_dict["pools"][network][poolDeployer]
 
-def ExtractInterestConfig(interestDeployer):
+def ExtractPoolConfigByPoolName(poolName, network):
+    res = None
     with open('./flow.json', 'r') as f:
         flow_dict = json.load(f)
-        return flow_dict["interest-rate-models"][interestDeployer]
+        for poolDeployer in flow_dict["pools"][network]:
+            if flow_dict["pools"][network][poolDeployer]['poolName'] == poolName:
+                res = flow_dict["pools"][network][poolDeployer]
+        return res
+
+def ExtractInterestConfig(interestDeployer, network):
+    with open('./flow.json', 'r') as f:
+        flow_dict = json.load(f)
+        return flow_dict["interest-rate-models"][network][interestDeployer]
 
 def ExtractContractNameToAddress(flow_json_path):
     ContractNameToAddress = {}
