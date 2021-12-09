@@ -11,8 +11,8 @@ os.system('flow project deploy -f ./scripts/deployment/testnet/flow.empty.json -
 PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
 InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 # Pool contract name
-poolContractName = ConfigTestnet.Encrypt('LendingPool')
-interestModelContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
+poolContractName = ConfigTestnet.GetLendingPoolContractName()
+interestModelContractName = ConfigTestnet.GetInterestContractName()
 # Deploy empty pool contracts
 for poolDeployer in PoolDeployerNameToAddr:
     print('\n=======> remove ', poolDeployer)
