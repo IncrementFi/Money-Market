@@ -21,6 +21,13 @@ def Encrypt(w):
         ww = ww.replace(P[i], C[i])
     return ww
 
+def GetComptrollerContractName():
+    return 'ComptrollerV1'
+def GetLendingPoolContractName():
+    return 'LendingPool'
+def GetInterestContractName():
+    return 'TwoSegmentsInterestRateModel'
+
 def ExtractPoolDeployers(network):
     PoolDeployerNameToAddr = {}
     with open('./flow.json', 'r') as f:

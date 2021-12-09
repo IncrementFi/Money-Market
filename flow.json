@@ -43,12 +43,12 @@
     "testnet-comptroller-deployer":    {"address": "0x67e2455e98098a95", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
     "testnet-interest-rate-FlowToken-deployer":  {"address": "0x21c8f30131939cfd", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
     "testnet-interest-rate-FUSD-deployer":       {"address": "0x2a6caf9d0382405e", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-    "testnet-interface-deployer":      {"address": "0x975dfdc6abf962b5", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-    "testnet-oracle-deployer":         {"address": "0x383cde4811b4b0d0", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-    "testnet-oracle-updater":          {"address": "0xc125303f55cfc447", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-interface-deployer":      {"address": "0xbef33bc3b8b3e500", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-oracle-deployer":         {"address": "0xb9ea46f9e5fc5504", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-oracle-updater":          {"address": "0x078095ae53d01b36", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
 
-    "testnet-pool-FlowToken-deployer": {"address": "0x379c9632a897969c", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-    "testnet-pool-FUSD-deployer":      {"address": "0xd3fb2fefb96d9643", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
+    "testnet-pool-FlowToken-deployer": {"address": "0xe87fbdc31260d121", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-pool-FUSD-deployer":      {"address": "0xf8110b49279777d0", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
   },
   "pools" : {
     "testnet": {
