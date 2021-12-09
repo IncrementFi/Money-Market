@@ -19,6 +19,21 @@ if os.path.exists(ConfigTestnet.EmptyPath):
 os.makedirs(ConfigTestnet.EmptyPath)
 
 
+def ExtractContractName(line):
+    variable_reg = re.compile(r'pub contract interface (.+?)\b[:=<{\n]*')
+    res = variable_reg.search(line)
+    if res != None: return res[1].strip()
+    variable_reg = re.compile(r'pub contract (.+?)\b[:=<{\n]*')
+    res = variable_reg.search(line)
+    if res != None: return res[1].strip()
+    variable_reg = re.compile(r'pub resource interface (.+?)\b[:=<{\n]*')
+    res = variable_reg.search(line)
+    if res != None: return res[1].strip()
+    variable_reg = re.compile(r'pub resource (.+?)\b[:=<{\n]*')
+    res = variable_reg.search(line)
+    if res != None: return res[1].strip()
+    return None
+
 def ExtractVariable(line):
     variable_reg = re.compile(r'\blet\b (.+?)\b[:=<\n]*')
     res = variable_reg.search(line)
@@ -29,22 +44,6 @@ def ExtractVariable(line):
     if res != None: return res[1].strip()
 
     variable_reg = re.compile(r'pub case (.+?)\b[:=<\n]*')
-    res = variable_reg.search(line)
-    if res != None: return res[1].strip()
-
-    variable_reg = re.compile(r'pub contract interface (.+?)\b[:=<{\n]*')
-    res = variable_reg.search(line)
-    if res != None: return res[1].strip()
-
-    variable_reg = re.compile(r'pub contract (.+?)\b[:=<{\n]*')
-    res = variable_reg.search(line)
-    if res != None: return res[1].strip()
-
-    variable_reg = re.compile(r'pub resource interface (.+?)\b[:=<{\n]*')
-    res = variable_reg.search(line)
-    if res != None: return res[1].strip()
-
-    variable_reg = re.compile(r'pub resource (.+?)\b[:=<{\n]*')
     res = variable_reg.search(line)
     if res != None: return res[1].strip()
 
@@ -185,9 +184,12 @@ for path, dir_list, file_list in replace_files:
                     replace_line.startswith('init') or \
                     replace_line.startswith('destroy') or \
                     replace_line.startswith('emit') or \
+                    replace_line.startswith('LendingPool.') or \
                     pre_line.endswith(')'):
                     end_char = ';'
                 if path.find('contracts') < 0:
+                    end_char = '\n'
+                if pre_line.find('//') >= 0:
                     end_char = '\n'
                     # TODO add space before lines
                     #ori_line.find(replace_line[0])
@@ -221,16 +223,21 @@ for path, dir_list, file_list in replace_files:
                 ori_line = line
                 line = ori_line.strip()
                 if len(line) == 0: continue
-                keyword = ExtractVariable(line)
-                if line.startswith('pub contract interface'):    
+                
+                if line.startswith('pub contract interface'):   
+                    keyword = ExtractContractName(line)
                     line = 'pub contract interface ' + keyword + '{\n' 
-                elif line.startswith('pub contract'):    
+                elif line.startswith('pub contract'):
+                    keyword = ExtractContractName(line)
                     line = 'pub contract ' + keyword + '{\n' 
                 elif line.startswith('pub resource interface'):
+                    keyword = ExtractContractName(line)
                     line = 'pub resource interface ' + keyword + '{}\n'
                 elif line.startswith('pub resource'):
+                    keyword = ExtractContractName(line)
                     line = 'pub resource ' + keyword + '{}\n'
                 elif line.startswith('pub struct'):
+                    keyword = ExtractVariable(line)
                     line = 'pub struct ' + keyword + '{}\n'
                 elif ori_line.startswith('    pub') and line.endswith('StoragePath'):
                     line = line + '\n'
@@ -290,9 +297,9 @@ InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
 ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./scripts/deployment/testnet/flow.unreadable.json')
 PoolNameToAddr = ConfigTestnet.ExtractPoolNames('testnet')
-PoolContractName = ConfigTestnet.Encrypt('LendingPool')
-ComptrollerContractName = ConfigTestnet.Encrypt('ComptrollerV1')
-InterestContractName = ConfigTestnet.Encrypt('TwoSegmentsInterestRateModel')
+PoolContractName = ConfigTestnet.GetLendingPoolContractName()
+ComptrollerContractName = ConfigTestnet.GetComptrollerContractName()
+InterestContractName = ConfigTestnet.GetInterestContractName()
 
 
 # gen contracts: InterestRateModel with address
@@ -448,6 +455,10 @@ scriptsCodePath = [
         'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_interestrate_model_params.cdc',
         'name': 'QueryMarketInterestRateModelParams'
     },
+    {
+        "path" : "./scripts/deployment/testnet/cadence_unreadable/scripts/Oracle/get_feed_latest_result.cdc",
+        "name" : "GetSimpleOracleFeedLatestResult"
+    }
 ]
 for item in scriptsCodePath:
     path = item["path"]
@@ -497,10 +508,28 @@ for item in poolCodePath:
             
             configJson["Codes"]["Transactions"][name][poolName] = code
 
+#
+simpleOracleTransactionsPath = [
+    {
+        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc",
+        "name" : "UpdaterUploadFeedData"
+    }
+]
+configJson["Codes"]["Transactions"]["SimpleOracle"] = {}
+for item in simpleOracleTransactionsPath:
+    path = item["path"]
+    name = item["name"]
+    with open(path, 'r') as f:
+        poolTemplate = f.read()
+        
+        code = poolTemplate
+        code = ConfigTestnet.ReplaceImportPathTo0xName(code)
+        code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
+        
+        configJson["Codes"]["Transactions"]["SimpleOracle"][name] = code
 
 #                      
 configJson["Codes"]["Transactions"]["Test"] = {}
-
 with open("./scripts/deployment/testnet/cadence_unreadable/transactions/Test/test_next_block.cdc", 'r') as f:
     code = f.read()
     code = ConfigTestnet.ReplaceImportPathTo0xName(code)
