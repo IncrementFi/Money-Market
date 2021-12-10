@@ -15,6 +15,14 @@
       "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FUSD.cdc",
       "aliases": { "testnet": "0xe223d8a629e49c68", "mainnet": "0x3c5959b568896393" }
     },
+    "FBTC" : {
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FBTC.cdc",
+      "aliases": { "testnet": "0x92d6cfec0152a767" }
+    },
+    "FETH" : {
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FETH.cdc",
+      "aliases": { "testnet": "0x9c69e4392b968bd4" }
+    },
 
     "SimpleOracle":                   "./scripts/deployment/testnet/cadence_unreadable/contracts/SimpleOracle.cdc",
     "Interfaces":                     "./scripts/deployment/testnet/cadence_unreadable/contracts/Interfaces.cdc",
@@ -48,7 +56,10 @@
     "testnet-oracle-updater":          {"address": "0x078095ae53d01b36", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
 
     "testnet-pool-FlowToken-deployer": {"address": "0xe87fbdc31260d121", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-    "testnet-pool-FUSD-deployer":      {"address": "0xf8110b49279777d0", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
+    "testnet-pool-FUSD-deployer":      {"address": "0xf8110b49279777d0", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-pool-FBTC-deployer":      {"address": "0x80c056e9db4e71db", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+    "testnet-pool-FETH-deployer":      {"address": "0x63f87ade5fd1e732", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
+    
   },
   "pools" : {
     "testnet": {
@@ -65,7 +76,8 @@
         "isOpen": true,
         "isMining": true,
         "oracleCap": 10,
-        "oracleInitialPrice": 48.0
+        "oracleInitialPrice": 48.0,
+        "isFake": false
       },
       "testnet-pool-FUSD-deployer": {
         "poolName": "FUSD",
@@ -80,8 +92,42 @@
         "isOpen": true,
         "isMining": true,
         "oracleCap": 10,
-        "oracleInitialPrice": 1.0
+        "oracleInitialPrice": 1.0,
+        "isFake": false
+      },
+      "testnet-pool-FBTC-deployer": {
+        "poolName": "FBTC",
+        "tokenName": "FBTC",
+        "tokenNameLower": "fBTC",
+        "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
+        "reserveFactor": 0.02,
+        "poolSeizeShare": 0.048,
+        "liquidationPenalty": 0.05,
+        "collateralFactor": 0.8,
+        "borrowCap": 0.0,
+        "isOpen": true,
+        "isMining": true,
+        "oracleCap": 10,
+        "oracleInitialPrice": 60000.0,
+        "isFake": true
+      },
+      "testnet-pool-FETH-deployer": {
+        "poolName": "FETH",
+        "tokenName": "FETH",
+        "tokenNameLower": "fETH",
+        "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
+        "reserveFactor": 0.02,
+        "poolSeizeShare": 0.048,
+        "liquidationPenalty": 0.05,
+        "collateralFactor": 0.8,
+        "borrowCap": 0.0,
+        "isOpen": true,
+        "isMining": true,
+        "oracleCap": 10,
+        "oracleInitialPrice": 4000.0,
+        "isFake": true
       }
+
     }
   },
   "interest-rate-models": {
@@ -108,6 +154,8 @@
     "emulator": {
       "emulator-account": [
         "FUSD",
+        "FBTC",
+        "FETH",
         "Kibble",
         "Error",
         "Interfaces",
