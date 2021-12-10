@@ -10,3 +10,4 @@ pub fun main(oracle: Address, pool: Address): [UFix64; 2] {
 
     return oracleGetterRef.latestResult(pool: pool)
 }
+ 
