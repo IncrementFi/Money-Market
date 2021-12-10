@@ -82,7 +82,7 @@ for name in setting.FakePoolNames:
         fusd_vault = transaction_template
         fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
         fusd_vault = fusd_vault.replace('FlowToken', name)
-        fusd_vault = fusd_vault.replace('../contracts/', '../contracts/autogen/')
+        fusd_vault = fusd_vault.replace('../contracts/'+name, '../contracts/autogen/'+name)
         fw.write(fusd_vault)
 
 # generate init_pool_Apple.cdc, using template init_pool_template.cdc
