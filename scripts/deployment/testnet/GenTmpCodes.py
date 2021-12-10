@@ -6,7 +6,7 @@ import re
 import ConfigTestnet
 
 Keywords = {}
-WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc' }
+WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc' }
 WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err' }
 
 
@@ -417,7 +417,8 @@ for poolName in PoolNameToAddr:
         "TokenName": poolTokenName,
         "VaultBalancePath": lowerPoolName+"Balance",
         "TokenAddress": configJson["ContractAddress"][poolName],
-        "PoolAddress":  poolAddr
+        "PoolAddress":  poolAddr,
+        "Fake": poolConfig['isFake']
     }
     configJson["PoolAddress"][poolAddr] = info
     configJson["PoolName"][poolName] = info
@@ -530,11 +531,23 @@ for item in simpleOracleTransactionsPath:
 
 #                      
 configJson["Codes"]["Transactions"]["Test"] = {}
-with open("./scripts/deployment/testnet/cadence_unreadable/transactions/Test/test_next_block.cdc", 'r') as f:
+with open(ConfigTestnet.UnreadablePath + '/transactions/Test/test_next_block.cdc', 'r') as f:
     code = f.read()
     code = ConfigTestnet.ReplaceImportPathTo0xName(code)
     code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
     configJson["Codes"]["Transactions"]["Test"]["NextBlock"] = code
+
+for poolName in configJson['PoolName']:
+    poolConfig = ConfigTestnet.ExtractPoolConfigByPoolName(poolName, 'testnet')
+    if poolConfig['isFake'] == False: continue
+    with open(ConfigTestnet.UnreadablePath + '/transactions/Test/mint_fusd_for_user.cdc', 'r') as f:
+        code = f.read()
+        code = code.replace('FUSD', poolName)
+        code = code.replace('fusd', configJson['PoolName'][poolName]['LowerPoolName'])
+        code = ConfigTestnet.ReplaceImportPathTo0xName(code)
+        code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
+        configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = code
+        print(code)
 
 
 ###
