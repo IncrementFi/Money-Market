@@ -54,48 +54,6 @@
       "Fake": true
     }
   },
-  "PoolName": {
-    "FlowToken": {
-      "PoolContract": "LendingPool",
-      "PoolName": "FlowToken",
-      "LowerPoolName": "flowToken",
-      "TokenName": "Flow",
-      "VaultBalancePath": "flowTokenBalance",
-      "TokenAddress": "0x7e60df042a9c0868",
-      "PoolAddress": "0xe87fbdc31260d121",
-      "Fake": false
-    },
-    "FUSD": {
-      "PoolContract": "LendingPool",
-      "PoolName": "FUSD",
-      "LowerPoolName": "fusd",
-      "TokenName": "FUSD",
-      "VaultBalancePath": "fusdBalance",
-      "TokenAddress": "0xe223d8a629e49c68",
-      "PoolAddress": "0xf8110b49279777d0",
-      "Fake": false
-    },
-    "FBTC": {
-      "PoolContract": "LendingPool",
-      "PoolName": "FBTC",
-      "LowerPoolName": "fBTC",
-      "TokenName": "FBTC",
-      "VaultBalancePath": "fBTCBalance",
-      "TokenAddress": "0x92d6cfec0152a767",
-      "PoolAddress": "0x80c056e9db4e71db",
-      "Fake": true
-    },
-    "FETH": {
-      "PoolContract": "LendingPool",
-      "PoolName": "FETH",
-      "LowerPoolName": "fETH",
-      "TokenName": "FETH",
-      "VaultBalancePath": "fETHBalance",
-      "TokenAddress": "0x9c69e4392b968bd4",
-      "PoolAddress": "0x63f87ade5fd1e732",
-      "Fake": true
-    }
-  },
   "Codes": {
     "Scripts": {
       "QueryAllMarkets": "import Interfaces from 0xbef33bc3b8b3e500\nimport Config from 0xbef33bc3b8b3e500\nimport Error from 0xbef33bc3b8b3e500\npub fun main(comptrollerAddr: Address): [Address] {\nlet edRldmmilnjgib = getAccount(comptrollerAddr).getCapability<&{Interfaces.ComptrollerPublic}>(Config.wnePbxmitPldmmilnjgiC).borrow()\n?? panic(\nError.dcibhElillE (\nmsg: \"Invailid comptroller cap.\",\nerr: Error.dciClillE.YTILIBAPAC_CILBUP_RELLORTPMOC_SSECCA_TONNAC\n)\n)\nlet poolAddrs = edRldmmilnjgib.mndlleMmmAndj()\nreturn poolAddrs\n}",
@@ -141,5 +99,35 @@
         "MintFETH": "import FETH from 0x9c69e4392b968bd4\nimport FungibleToken from 0x9a0766d93b6608b7\ntransaction(mintAmount: UFix64) {\nprepare(signer: AuthAccount) {\nlet fETHStoragePath = /storage/fETHVault\nvar fETHVault = signer.borrow<&FETH.Vault>(from: fETHStoragePath)\nif fETHVault == nil {\nsigner.save(<-FETH.createEmptyVault(), to: fETHStoragePath)\nsigner.link<&FETH.Vault{FungibleToken.Receiver}>(/public/fETHReceiver, target: fETHStoragePath)\nsigner.link<&FETH.Vault{FungibleToken.Balance}>(/public/fETHBalance, target: fETHStoragePath)\n}\nfETHVault = signer.borrow<&FETH.Vault>(from: fETHStoragePath)\nfETHVault!.deposit(from: <-FETH.test_minter.mintTokens(amount: mintAmount))\n}\nexecute {\n}\n}"
       }
     }
-  }
+  },
+  "Pools": [
+    {
+      "vaultBalancePath": "flowTokenBalance",
+      "poolName": "FlowToken",
+      "tokenName": "Flow",
+      "marketAddress": "0xe87fbdc31260d121",
+      "tokenAddress": "0x7e60df042a9c0868"
+    },
+    {
+      "vaultBalancePath": "fusdBalance",
+      "poolName": "FUSD",
+      "tokenName": "FUSD",
+      "marketAddress": "0xf8110b49279777d0",
+      "tokenAddress": "0xe223d8a629e49c68"
+    },
+    {
+      "vaultBalancePath": "fBTCBalance",
+      "poolName": "FBTC",
+      "tokenName": "FBTC",
+      "marketAddress": "0x80c056e9db4e71db",
+      "tokenAddress": "0x92d6cfec0152a767"
+    },
+    {
+      "vaultBalancePath": "fETHBalance",
+      "poolName": "FETH",
+      "tokenName": "FETH",
+      "marketAddress": "0x63f87ade5fd1e732",
+      "tokenAddress": "0x9c69e4392b968bd4"
+    }
+  ]
 }

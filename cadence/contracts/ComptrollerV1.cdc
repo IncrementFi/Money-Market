@@ -13,10 +13,6 @@ pub contract ComptrollerV1 {
     pub let ComptrollerPrivatePath: PrivatePath
     // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
-    // Storage path user account stores UserCertificate resource
-    pub let UserCertificateStoragePath: StoragePath
-    // Path for creating private capability of UserCertificate resource
-    pub let UserCertificatePrivatePath: PrivatePath
 
     pub event MarketAdded(market: Address, marketType: String, liquidationPenalty: UFix64, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
@@ -690,8 +686,6 @@ pub contract ComptrollerV1 {
         self.ComptrollerStoragePath = /storage/comptrollerModule
         self.ComptrollerPublicPath = /public/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
-        self.UserCertificateStoragePath = /storage/userCertificate
-        self.UserCertificatePrivatePath = /private/userCertificate
         self.comptrollerAddress = self.account.address
 
         destroy <-self.account.load<@AnyResource>(from: self.AdminStoragePath)

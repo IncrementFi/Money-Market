@@ -323,6 +323,18 @@ with open("./cadence/transactions/Test/emulator_flow_transfer.cdc", 'r') as f:
     codeMapping = AddressMapping(code)
     configJson["Codes"]["Transactions"]["Test"]["MintFlowToken"] = codeMapping
 
+configJson['Pools'] = []
+for poolName in configJson['PoolName']:
+    nameConfig = configJson['PoolName'][poolName]
+    configJson['Pools'].append(
+        {
+            "vaultBalancePath": nameConfig["VaultBalancePath"],
+            "poolName": nameConfig["PoolName"],
+            "tokenName": nameConfig["TokenName"],
+            "marketAddress": nameConfig["PoolAddress"],
+            "tokenAddress": nameConfig["TokenAddress"]
+        }
+    )
 
 ###
 with open("./deploy.config.emulator.json", 'w') as fw:

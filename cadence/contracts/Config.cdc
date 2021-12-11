@@ -44,8 +44,8 @@ pub contract Config {
         self.OraclePublicPath = /public/oracleModule
         self.UpdaterPublicPath = /public/oracleUpdaterProxy
         self.ComptrollerPublicPath = /public/comptrollerModule
-        self.UserCertificateStoragePath = /storage/userCertificate
-        self.UserCertificatePrivatePath = /private/userCertificate
+        self.UserCertificateStoragePath = /storage/userCertificate_increment
+        self.UserCertificatePrivatePath = /private/userCertificate_increment
         self.PoolPublicPublicPath = /public/poolPublic
 
         // 1e18
