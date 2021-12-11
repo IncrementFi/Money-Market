@@ -2,14 +2,14 @@
   "ComptrollerAddress": "0xf8d6e0586b0a20c7",
   "ContractAddress": {
     "FUSD": "0xf8d6e0586b0a20c7",
+    "FBTC": "0xf8d6e0586b0a20c7",
+    "FETH": "0xf8d6e0586b0a20c7",
     "Kibble": "0xf8d6e0586b0a20c7",
     "Error": "0xf8d6e0586b0a20c7",
     "Interfaces": "0xf8d6e0586b0a20c7",
     "Config": "0xf8d6e0586b0a20c7",
     "TwoSegmentsInterestRateModel": "0xf8d6e0586b0a20c7",
     "ComptrollerV1": "0xf8d6e0586b0a20c7",
-    "FBTC": "0xf8d6e0586b0a20c7",
-    "FETH": "0xf8d6e0586b0a20c7",
     "SimpleOracle": "0x01cf0e2f2f715450",
     "LendingPool_FUSD": "0x192440c99cb17282",
     "LendingPool_FlowToken": "0xfd43f9148d4b725d",
@@ -138,5 +138,35 @@
         "MintFlowToken": "import FungibleToken from 0xee82856bf20e2aa6\nimport FlowToken from 0x0ae53cb6e3f42a79\n\n\ntransaction(to: Address, amount: UFix64) {\n    prepare(signer: AuthAccount) {\n        log(\"Transaction Start --------------- emulator_flow_transfer\")\n\n        log(\"account deposit FlowToken\".concat(amount.toString()))\n        // Get a reference to the signer's stored vault\n        let vaultRef = signer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)\n          ?? panic(\"Could not borrow reference to the owner's Vault!\")\n\n        // Withdraw tokens from the signer's stored vault\n        let sentVault <- vaultRef.withdraw(amount: amount)\n\n        // Get a reference to the recipient's Receiver\n        let receiverRef =  getAccount(to)\n            .getCapability(/public/flowTokenReceiver)\n            .borrow<&{FungibleToken.Receiver}>()\n            ?? panic(\"Could not borrow receiver reference to the recipient's Vault\")\n\n        // Deposit the withdrawn tokens in the recipient's receiver\n        receiverRef.deposit(from: <-sentVault)\n\n        log(\"End -----------------------------\")\n    }\n\n    execute {\n    }\n}\n"
       }
     }
-  }
+  },
+  "Pools": [
+    {
+      "vaultBalancePath": "fusdBalance",
+      "poolName": "FUSD",
+      "tokenName": "FUSD",
+      "marketAddress": "0x192440c99cb17282",
+      "tokenAddress": "0xf8d6e0586b0a20c7"
+    },
+    {
+      "vaultBalancePath": "flowTokenBalance",
+      "poolName": "FlowToken",
+      "tokenName": "Flow",
+      "marketAddress": "0xfd43f9148d4b725d",
+      "tokenAddress": "0x0ae53cb6e3f42a79"
+    },
+    {
+      "vaultBalancePath": "fBTCBalance",
+      "poolName": "FBTC",
+      "tokenName": "FBTC",
+      "marketAddress": "0xeb179c27144f783c",
+      "tokenAddress": "0xf8d6e0586b0a20c7"
+    },
+    {
+      "vaultBalancePath": "fETHBalance",
+      "poolName": "FETH",
+      "tokenName": "FETH",
+      "marketAddress": "0x0f7025fa05b578e3",
+      "tokenAddress": "0xf8d6e0586b0a20c7"
+    }
+  ]
 }
