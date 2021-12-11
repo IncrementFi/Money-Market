@@ -344,14 +344,15 @@ with open(gen_base_path + '/prepare_template_for_pool.cdc', 'r') as f:
 for poolDeployer in PoolDeployerNameToAddr:
     write_path = gen_base_path + '/autogen'
     if not os.path.exists(write_path): os.makedirs(write_path)
-
+    PoolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
     with open(write_path+'/prepare_template_for_pool.cdc.{0}.tmp'.format(poolDeployer), 'w') as fw:
         code = code_template
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
-        tmpDict = ContractNameToAddress.copy()
-        # specify the interest contract addr
-        tmpDict[PoolContractName] = PoolDeployerNameToAddr[poolDeployer]
-        code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
+
+        code = code.replace('FlowToken', PoolConfig['poolName'])
+        code = code.replace('flowToken', PoolConfig['tokenNameLower'])
+        
+        code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
         
         fw.write(code)
 
@@ -547,9 +548,20 @@ for poolName in configJson['PoolName']:
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
         configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = code
-        print(code)
 
-
+configJson['Pools'] = []
+for poolName in configJson['PoolName']:
+    nameConfig = configJson['PoolName'][poolName]
+    configJson['Pools'].append(
+        {
+            "vaultBalancePath": nameConfig["VaultBalancePath"],
+            "poolName": nameConfig["PoolName"],
+            "tokenName": nameConfig["TokenName"],
+            "marketAddress": nameConfig["PoolAddress"],
+            "tokenAddress": nameConfig["TokenAddress"]
+        }
+    )
+del configJson['PoolName']
 ###
 with open("./deploy.config.testnet.json", 'w') as fw:
     json_str = json.dumps(configJson, indent=2)
