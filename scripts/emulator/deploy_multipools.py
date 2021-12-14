@@ -245,6 +245,10 @@ scriptsCodePath = [
         'name': 'QueryUserPoolInfo'
     },
     {
+        'path': './cadence/scripts/Query/query_user_pool_infos.cdc',
+        'name': 'QueryUserPoolInfos'
+    },
+    {
         'path': './cadence/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
@@ -256,8 +260,14 @@ scriptsCodePath = [
         'path': './cadence/scripts/Query/query_market_interestrate_model_params.cdc',
         'name': 'QueryMarketInterestRateModelParams'
     },
-    
-    
+    {
+        'path': './cadence/scripts/Query/query_market_borrower_list.cdc',
+        'name': 'QueryMarketBorrowers'
+    },
+    {
+        "path" : "./cadence/scripts/Oracle/get_feed_latest_result.cdc",
+        "name" : "QuerySimpleOracleFeedLatestResult"
+    }
 ]
 for item in scriptsCodePath:
     path = item["path"]

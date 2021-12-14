@@ -131,6 +131,7 @@ for w in Keywords:
     Keywords[w] = ConfigTestnet.Encrypt(w)
 
 # mix contracts, transactions, scripts
+inJsonBlock = False
 replace_files = os.walk('./cadence')
 for path, dir_list, file_list in replace_files:
     if path.find('autogen') >= 0: continue
@@ -152,8 +153,20 @@ for path, dir_list, file_list in replace_files:
                 ori_line = line
                 line = FilterLine(line)
                 if len(line) == 0: continue
+                if line == 'return {':
+                    inJsonBlock = True
+                if inJsonBlock == True and line == '}':
+                    inJsonBlock = False
+                # if in return json block
+                if inJsonBlock == True and line.find(':')>=0:
+                    splitIdnex = line.find(':')
+                    left_line = line[0:splitIdnex]
+                    right_line = line[splitIdnex:]
+
+                    replace_line = left_line + ReplaceKeywords(right_line, Keywords)
+                else:
+                    replace_line = ReplaceKeywords(line, Keywords)
                 
-                replace_line = ReplaceKeywords(line, Keywords)
                 end_char = '\n'
                 if pre_line.endswith(',') or \
                     pre_line.endswith('{') or \
@@ -446,6 +459,10 @@ scriptsCodePath = [
         'name': 'QueryUserPoolInfo'
     },
     {
+        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_pool_infos.cdc',
+        'name': 'QueryUserPoolInfos'
+    },
+    {
         'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
@@ -458,8 +475,12 @@ scriptsCodePath = [
         'name': 'QueryMarketInterestRateModelParams'
     },
     {
+        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_borrower_list.cdc',
+        'name': 'QueryMarketBorrowers'
+    },
+    {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/scripts/Oracle/get_feed_latest_result.cdc",
-        "name" : "GetSimpleOracleFeedLatestResult"
+        "name" : "QuerySimpleOracleFeedLatestResult"
     }
 ]
 for item in scriptsCodePath:

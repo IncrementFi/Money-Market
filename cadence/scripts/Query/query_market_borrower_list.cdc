@@ -10,5 +10,10 @@ pub fun main(comptrollerAddr: Address, poolAddr: Address, from: UInt64, to: UInt
                 err: Error.ErrorCode.CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
             )
         )
-    return comptrollerRef.getPoolPublicRef(poolAddr: poolAddr).getPoolBorrowerSlicedList(from: from, to: to)
+    if from == 0 && to == 0 {
+        return comptrollerRef.getPoolPublicRef(poolAddr: poolAddr).getPoolBorrowerList()
+    } else {
+        return comptrollerRef.getPoolPublicRef(poolAddr: poolAddr).getPoolBorrowerSlicedList(from: from, to: to)
+    }
+    
 }
