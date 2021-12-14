@@ -11,7 +11,7 @@ const DeployConfigTestnet = require('../../deploy.config.testnet.json')
 
 /// [Imported code start] - Related cadence transactions/scripts used in this script.
 const uploadFeedDataTxCode = DeployConfigTestnet['Codes']['Transactions']['SimpleOracle']['UpdaterUploadFeedData']
-const getFeedLatestResultScriptCode = DeployConfigTestnet['Codes']['Scripts']['GetSimpleOracleFeedLatestResult']
+const getFeedLatestResultScriptCode = DeployConfigTestnet['Codes']['Scripts']['QuerySimpleOracleFeedLatestResult']
 /// [Imported code end]
 
 /// [DATA STRUCTURE start] - Local data structure used in this script.
