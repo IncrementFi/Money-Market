@@ -295,6 +295,10 @@ poolCodePath = [
     {
         "path" : "./cadence/transactions/User/user_repay_template.cdc",
         "name" : "Repay"
+    },
+    {
+        "path" : "./cadence/transactions/User/user_liquidate_template.cdc",
+        "name" : "Liquidate"
     }
 ]
 for item in poolCodePath:

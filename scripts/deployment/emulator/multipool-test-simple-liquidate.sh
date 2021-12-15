@@ -43,10 +43,8 @@ updateOracle="flow transactions send ./cadence/transactions/Oracle/updater_uploa
 # faucet userA
 eval $faucet_fETH --signer $SignerA --arg UFix64:"1.0"
 # faucet userB
-eval $faucet_fusd --signer $SignerB --arg UFix64:"99999999.0"
-eval $faucet_fETH --signer $SignerB --arg UFix64:"99999999.0"
-eval $faucet_fBTC --signer $SignerB --arg UFix64:"99999999.0"
-eval $faucet_Flow --arg Address:$SignerAddrB --arg UFix64:"900000000.0" 
+eval $faucet_fusd --signer $SignerB --arg UFix64:"100000.0"
+eval $faucet_fETH --signer $SignerB --arg UFix64:"10.0"
 # faucet userC
 eval $faucet_fETH --signer $SignerC --arg UFix64:"2.0"
 # faucet userD

@@ -3,7 +3,7 @@ from matplotlib.widgets import Button
 import matplotlib.animation as Animation
 import asyncio
 import threading
-
+import sys
 from flow_py_sdk import flow_client, cadence, Script
 
 from board_market import MarketBoard
@@ -13,6 +13,11 @@ from AgentMgr import AgentMgr
 
 
 defaultUserAddr = "0x045a1763c93006ca"
+ifUpdate = False
+if len(sys.argv) >= 2:
+    defaultUserAddr = str(sys.argv[1])
+    if len(sys.argv) >= 3:
+        ifUpdate = bool(sys.argv[2])
 
 asyncio.run(chain.QueryAllMarkets())
 asyncio.run(chain.UpdateAllMarketInfos())
@@ -79,7 +84,7 @@ async def UpdateUI():
 
 
 async def UpdateData():
-    while(True):
+    while(ifUpdate):
         await asyncio.sleep(1)
         
         await chain.QueryBlockInfo()

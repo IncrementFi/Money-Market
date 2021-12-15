@@ -18,7 +18,7 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 ```
 
 
-### Deploy multipools to emulator:
+### Deploy multipools on emulator:
 1. Run `flow emulator -v` to start emulator
 2. Run `./scripts/deployment/emulator/multipool-deploy.sh` to deploy accounts and contracts.
 3. Run `./scripts/deployment/emulator/multipool-test.sh` for testing.
@@ -28,7 +28,7 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 ###### clear tmp codes:
 python ./scripts/emulator/gen_tmp_codes.py 1
 
-### Deploy to testnet:
+### Deploy on testnet:
 1. Run `python ./scripts/deployment/testnet/GenTmpCodes.py` to generate all empty&mixture codes and configs.
 2. Run `python ./scripts/deployment/testnet/DeployEmptyOnTestnet.py` to deploy empty contracts.
 3. Run `python ./scripts/deployment/testnet/UndeployTestnet.py` to clear your deployment.
