@@ -444,6 +444,11 @@ pub contract LendingPool {
         }
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
+        if (self.poolAddress != poolCollateralizedToSeize) {
+            let externalPoolPublicRef = getAccount(poolCollateralizedToSeize).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow() 
+                    ?? panic(Error.ErrorEncode(msg: "Cannot borrow reference to external PoolPublic resource", err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY))
+            externalPoolPublicRef.accrueInterest()
+        }
 
         // 2. Check whether or not liquidateAllowed()
         let scaledUnderlyingAmountToRepay = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
@@ -478,7 +483,6 @@ pub contract LendingPool {
         // 4. seizeInternal if current pool is also borrower's collateralPool; otherwise seize external collateralPool
         if (poolCollateralizedToSeize == self.poolAddress) {
             self.seizeInternal(
-                borrowPool: self.poolAddress,
                 liquidator: liquidator,
                 borrower: borrower,
                 scaledBorrowerLpTokenToSeize: scaledCollateralLpTokenSeizedAmount
@@ -540,7 +544,6 @@ pub contract LendingPool {
 
         // 3. seizeInternal
         self.seizeInternal(
-            borrowPool: seizerPool,
             liquidator: liquidator,
             borrower: borrower,
             scaledBorrowerLpTokenToSeize: scaledBorrowerCollateralLpTokenToSeize
@@ -549,7 +552,6 @@ pub contract LendingPool {
 
     // Caller ensures accrueInterest() has been called
     access(self) fun seizeInternal(
-        borrowPool: Address,
         liquidator: Address,
         borrower: Address,
         scaledBorrowerLpTokenToSeize: UInt256
@@ -564,7 +566,7 @@ pub contract LendingPool {
         
         let err = self.comptrollerCap!.borrow()!.seizeAllowed(
             poolCertificate: <- create PoolCertificate(),
-            borrowPool: borrowPool,
+            borrowPool: self.poolAddress,
             collateralPool: self.poolAddress,
             liquidator: liquidator,
             borrower: borrower,

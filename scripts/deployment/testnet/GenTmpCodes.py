@@ -7,7 +7,7 @@ import ConfigTestnet
 
 Keywords = {}
 WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc' }
-WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err' }
+WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err', 'borrower' }
 
 
 
@@ -157,6 +157,7 @@ for path, dir_list, file_list in replace_files:
                     inJsonBlock = True
                 if inJsonBlock == True and line == '}':
                     inJsonBlock = False
+
                 # if in return json block
                 if inJsonBlock == True and line.find(':')>=0:
                     splitIdnex = line.find(':')
@@ -509,6 +510,10 @@ poolCodePath = [
     {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_repay_template.cdc",
         "name" : "Repay"
+    },
+    {
+        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_liquidate_template.cdc",
+        "name" : "Liquidate"
     }
 ]
 

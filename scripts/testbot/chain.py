@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import asyncio
 import os
+import math
 import json
 from flow_py_sdk import flow_client, cadence, Script
 
@@ -146,17 +147,22 @@ def CreateAccount():
     return addr
 
 def Deposit(poolName, userAddr, amount):
+    amount = round(float(amount), 8)
     cmd = 'node '+js_path+'deposit.js '+poolName+' '+userAddr+' '+str(amount)
     os.popen(cmd).read()
 def Redeem(poolName, userAddr, amount):
+    amount = round(float(amount), 8)
     cmd = 'node '+js_path+'redeem.js '+poolName+' '+userAddr+' '+str(amount)
     os.popen(cmd).read()
 def Borrow(poolName, userAddr, amount):
+    amount = round(float(amount), 8)
     cmd = 'node '+js_path+'borrow.js '+poolName+' '+userAddr+' '+str(amount)
     os.popen(cmd).read()
 def Repay(poolName, userAddr, amount):
+    amount = round(float(amount), 8)
     cmd = 'node '+js_path+'repay.js '+poolName+' '+userAddr+' '+str(amount)
     os.popen(cmd).read()
 def Faucet(poolName, userAddr, amount):
+    amount = round(float(amount), 8)
     cmd = 'node '+js_path+'faucet.js '+poolName+' '+userAddr+' '+str(amount)
     os.popen(cmd).read()

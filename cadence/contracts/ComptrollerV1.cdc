@@ -304,6 +304,18 @@ pub contract ComptrollerV1 {
                 return err
             }
 
+            // Add to liquidator markets list
+            if (self.accountMarketsIn.containsKey(liquidator) == false) {
+                self.accountMarketsIn[liquidator] = [collateralPool]
+            } else if (self.accountMarketsIn[liquidator]!.contains(collateralPool) == false) {
+                self.accountMarketsIn[liquidator]!.append(collateralPool)
+            }
+            // Remove pool out of user markets list if necessary
+            self.removePoolFromAccountMarketsOnCondition(
+                poolAddress: collateralPool,
+                account: borrower,
+                scaledRedeemOrRepayAmount: seizeCollateralPoolLpTokenAmountScaled
+            )
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(collateralPool);
             ///// distributeSupplierComp(collateralPool, borrower);
@@ -351,7 +363,7 @@ pub contract ComptrollerV1 {
             assert(
                 scaledCollateralLpTokenSeizedAmount <= scaledLpTokenAmount,
                 message: Error.ErrorEncode(
-                    msg: "Liquidation seized too much, more than borrower collateralPool supply balance",
+                    msg: "Liquidation seized too much, more than borrower collateralPool supply balance".concat((scaledCollateralLpTokenSeizedAmount).toString().concat(" <= ").concat(scaledLpTokenAmount.toString())),
                     err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
                 )
             )
