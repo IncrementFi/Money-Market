@@ -9,6 +9,7 @@ transaction(oracleAddr: Address) {
         let comptrollerAdminRef = comptrollerAccount.borrow<&ComptrollerV1.Admin>(from: ComptrollerV1.AdminStoragePath) ?? panic("Lost comptroller admin.")
         comptrollerAdminRef.configOracle(oracleAddress: oracleAddr)
 
+        comptrollerAdminRef.setCloseFactor(closeFactor: 0.5)
         log("End -----------------------------")
     }
 }

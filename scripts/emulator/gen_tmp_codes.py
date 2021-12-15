@@ -280,3 +280,40 @@ for name in setting.PoolNames:
         fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
         fusd_vault = fusd_vault.replace('../contracts/LendingPool', '../contracts/autogen/LendingPool')
         fw.write(fusd_vault)
+
+#generate user_liquidate_fusd.cdc
+with open('./cadence/transactions/User/user_liquidate_template.cdc', 'r') as f:
+    transaction_template = f.read()
+for name in setting.FakePoolNames:
+    path = './cadence/transactions/User/autogen'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+'/user_liquidate_{0}.cdc'.format(name), 'w') as fw:
+        fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('FlowToken', name)
+
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD':
+            lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('flowToken', lowerName)
+        fusd_vault = fusd_vault.replace('LendingPool', 'LendingPool_'+name)
+        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
+        fusd_vault = fusd_vault.replace('../contracts/'+name, '../contracts/autogen/'+name)
+        fusd_vault = fusd_vault.replace('../contracts/LendingPool', '../contracts/autogen/LendingPool')
+        fw.write(fusd_vault)
+for name in setting.PoolNames:
+    path = './cadence/transactions/User/autogen'
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(path+'/user_liquidate_{0}.cdc'.format(name), 'w') as fw:
+        fusd_vault = transaction_template
+        fusd_vault = fusd_vault.replace('FlowToken', name)
+
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD':
+            lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('flowToken', lowerName)
+        fusd_vault = fusd_vault.replace('LendingPool', 'LendingPool_'+name)
+        fusd_vault = fusd_vault.replace('../contracts/', '../../contracts/')
+        fusd_vault = fusd_vault.replace('../contracts/LendingPool', '../contracts/autogen/LendingPool')
+        fw.write(fusd_vault)

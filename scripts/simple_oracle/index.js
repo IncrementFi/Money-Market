@@ -118,8 +118,6 @@ async function queryCoingeckoFeedsData(debug = true) {
   let ret = [];
   let resp = await fetch(config.coingeckoMegaFeeds);
   
-  console.log(resp)
-
   let respJson = await resp.json();
   for (let i = 0; i < states.length; i++) {
     let data = jp.value(respJson, normalizeSelector(states[i].selector));
