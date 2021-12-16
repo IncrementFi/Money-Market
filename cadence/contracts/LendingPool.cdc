@@ -444,11 +444,6 @@ pub contract LendingPool {
         }
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
-        if (self.poolAddress != poolCollateralizedToSeize) {
-            let externalPoolPublicRef = getAccount(poolCollateralizedToSeize).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow() 
-                    ?? panic(Error.ErrorEncode(msg: "Cannot borrow reference to external PoolPublic resource", err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY))
-            externalPoolPublicRef.accrueInterest()
-        }
 
         // 2. Check whether or not liquidateAllowed()
         let scaledUnderlyingAmountToRepay = Config.UFix64ToScaledUInt256(repayUnderlyingVault.balance)

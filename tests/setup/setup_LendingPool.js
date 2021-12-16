@@ -20,6 +20,14 @@ export const queryPoolInfo = async () => {
     return executeScript({ name, args })
 }
 
+export const queryUserPosition = async (userAddr) => {
+    const auditAddr = await getComptrollerAddress()
+    
+    const name = "Query/query_user_position"
+    const args = [userAddr, auditAddr]
+    return executeScript({ name, args })
+}
+
 export const queryFlowTokenPoolState = async() => {
     const name = "Test/query_pool_state_template"
     const args = []
@@ -58,6 +66,7 @@ export const queryFlowTokenInterestRate = async () => {
     const args = [modelAddr];
     return executeScript({ name, args });
 }
+
 
 
 /**
@@ -101,5 +110,16 @@ export const queryFlowTokenInterestRate = async () => {
     const name = "User/user_repay_template"
     const signers = [userAddr]
     const args = [repayAmount]
+    return sendTransaction({ name, args, signers })
+}
+
+/**
+ * 
+ * @returns {Promise<*>}
+ */
+ export const liquidate = async (liquidatorAddr, borrowerAddr, seizePoolAddr, liquidateAmount) => {
+    const name = "User/user_liquidate_template"
+    const signers = [liquidatorAddr]
+    const args = [liquidateAmount, borrowerAddr, seizePoolAddr]
     return sendTransaction({ name, args, signers })
 }
