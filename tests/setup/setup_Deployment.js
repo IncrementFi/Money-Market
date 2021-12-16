@@ -5,6 +5,7 @@ import { createInterestRateModel, } from "./setup_TwoSegmentsInterestRateModel";
 export const getLendingPoolAddress = async () => { return await getLendingPoolDeployerAddress() }
 export const getInterfacesAddress = async () => { return await getLendingPoolDeployerAddress() }
 export const getConfigAddress = async () => { return await getLendingPoolDeployerAddress() }
+export const getErrorAddress = async () => { return await getLendingPoolDeployerAddress() }
 export const getInterestRateModelAddress = async () => { return await getLendingPoolDeployerAddress() }
 export const getComptrollerAddress = async () => { return await getLendingPoolDeployerAddress() }
 export const getSimpleOracleAddress = async () => { return await getLendingPoolDeployerAddress() }
@@ -18,13 +19,15 @@ export const deployLendingPoolContract = async () => {
     const lendingPoolAddr = await getLendingPoolAddress()
     const interfacesAddr = await getInterfacesAddress()
     const configAddr = await getConfigAddress()
+    const errorAddr = await getErrorAddress()
     const interestRateModel = await getInterestRateModelAddress()
     const comptrollerAddr = await getComptrollerAddress()
     const simpleOracleAddr = await getSimpleOracleAddress()
     // Mint some flow to deployer account for extra storage capacity.
     await mintFlow(lendingPoolAddr, "100.0")
     // Deploy indepencies & pool contracts.
-    const addressMap = { Interfaces: interfacesAddr, Config: configAddr }
+    const addressMap = { Interfaces: interfacesAddr, Config: configAddr, Error: errorAddr }
+    await deployContractByName({ to: errorAddr, name: "Error" })
     await deployContractByName({ to: interfacesAddr, name: "Interfaces" })
     await deployContractByName({ to: configAddr, name: "Config" })
     await deployContractByName({ to: simpleOracleAddr, name: "SimpleOracle", addressMap })
@@ -112,7 +115,7 @@ export const initComptroller = async () => {
     const comptrollerDeployer = await getComptrollerAddress()
     const name = "Comptroller/init_comptroller"
     const signers = [comptrollerDeployer]
-    const args = [oracleAddr]
+    const args = [oracleAddr, 0.5]
     return sendTransaction({ name, args, signers })
 }
 

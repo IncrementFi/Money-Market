@@ -134,7 +134,7 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
 
 # init comptroller
 oracle_deployer_addr = setting.DictDeployNameToAddr['emulator-oracle-deployer']
-os.system('flow transactions send ./cadence/transactions/Comptroller/init_comptroller.cdc --arg Address:{0} --signer emulator-account'.format(oracle_deployer_addr))
+os.system('flow transactions send ./cadence/transactions/Comptroller/init_comptroller.cdc --arg Address:{0} --arg UFix64:{1} --signer emulator-account'.format(oracle_deployer_addr, 0.5))
 
 # init pools
 print('-------------', 'init pools')
