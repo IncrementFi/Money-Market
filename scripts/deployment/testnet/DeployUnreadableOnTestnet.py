@@ -125,6 +125,7 @@ for poolDeployer in PoolDeployerNameToAddr:
 print('===============>', 'Init comptroller.')
 cmd = 'flow transactions send {0}/transactions/Comptroller/init_comptroller.cdc '.format(ConfigTestnet.UnreadablePath) + \
       '--arg Address:{0} '.format(DeployerToAddress[OracleDeployer]) + \
+      '--arg UFix64:{0} '.format(0.5) + \
       '--signer {0} '.format(ComptrollerDeployer) + \
       '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
       '--network testnet'
