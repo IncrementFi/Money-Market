@@ -107,6 +107,9 @@ flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c
 > Input: comptrollerAddress
 * flow transactions send ./cadence/transactions/Test/test_next_block.cdc --signer emulator-account
 
+#### 更新测试网oracle
+flow transactions send ./scripts/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc -f ./scripts/deployment/testnet/flow.unreadable.json --signer testnet-oracle-updater --arg Address:0x63f87ade5fd1e732 --arg UFix64:"3500.0" --network testnet
+
 
 ## 利率模型曲线绘制:
 利用QueryMarketInterestRateModelParams接口获取到的利率模型参数之后:
