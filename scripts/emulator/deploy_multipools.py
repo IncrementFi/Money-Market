@@ -323,14 +323,36 @@ with open("./cadence/transactions/Test/test_next_block.cdc", 'r') as f:
     codeMapping = AddressMapping(code)
     configJson["Codes"]["Transactions"]["Test"]["NextBlock"] = codeMapping
 
+mergeImports = {}
+transactionLine = {}
+prepareLine = {}
+bodys = []
 for poolName in configJson['PoolName']:
     if poolName == "FlowToken": continue
     with open("./cadence/transactions/Test/mint_fusd_for_user.cdc", 'r') as f:
         code = f.read()
         code = code.replace('FUSD', poolName)
         code = code.replace('fusd', configJson['PoolName'][poolName]['LowerPoolName'])
-        codeMapping = AddressMapping(code)
-    configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = codeMapping
+        code = AddressMapping(code)
+    configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = code
+    
+    importLines = re.findall(r'import.*?\n', code)
+    for line in importLines:
+        mergeImports[line] = True
+    for line in re.findall(r'transaction\(.*?\n', code): transactionLine[line] = True
+    for line in re.findall(r'prepare\(.*?\n', code): prepareLine[line] = True
+    for body in re.findall(r'{.*?{(.*)}.*?}', code, re.S):
+        bodys.append(body)
+mergeMintContract = ""
+for imp in mergeImports:
+    mergeMintContract = mergeMintContract + imp
+for line in transactionLine: mergeMintContract = mergeMintContract + line
+for line in prepareLine: mergeMintContract = mergeMintContract + line
+for body in bodys: mergeMintContract = mergeMintContract + body
+mergeMintContract = mergeMintContract + '}\n}\n'
+configJson["Codes"]["Transactions"]["Test"]["MintAll"] = mergeMintContract
+
+
 
 with open("./cadence/transactions/Test/emulator_flow_transfer.cdc", 'r') as f:
     code = f.read()

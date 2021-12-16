@@ -564,6 +564,10 @@ with open(ConfigTestnet.UnreadablePath + '/transactions/Test/test_next_block.cdc
     code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
     configJson["Codes"]["Transactions"]["Test"]["NextBlock"] = code
 
+mergeImports = {}
+transactionLine = {}
+prepareLine = {}
+bodys = []
 for poolName in configJson['PoolName']:
     poolConfig = ConfigTestnet.ExtractPoolConfigByPoolName(poolName, 'testnet')
     if poolConfig['isFake'] == False: continue
@@ -574,6 +578,25 @@ for poolName in configJson['PoolName']:
         code = ConfigTestnet.ReplaceImportPathTo0xName(code)
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
         configJson["Codes"]["Transactions"]["Test"]["Mint"+poolName] = code
+
+        importLines = re.findall(r'import.*?\n', code)
+        for line in importLines:
+            mergeImports[line] = True
+        for line in re.findall(r'transaction\(.*?\n', code): transactionLine[line] = True
+        for line in re.findall(r'prepare\(.*?\n', code): prepareLine[line] = True
+        for body in re.findall(r'{.*?{(.*)}.*?}', code, re.S):
+            bodys.append(body)
+
+mergeMintContract = ""
+for imp in mergeImports:
+    mergeMintContract = mergeMintContract + imp
+for line in transactionLine: mergeMintContract = mergeMintContract + line
+for line in prepareLine: mergeMintContract = mergeMintContract + line
+for body in bodys: mergeMintContract = mergeMintContract + body
+mergeMintContract = mergeMintContract + '}\n}\n'
+configJson["Codes"]["Transactions"]["Test"]["MintAll"] = mergeMintContract
+
+
 
 configJson['Pools'] = []
 for poolName in configJson['PoolName']:

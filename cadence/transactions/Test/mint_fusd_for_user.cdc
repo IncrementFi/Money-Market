@@ -17,7 +17,4 @@ transaction(mintAmount: UFix64) {
         fusdVault!.deposit(from: <-FUSD.test_minter.mintTokens(amount: mintAmount))
         log("End -----------------------------")
     }
-
-    execute {
-    }
 }

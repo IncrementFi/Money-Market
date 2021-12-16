@@ -387,8 +387,9 @@ pub contract ComptrollerV1 {
                 destroy callerCertificate
                 return nil
             } else {
+                let errMsg = callerCertificate.getType().identifier.concat("!=").concat(callerPoolCertificateType.identifier)
                 destroy callerCertificate
-                return Error.ErrorEncode(msg: "not called from valid market contract", err: Error.ErrorCode.INVALID_POOL_CERTIFICATE)
+                return Error.ErrorEncode(msg: "not called from valid market contract".concat(errMsg), err: Error.ErrorCode.INVALID_POOL_CERTIFICATE)
             }
         }
 
