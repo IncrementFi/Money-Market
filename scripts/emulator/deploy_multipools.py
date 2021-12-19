@@ -237,6 +237,10 @@ scriptsCodePath = [
         'name': 'QueryMarketInfo'
     },
     {
+        'path': './cadence/scripts/Query/query_market_infos.cdc',
+        'name': 'QueryMarketInfos'
+    },
+    {
         'path': './cadence/scripts/Query/query_user_all_pools.cdc',
         'name': 'QueryUserAllPools'
     },

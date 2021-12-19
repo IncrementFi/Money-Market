@@ -154,7 +154,8 @@ pub contract ComptrollerV1 {
             // Hypothetical account liquidity check if virtual lpToken was redeemed
             // liquidity[0] - cross-market collateral value
             // liquidity[1] - cross-market borrow value
-            let scaledLiquidity: [UInt256;2] = self.getHypotheticalAccountLiquidity(
+            // liquidity[2] - cross-market supply value
+            let scaledLiquidity: [UInt256;3] = self.getHypotheticalAccountLiquidity(
                 account: redeemerAddress,
                 poolToModify: poolAddress,
                 scaledAmountLPTokenToRedeem: redeemLpTokenAmountScaled,
@@ -207,7 +208,8 @@ pub contract ComptrollerV1 {
             // 3. Hypothetical account liquidity check after underlying was borrowed
             // liquidity[0] - cross-market collateral value
             // liquidity[1] - cross-market borrow value
-            let scaledLiquidity: [UInt256; 2] = self.getHypotheticalAccountLiquidity(
+            // liquidity[2] - cross-market supply value
+            let scaledLiquidity: [UInt256; 3] = self.getHypotheticalAccountLiquidity(
                 account: borrowerAddress,
                 poolToModify: poolAddress,
                 scaledAmountLPTokenToRedeem: 0,
@@ -268,7 +270,8 @@ pub contract ComptrollerV1 {
             // Current account liquidity check
             // liquidity[0] - cross-market collateral value
             // liquidity[1] - cross-market borrow value
-            let scaledLiquidity: [UInt256;2] = self.getHypotheticalAccountLiquidity(
+            // liquidity[2] - cross-market supply value
+            let scaledLiquidity: [UInt256;3] = self.getHypotheticalAccountLiquidity(
                 account: borrower,
                 poolToModify: 0x0,
                 scaledAmountLPTokenToRedeem: 0,
@@ -421,15 +424,18 @@ pub contract ComptrollerV1 {
         // amountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
         // Return: 0. hypothetical cross-market total collateral value normalized in usd
         //         1. hypothetical cross-market tatal borrow value normalized in usd
+        //         3. hypothetical cross-market total supply value normalized in usd
         access(self) fun getHypotheticalAccountLiquidity(
             account: Address,
             poolToModify: Address,
             scaledAmountLPTokenToRedeem: UInt256,
             scaledAmountUnderlyingToBorrow: UInt256
-        ): [UInt256; 2] {
+        ): [UInt256; 3] {
             if (self.accountMarketsIn.containsKey(account) == false) {
-                return [0, 0]
+                return [0, 0, 0]
             }
+            // Cross-market total supply value applies with hypothetical side effects, normalized in usd
+            var sumScaledSupplyWithEffectsNormalized: UInt256 = 0
             // Cross-market total collateral value applies with hypothetical side effects, normalized in usd
             var sumScaledCollateralWithEffectsNormalized: UInt256 = 0
             // Cross-market total borrow value applies with hypothetical side-effects, normalized in usd
@@ -447,6 +453,8 @@ pub contract ComptrollerV1 {
                     sumScaledCollateralWithEffectsNormalized = sumScaledCollateralWithEffectsNormalized +
                         scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
                             scaledUnderlyingToLpTokenRate / scaleFactor * scaledLpTokenAmount / scaleFactor
+                    sumScaledSupplyWithEffectsNormalized = sumScaledSupplyWithEffectsNormalized +
+                        scaledUnderlyingPriceInUSD * scaledUnderlyingToLpTokenRate / scaleFactor * scaledLpTokenAmount / scaleFactor
                 }
                 if (scaledBorrowBalance > 0) {
                     sumScaledBorrowWithEffectsNormalized = sumScaledBorrowWithEffectsNormalized +
@@ -458,6 +466,8 @@ pub contract ComptrollerV1 {
                         sumScaledCollateralWithEffectsNormalized = sumScaledCollateralWithEffectsNormalized -
                             scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
                                 scaledUnderlyingToLpTokenRate / scaleFactor * scaledAmountLPTokenToRedeem / scaleFactor
+                        sumScaledSupplyWithEffectsNormalized = sumScaledSupplyWithEffectsNormalized -
+                            scaledUnderlyingPriceInUSD * scaledUnderlyingToLpTokenRate / scaleFactor * scaledAmountLPTokenToRedeem / scaleFactor
                     }
                     // Apply hypothetical borrow side-effect
                     if (scaledAmountUnderlyingToBorrow > 0) {
@@ -466,7 +476,7 @@ pub contract ComptrollerV1 {
                     }
                 }
             }
-            return [sumScaledCollateralWithEffectsNormalized, sumScaledBorrowWithEffectsNormalized]
+            return [sumScaledCollateralWithEffectsNormalized, sumScaledBorrowWithEffectsNormalized, sumScaledSupplyWithEffectsNormalized]
         }
 
         access(contract) fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
@@ -623,16 +633,16 @@ pub contract ComptrollerV1 {
         }
 
         // Return the current account cross-market liquidity snapshot:
-        // [cross-market account collateral value in usd, cross-market account borrows in usd]
+        // [cross-market account collateral value in usd, cross-market account borrows in usd, cross-market account supplies in usd]
         // Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
-        pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 2] {
+        pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 3] {
             let scaledLiquidity = self.getHypotheticalAccountLiquidity(
                 account: userAddr,
                 poolToModify: 0x0,
                 scaledAmountLPTokenToRedeem: 0,
                 scaledAmountUnderlyingToBorrow: 0
             )
-            return [scaledLiquidity[0].toString(), scaledLiquidity[1].toString()]
+            return [scaledLiquidity[0].toString(), scaledLiquidity[1].toString(), scaledLiquidity[2].toString()]
         }
 
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {

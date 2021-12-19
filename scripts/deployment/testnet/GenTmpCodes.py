@@ -452,6 +452,10 @@ scriptsCodePath = [
         'name': 'QueryMarketInfo'
     },
     {
+        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_infos.cdc',
+        'name': 'QueryMarketInfos'
+    },
+    {
         'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_all_pools.cdc',
         'name': 'QueryUserAllPools'
     },
