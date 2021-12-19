@@ -46,7 +46,7 @@
 > input: poolAddr, Comptroller地址
 > output: json
   返回json中需要注意的是: marketType字段是string类型，比如：“A.XXXXX_FUSD”，它的字符串结尾以‘_’可以切割出token的名称
-* flow scripts execute ./cadence/scripts/Query/query_market_info.cdc 0x192440c99cb17282 0xf8d6e0586b0a20c7
+* flow scripts execute ./cadence/scripts/Query/query_market_info.cdc 0x192440c99cb17282 0xe87fbdc31260d121
 
 #### 查询pool 利率模型参数，用于利率模型曲线绘制:
 > input: poolAddr
@@ -116,7 +116,7 @@ flow transactions send ./scripts/deployment/testnet/cadence_unreadable/transacti
 ```js
 {
     "modelName": Name,
-    "blocksPerYear": B,
+    "blocksPerYear": 每年块数,
     "scaleFactor": 放大因子 (1e18),
     "scaledBaseRatePerBlock": 基础利率,
     "scaledBaseMultiplierPerBlock": 一段斜率,
@@ -129,9 +129,9 @@ flow transactions send ./scripts/deployment/testnet/cadence_unreadable/transacti
 X轴: 当前使用率 0% - 100% 比如 38%的使用率的 X = 0.38 * 放大因子(1e18)
 Y轴: 
 a. 如果 X <= 折线拐点使用率:
-> Y = (一段斜率 * X / 放大因子 + 基础利率)
+> Y = (一段斜率 * X / 放大因子 + 基础利率*每年块数)
 b. 如果 X > 折线拐点使用率:
-> Y = (X - 折线拐点使用率) * 二段斜率 / 放大因子 + 一段斜率 * 折线拐点使用率 / 放大因子 + 基础利率
+> Y = (X - 折线拐点使用率) * 二段斜率 / 放大因子 + 一段斜率 * 折线拐点使用率 / 放大因子 + 基础利率*每年块数
 
 3. supply曲线公式:
 X轴: 当前使用率 (比如 0.38 * 1e18)
