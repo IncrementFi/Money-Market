@@ -117,9 +117,6 @@ describe("LendingPool Testsuites", () => {
 
         const prePoolState = await queryFlowTokenPoolState()
         const preBorrowerState = await queryUserPoolState(borrower)
-        console.log(prePoolState)
-        console.log(preBorrowerState)
-
 
         const seizePoolAddr = await getLendingPoolAddress()
         const curBorrowBalance = BigNumber(prePoolState['TotalBorrows'])
@@ -138,17 +135,12 @@ describe("LendingPool Testsuites", () => {
         const aftBorrowerState = await queryUserPoolState(borrower)
         const aftLiuidatorState = await queryUserPoolState(liquidator)
         
-        console.log(aftPoolState)
-        console.log(aftBorrowerState)
-        console.log(aftLiuidatorState)
-        
         const curBorrowIndex = BigNumber(aftPoolState.BorrowIndex)
         const preBorrowPrincipal = BigNumber(preBorrowerState[3])
         const preBorrowIndex = BigNumber(preBorrowerState[4])
         const curBorrow = preBorrowPrincipal.times(curBorrowIndex).dividedBy(preBorrowIndex).integerValue(BigNumber.ROUND_FLOOR)
         const deltInterest = BigNumber(preInterestState[1]).times( aftPoolState.BlockNumber-prePoolState.BlockNumber )
         // the borrower's debt should be repayed correctly
-        console.log(deltInterest.toFixed(16))
         expect(
             (curBorrow.dividedBy(1e18) - liquidateAmount).toFixed(8)
         ).toBe(
