@@ -9,7 +9,7 @@ transaction(poolAddr: Address, liquidationPenalty: UFix64, collateralFactor: UFi
         comptrollerAdminRef.addMarket(poolAddress: poolAddr, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         
         log("config market")
-        comptrollerAdminRef.configMarket(pool: poolAddr, isOpen: isOpen, isMining: isMining, liquidationPenalty: nil, collateralFactor: nil, borrowCap: borrowCap)
+        comptrollerAdminRef.configMarket(pool: poolAddr, isOpen: isOpen, isMining: isMining, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: borrowCap)
         
         log("End -----------------------------")
     }

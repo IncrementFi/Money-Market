@@ -8,6 +8,7 @@ const t = require('@onflow/types');
 const config = require('./config');
 const utils = require('./utils');
 const DeployConfigTestnet = require('../../deploy.config.testnet.json')
+require('log-timestamp');
 
 /// [Imported code start] - Related cadence transactions/scripts used in this script.
 const uploadFeedDataTxCode = DeployConfigTestnet['Codes']['Transactions']['SimpleOracle']['UpdaterUploadFeedData']

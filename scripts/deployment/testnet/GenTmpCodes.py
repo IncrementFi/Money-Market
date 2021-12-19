@@ -349,6 +349,25 @@ for interestDeployer in InterestDeployerNameToAddr:
         
         fw.write(code)
 
+# gen tmp transactions: create_interest_rate_model
+gen_base_path = ConfigTestnet.UnreadablePath + '/transactions/InterestRateModel'
+with open(gen_base_path + '/update_model_params.cdc', 'r') as f:
+    code_template = f.read()
+
+for interestDeployer in InterestDeployerNameToAddr:
+    write_path = gen_base_path + '/autogen'
+    if not os.path.exists(write_path): os.makedirs(write_path)
+
+    with open(write_path+'/update_model_params.cdc.{0}.tmp'.format(interestDeployer), 'w') as fw:
+        code = code_template
+        code = ConfigTestnet.ReplaceImportPathTo0xName(code)
+        tmpDict = ContractNameToAddress.copy()
+        # specify the interest contract addr
+        tmpDict[InterestContractName] = InterestDeployerNameToAddr[interestDeployer]
+        code = ConfigTestnet.Replace0xNameTo0xAddress(code, tmpDict)
+        
+        fw.write(code)
+
 # gen tmp transactions: prepare_template_for_pool
 gen_base_path = ConfigTestnet.UnreadablePath + '/transactions/Pool'
 if os.path.exists( gen_base_path + '/autogen' ): shutil.rmtree(gen_base_path + '/autogen')
