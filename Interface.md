@@ -67,7 +67,7 @@
 > input: userAddr, vaultPublicPath
 * FUSD: flow scripts execute ./cadence/scripts/Query/query_vault_balance.cdc --args-json '[{"type": "Address", "value": "0x045a1763c93006ca"}, {"type": "Path", "value": {"domain": "public", "identifier": "fusdBalance"}}]'
 
-#### 查询用户名下的最新的totalSupply与totalBorrow
+#### 查询用户名下的最新的totalCollateral, totalBorrow, totalsupply的美元价值
 > input: userAddr, comptroller地址
 flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c93006ca 0xf8d6e0586b0a20c7
 

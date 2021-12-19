@@ -136,18 +136,18 @@
     "testnet": {
       "testnet-interest-rate-FlowToken-deployer" : {
         "modelName" : "Unstable interest rate model",
-        "blocksPerYear": 12614400,
-        "scaledZeroUtilInterestRatePerYear": 0,
-        "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
-        "scaledFullUtilInterestRatePerYear": 350000000000000000,
+        "blocksPerYear": 39420000,
+        "scaledZeroUtilInterestRatePerYear": 20000000000000000,
+        "scaledCriticalUtilInterestRatePerYear": 350000000000000000,
+        "scaledFullUtilInterestRatePerYear": 1000000000000000000,
         "scaledCriticalUtilRate": 800000000000000000
       },
       "testnet-interest-rate-FUSD-deployer" : {
         "modelName" : "Stable interest rate model",
-        "blocksPerYear": 12614400,
-        "scaledZeroUtilInterestRatePerYear": 0,
-        "scaledCriticalUtilInterestRatePerYear": 50000000000000000,
-        "scaledFullUtilInterestRatePerYear": 350000000000000000,
+        "blocksPerYear": 39420000,
+        "scaledZeroUtilInterestRatePerYear": 20000000000000000,
+        "scaledCriticalUtilInterestRatePerYear":  350000000000000000,
+        "scaledFullUtilInterestRatePerYear": 1000000000000000000,
         "scaledCriticalUtilRate": 800000000000000000
       }
     }

@@ -25,4 +25,4 @@ Oracle contract and supported feeds deployment address and configuration. The up
 
 ### Start SimpleOracle node
 
-*  `pm2 start index.js` to run in daemon mode, or `node index.js` for a one-time run.
+*  `pm2 start index.js --exp-backoff-restart-delay=10000` to run in daemon mode, or `node index.js` for a one-time run.
