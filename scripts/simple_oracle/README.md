@@ -25,4 +25,8 @@ Oracle contract and supported feeds deployment address and configuration. The up
 
 ### Start SimpleOracle node
 
+* start email monitor
+    config the pm2-health as https://stackoverflow.com/questions/60394821/pm2-health-can-i-use-pm2-health-module-for-sending-email-alerts-notifications
+    `pm2 restart pm2-health`
+
 *  `pm2 start index.js --exp-backoff-restart-delay=10000` to run in daemon mode, or `node index.js` for a one-time run.
