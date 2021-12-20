@@ -2,7 +2,7 @@
   "name": "simple_oracle",
   "version": "1.0.0",
   "description": "Simple oracle node",
-  "main": "index.js",
+  "main": "simpel_oracle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
