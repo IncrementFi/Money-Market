@@ -1,6 +1,6 @@
-import FungibleToken from "./FungibleToken.cdc"
+import FungibleToken from "FungibleToken.cdc"
 
-pub contract FBTC: FungibleToken {
+pub contract BLT: FungibleToken {
 
     // Event that is emitted when the contract is created
     pub event TokensInitialized(initialSupply: UFix64)
@@ -26,7 +26,7 @@ pub contract FBTC: FungibleToken {
     // Event that is emitted when a new minter resource is created
     pub event MinterCreated()
 
-    // Total supply of fBTC in existence
+    // Total supply of bLT in existence
     pub var totalSupply: UFix64
 
     // Vault
@@ -74,7 +74,7 @@ pub contract FBTC: FungibleToken {
         // was a temporary holder of the tokens. The Vault's balance has
         // been consumed and therefore can be destroyed.
         pub fun deposit(from: @FungibleToken.Vault) {
-            let vault <- from as! @FBTC.Vault
+            let vault <- from as! @BLT.Vault
             self.balance = self.balance + vault.balance
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
@@ -82,7 +82,7 @@ pub contract FBTC: FungibleToken {
         }
 
         destroy() {
-            FBTC.totalSupply = FBTC.totalSupply - self.balance
+            BLT.totalSupply = BLT.totalSupply - self.balance
         }
     }
 
@@ -93,7 +93,7 @@ pub contract FBTC: FungibleToken {
     // and store the returned Vault in their storage in order to allow their
     // account to be able to receive deposits of this token type.
     //
-    pub fun createEmptyVault(): @FBTC.Vault {
+    pub fun createEmptyVault(): @BLT.Vault {
         return <-create Vault(balance: 0.0)
     }
 
@@ -109,11 +109,11 @@ pub contract FBTC: FungibleToken {
         // Function that mints new tokens, adds them to the total supply,
         // and returns them to the calling context.
         //
-        pub fun mintTokens(amount: UFix64): @FBTC.Vault {
+        pub fun mintTokens(amount: UFix64): @BLT.Vault {
             pre {
                 amount > 0.0: "Amount minted must be greater than zero"
             }
-            FBTC.totalSupply = FBTC.totalSupply + amount
+            BLT.totalSupply = BLT.totalSupply + amount
             emit TokensMinted(amount: amount)
             return <-create Vault(balance: amount)
         }
@@ -141,7 +141,7 @@ pub contract FBTC: FungibleToken {
             self.minterCapability = cap
         }
 
-        pub fun mintTokens(amount: UFix64): @FBTC.Vault {
+        pub fun mintTokens(amount: UFix64): @BLT.Vault {
             return <- self.minterCapability!
             .borrow()!
             .mintTokens(amount:amount)
@@ -180,9 +180,9 @@ pub contract FBTC: FungibleToken {
         // This should be stored at a unique path in storage then a capability to it wrapped
         // in a MinterProxy to be stored in a minter account's storage.
         // This is done by the minter account running:
-        // transactions/fBTC/minter/setup_fBTC_minter.cdc
+        // transactions/bLT/minter/setup_bLT_minter.cdc
         // then the admin account running:
-        // transactions/fBTC/admin/deposit_fBTC_minter.cdc
+        // transactions/bLT/admin/deposit_bLT_minter.cdc
         //
         pub fun createNewMinter(): @Minter {
             emit MinterCreated()
@@ -194,9 +194,9 @@ pub contract FBTC: FungibleToken {
     // TODO delete
     pub var test_minter:@Minter
     init() {
-        self.AdminStoragePath = /storage/fBTCAdmin
-        self.MinterProxyPublicPath = /public/fBTCMinterProxy
-        self.MinterProxyStoragePath = /storage/fBTCMinterProxy
+        self.AdminStoragePath = /storage/bLTAdmin
+        self.MinterProxyPublicPath = /public/bLTMinterProxy
+        self.MinterProxyStoragePath = /storage/bLTMinterProxy
 
         self.totalSupply = 0.0
 
