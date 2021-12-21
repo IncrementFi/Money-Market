@@ -6,7 +6,7 @@ import re
 import ConfigTestnet
 
 Keywords = {}
-WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc' }
+WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc' }
 WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err', 'borrower' }
 
 
