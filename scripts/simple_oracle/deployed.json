@@ -6,14 +6,8 @@
         "updaterKeyIndex": 0,
         "feeds": [
             {
-                "id": "bitcoin",
+                "id": "blocto-token",
                 "address": "0x80c056e9db4e71db",
-                "windowSize": 1200,
-                "deviation": 0.005
-            },
-            {
-                "id": "ethereum",
-                "address": "0x63f87ade5fd1e732",
                 "windowSize": 1200,
                 "deviation": 0.005
             },
