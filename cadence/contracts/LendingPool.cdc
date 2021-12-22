@@ -654,13 +654,11 @@ pub contract LendingPool {
             let poolTotalBorrowRealtime = accrueInterestRealtimeRes[2]
             let poolTotalReserveRealtime = accrueInterestRealtimeRes[3]
 
-            let underlyingTolpTokenRateRealtime = (LendingPool.getPoolCash() + poolTotalBorrowRealtime - poolTotalReserveRealtime)
-                * Config.scaleFactor / LendingPool.scaledTotalSupply
+            let underlyingTolpTokenRateRealtime = (LendingPool.getPoolCash() + poolTotalBorrowRealtime - poolTotalReserveRealtime) * Config.scaleFactor / LendingPool.scaledTotalSupply
             
             var borrowBalanceRealtimeScaled:UInt256 = 0
             if (LendingPool.accountBorrows.containsKey(account)) {
-                borrowBalanceRealtimeScaled = self.getAccountBorrowPrincipalSnapshotScaled(account: account) 
-                                    * poolBorrowIndexRealtime / self.getAccountBorrowIndexSnapshotScaled(account: account)
+                borrowBalanceRealtimeScaled = self.getAccountBorrowPrincipalSnapshotScaled(account: account) * poolBorrowIndexRealtime / self.getAccountBorrowIndexSnapshotScaled(account: account)
             }
 
             return [
