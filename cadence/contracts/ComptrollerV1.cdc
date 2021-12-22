@@ -605,14 +605,25 @@ pub contract ComptrollerV1 {
             if(self.oracleCap != nil && self.oracleCap!.check()) {
                 oraclePrice = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddr)
             }
+
+            let accrueInterestRealtimeRes = poolRef.accrueInterestReadonly()
+
             return {
                 "isOpen": market.isOpen,
                 "isMining": market.isMining,
                 "marketAddress": poolAddr,
                 "marketType": poolRef.getUnderlyingTypeString(),
-                "marketSupplyScaled": poolRef.getPoolTotalSupplyScaled().toString(),
-                "marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled().toString(),
+
+                //"marketSupplyScaled": poolRef.getPoolTotalSupplyScaled().toString(),
+                //"marketSupplyRealtimeScaled": (poolRef.getPoolCash()+accrueInterestRealtimeRes[2]).toString(),
+                "marketSupplyScaled": (poolRef.getPoolCash()+accrueInterestRealtimeRes[2]).toString(),
+
+                //"marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled().toString(),
+                //"marketBorrowRealtimeScaled": accrueInterestRealtimeRes[2].toString(),
+                "marketBorrowScaled": accrueInterestRealtimeRes[2].toString(),
+
                 "marketReserveScaled": poolRef.getPoolTotalReservesScaled().toString(),
+                
                 "marketSupplyApr": poolRef.getPoolSupplyAprScaled().toString(),
                 "marketBorrowApr": poolRef.getPoolBorrowAprScaled().toString(),
                 "marketLiquidationPenalty": market.scaledLiquidationPenalty.toString(),
@@ -658,10 +669,22 @@ pub contract ComptrollerV1 {
             }
             let market = self.markets[poolAddr]!
             let poolRef = market.poolPublicCap.borrow()!
+
             let scaledAccountSnapshot = poolRef.getAccountSnapshotScaled(account: userAddr)
+            let scaledAccountRealtime = poolRef.getAccountRealtimeScaled(account: userAddr)
+
             return {
-                "userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor).toString(),
-                "userBorrowScaled": scaledAccountSnapshot[2].toString()
+                //"userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor).toString(),
+                //"userSupplyRealtimeScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
+                "userSupplyScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
+
+                //"userBorrowScaled": scaledAccountSnapshot[2].toString(),
+                //"userBorrowRealtimeScaled": scaledAccountRealtime[2].toString(),
+                "userBorrowScaled": scaledAccountRealtime[2].toString(),
+
+                "userBorrowPrincipalSnapshotScaled": scaledAccountSnapshot[3].toString(),
+                "userBorrowIndexSnapshotScaled": scaledAccountSnapshot[4].toString(),
+                "userLpTokenBalanceScaled": scaledAccountSnapshot[1].toString()
             }
         }
 
