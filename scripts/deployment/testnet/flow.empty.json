@@ -13,7 +13,7 @@
     },
     "FUSD" : {
       "source": "./scripts/deployment/testnet/cadence_empty/contracts/FUSD.cdc",
-      "aliases": { "testnet": "0xe223d8a629e49c68", "mainnet": "0x3c5959b568896393" }
+      "aliases": { "testnet": "0xe5b5624186770886", "mainnet": "0x3c5959b568896393" }
     },
     "BLT" : {
       "source": "./scripts/deployment/testnet/cadence_empty/contracts/BLT.cdc",
@@ -89,13 +89,13 @@
         "isMining": true,
         "oracleCap": 10,
         "oracleInitialPrice": 1.0,
-        "isFake": false
+        "isFake": true
       },
       "testnet-pool-BLT-deployer": {
         "poolName": "BLT",
         "tokenName": "BLT",
         "tokenNameLower": "bLT",
-        "interestRateModelDeployer": "testnet-pool-BLT-deployer",
+        "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
         "reserveFactor": 0.20,
         "poolSeizeShare": 0.028,
         "liquidationPenalty": 0.20,
