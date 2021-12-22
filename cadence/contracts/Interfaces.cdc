@@ -27,11 +27,17 @@ pub contract interface Interfaces {
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
         // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance, scaledAccountBorrowPrincipal, scaledAccountBorrowIndex]
         pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5]
+        pub fun getAccountRealtimeScaled(account: Address): [UInt256; 5]
         pub fun getInterestRateModelAddress(): Address
         pub fun getPoolReserveFactorScaled(): UInt256
+        pub fun getPoolAccrualBlockNumber(): UInt256
         pub fun getPoolTotalBorrowsScaled(): UInt256
+        pub fun getPoolBorrowIndexScaled(): UInt256
         pub fun getPoolTotalSupplyScaled(): UInt256
+        pub fun getPoolCash(): UInt256
+        pub fun getPoolTotalLpTokenSupplyScaled(): UInt256
         pub fun getPoolTotalReservesScaled(): UInt256
+        pub fun getPoolBorrowRateScaled(): UInt256
         pub fun getPoolSupplyAprScaled(): UInt256
         pub fun getPoolBorrowAprScaled(): UInt256
         pub fun getPoolSupplierCount(): UInt256
@@ -43,6 +49,7 @@ pub contract interface Interfaces {
         
         // Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest()
+        pub fun accrueInterestReadonly(): [UInt256; 4]
         pub fun getPoolCertificateType(): Type
         // Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
         // so that this public seize function can only be invoked by another LendingPool contract

@@ -92,7 +92,7 @@ pub contract LendingPool {
 
     // Calculates interest accrued from the last checkpointed block to the current block and 
     // applies to total borrows, total reserves, borrow index.
-    pub fun accrueInterest() {
+    pub fun accrueInterestReadonly(): [UInt256; 4] {
         pre {
             self.interestRateModelCap != nil && self.interestRateModelCap!.check() == true:
                 Error.ErrorEncode(
@@ -102,10 +102,7 @@ pub contract LendingPool {
         }
         let currentBlockNumber = UInt256(getCurrentBlock().height)
         let accrualBlockNumberPrior = self.accrualBlockNumber
-        // Return early if accrue 0 interest
-        if (currentBlockNumber == accrualBlockNumberPrior) {
-            return
-        }
+        
         let scaledCashPrior = self.getPoolCash()
         let scaledBorrowPrior = self.scaledTotalBorrows
         let scaledReservesPrior = self.scaledTotalReserves
@@ -122,13 +119,31 @@ pub contract LendingPool {
         let scaledTotalReservesNew = self.scaledReserveFactor * scaledInterestAccumulated / scaleFactor + scaledReservesPrior
         let scaledBorrowIndexNew = scaledInterestFactor * scaledBorrowIndexPrior / scaleFactor + scaledBorrowIndexPrior
 
-        // Write calculated values into contract storage
-        self.accrualBlockNumber = currentBlockNumber
-        self.scaledBorrowIndex = scaledBorrowIndexNew
-        self.scaledTotalBorrows = scaledTotalBorrowsNew
-        self.scaledTotalReserves = scaledTotalReservesNew
+        return [
+            currentBlockNumber,
+            scaledBorrowIndexNew,
+            scaledTotalBorrowsNew,
+            scaledTotalReservesNew
+        ]
+    }
 
-        emit AccrueInterest(scaledCashPrior, scaledInterestAccumulated, scaledBorrowIndexNew, scaledTotalBorrowsNew)
+    pub fun accrueInterest() {
+        // Return early if accrue 0 interest
+        if (UInt256(getCurrentBlock().height) == self.accrualBlockNumber) {
+            return
+        }
+        let scaledCashPrior = self.getPoolCash()
+        let scaledBorrowPrior = self.scaledTotalBorrows
+        
+        let res = self.accrueInterestReadonly()
+        
+        // Write calculated values into contract storage
+        self.accrualBlockNumber = res[0]
+        self.scaledBorrowIndex = res[1]
+        self.scaledTotalBorrows = res[2]
+        self.scaledTotalReserves = res[3]
+
+        emit AccrueInterest(scaledCashPrior, res[2]-scaledBorrowPrior, self.scaledBorrowIndex, self.scaledTotalBorrows)
     }
 
     // Calculates the exchange rate from the underlying to virtual lpToken (i.e. how many UnderlyingToken per virtual lpToken)
@@ -633,6 +648,29 @@ pub contract LendingPool {
                 self.getAccountBorrowIndexSnapshotScaled(account: account)
             ]
         }
+        pub fun getAccountRealtimeScaled(account: Address): [UInt256; 5] {
+            let accrueInterestRealtimeRes = self.accrueInterestReadonly()
+            let poolBorrowIndexRealtime = accrueInterestRealtimeRes[1]
+            let poolTotalBorrowRealtime = accrueInterestRealtimeRes[2]
+            let poolTotalReserveRealtime = accrueInterestRealtimeRes[3]
+
+            let underlyingTolpTokenRateRealtime = (LendingPool.getPoolCash() + poolTotalBorrowRealtime - poolTotalReserveRealtime)
+                * Config.scaleFactor / LendingPool.scaledTotalSupply
+            
+            var borrowBalanceRealtimeScaled:UInt256 = 0
+            if (LendingPool.accountBorrows.containsKey(account)) {
+                borrowBalanceRealtimeScaled = self.getAccountBorrowPrincipalSnapshotScaled(account: account) 
+                                    * poolBorrowIndexRealtime / self.getAccountBorrowIndexSnapshotScaled(account: account)
+            }
+
+            return [
+                underlyingTolpTokenRateRealtime,
+                self.getAccountLpTokenBalanceScaled(account: account),
+                borrowBalanceRealtimeScaled,
+                self.getAccountBorrowPrincipalSnapshotScaled(account: account),
+                self.getAccountBorrowIndexSnapshotScaled(account: account)
+            ]
+        }
         pub fun getPoolReserveFactorScaled(): UInt256 {
             return LendingPool.scaledReserveFactor
         }
@@ -642,11 +680,23 @@ pub contract LendingPool {
         pub fun getPoolTotalBorrowsScaled(): UInt256 {
             return LendingPool.scaledTotalBorrows
         }
+        pub fun getPoolAccrualBlockNumber(): UInt256 {
+            return LendingPool.accrualBlockNumber
+        }
+        pub fun getPoolBorrowIndexScaled(): UInt256 {
+            return LendingPool.scaledBorrowIndex
+        }
+        pub fun getPoolTotalLpTokenSupplyScaled(): UInt256 {
+            return LendingPool.scaledTotalSupply
+        }
         pub fun getPoolTotalSupplyScaled(): UInt256 {
             return LendingPool.getPoolCash() + LendingPool.scaledTotalBorrows
         }
         pub fun getPoolTotalReservesScaled(): UInt256 {
             return LendingPool.scaledTotalReserves
+        }
+        pub fun getPoolCash(): UInt256 {
+            return LendingPool.getPoolCash()
         }
         pub fun getPoolSupplierCount(): UInt256 {
             return UInt256(LendingPool.accountLpTokens.length)
@@ -694,6 +744,13 @@ pub contract LendingPool {
             }
             return list
         }
+        pub fun getPoolBorrowRateScaled(): UInt256 {
+            return LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
+                cash: LendingPool.getPoolCash(),
+                borrows: LendingPool.scaledTotalBorrows,
+                reserves: LendingPool.scaledTotalReserves
+            )
+        }
         pub fun getPoolBorrowAprScaled(): UInt256 {
             let scaledBorrowRatePerBlock =
                 LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
@@ -717,6 +774,9 @@ pub contract LendingPool {
         }
         pub fun accrueInterest() {
             LendingPool.accrueInterest()
+        }
+        pub fun accrueInterestReadonly(): [UInt256; 4] {
+            return LendingPool.accrueInterestReadonly()
         }
         pub fun getPoolCertificateType(): Type {
             return Type<@LendingPool.PoolCertificate>()
