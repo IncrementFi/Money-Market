@@ -676,18 +676,15 @@ pub contract ComptrollerV1 {
             return {
                 //"userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor).toString(),
                 //"userSupplyRealtimeScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
-                //"userSupplyScaled": Config.ScaledUInt256FloorToFixed8( (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor) ).toString(),
-                "userSupplyScaled": ( (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor) ).toString(),
+                "userSupplyScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
 
                 //"userBorrowScaled": scaledAccountSnapshot[2].toString(),
                 //"userBorrowRealtimeScaled": scaledAccountRealtime[2].toString(),
-                //"userBorrowScaled": Config.ScaledUInt256CeilToFixed8( scaledAccountRealtime[2] ).toString(),
                 "userBorrowScaled": scaledAccountRealtime[2].toString(),
 
                 "userBorrowPrincipalSnapshotScaled": scaledAccountSnapshot[3].toString(),
                 "userBorrowIndexSnapshotScaled": scaledAccountSnapshot[4].toString(),
-                "userLpTokenBalanceScaled": scaledAccountSnapshot[1].toString(),
-                "lpTokenExchangeRate": scaledAccountRealtime[0].toString()
+                "userLpTokenBalanceScaled": scaledAccountSnapshot[1].toString()
             }
         }
 

@@ -230,35 +230,25 @@ pub contract LendingPool {
         var scaledUnderlyingToRedeem: UInt256 = 0
         let scaledUnderlyingToLpRate = self.underlyingToLpTokenRateSnapshotScaled()
         let scaleFactor = Config.scaleFactor
-        let accountLpToken = self.accountLpTokens[redeemer]!
         if (numLpTokenToRedeem == 0.0) {
             // redeem all
             if numUnderlyingToRedeem == UFix64.max {
-                scaledLpTokenToRedeem = accountLpToken
+                scaledLpTokenToRedeem = self.accountLpTokens[redeemer]!
                 scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
             } else {
                 scaledLpTokenToRedeem = Config.UFix64ToScaledUInt256(numUnderlyingToRedeem) * scaleFactor / scaledUnderlyingToLpRate
                 scaledUnderlyingToRedeem = Config.UFix64ToScaledUInt256(numUnderlyingToRedeem)
-                // if has a small residue, clear all
-                if (accountLpToken - scaledLpTokenToRedeem < Config.ufix8Scale) {
-                   scaledLpTokenToRedeem = accountLpToken
-                   scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
-                }
             }
         } else {
             if numLpTokenToRedeem == UFix64.max {
-                scaledLpTokenToRedeem = accountLpToken
+                scaledLpTokenToRedeem = self.accountLpTokens[redeemer]!
             } else {
                 scaledLpTokenToRedeem = Config.UFix64ToScaledUInt256(numLpTokenToRedeem)
-                if (accountLpToken - scaledLpTokenToRedeem < Config.ufix8Scale) {
-                   scaledLpTokenToRedeem = accountLpToken
-                }
             }
             scaledUnderlyingToRedeem = scaledLpTokenToRedeem * scaledUnderlyingToLpRate / scaleFactor
         }
 
-        
-        assert(scaledLpTokenToRedeem <= accountLpToken, message: 
+        assert(scaledLpTokenToRedeem <= self.accountLpTokens[redeemer]!, message: 
             Error.ErrorEncode(
                 msg: "exceeded redeemer lp token balance",
                 err: Error.ErrorCode.REDEEM_FAILED_NO_ENOUGH_LP_TOKEN
