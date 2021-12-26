@@ -22,8 +22,6 @@ pub contract Config {
     pub let scaleFactor: UInt256
     // 100_000_000.0, i.e. 1.0e8
     pub let ufixScale: UFix64
-    // 1e18 / 1e8 -> 1e10
-    pub let ufix8Scale: UInt256
 
     // Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
     // e.g. 184467440737.09551615 (UFix64.max) => 184467440737095516150000000000
@@ -40,18 +38,6 @@ pub contract Config {
         let ufixScaledFractional = (scaled % self.scaleFactor) * UInt256(self.ufixScale) / self.scaleFactor
         return UFix64(integral) + (UFix64(ufixScaledFractional) / self.ufixScale)
     }
-    // 184467440737095516150000045312 => 184467440737095516150000000000
-    pub fun ScaledUInt256FloorToFixed8(_ scaled: UInt256): UInt256 {
-        return scaled / self.ufix8Scale * self.ufix8Scale
-    }
-    // 184467440737095516150000045312 => 184467440737095516160000000000
-    pub fun ScaledUInt256CeilToFixed8(_ scaled: UInt256): UInt256 {
-        var integral:UInt256 = scaled / self.ufix8Scale * self.ufix8Scale
-        if (scaled - integral > 0) {
-            integral = integral + self.ufix8Scale
-        }
-        return integral
-    }
 
     init() {
         self.InterestRateModelPublicPath = /public/InterestRateModel
@@ -66,7 +52,5 @@ pub contract Config {
         self.scaleFactor = 1_000_000_000_000_000_000
         // 1.0e8
         self.ufixScale = 100_000_000.0
-        // 1e18 / 1e8 -> 1e10
-        self.ufix8Scale = 10_000_000_000
     }
 }
