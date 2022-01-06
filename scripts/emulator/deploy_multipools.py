@@ -293,12 +293,20 @@ poolCodePath = [
         "name" : "Redeem"
     },
     {
+        "path" : "./cadence/transactions/User/user_redeemAll_template.cdc",
+        "name" : "RedeemAll"
+    },
+    {
         "path" : "./cadence/transactions/User/user_borrow_template.cdc",
         "name" : "Borrow"
     },
     {
         "path" : "./cadence/transactions/User/user_repay_template.cdc",
         "name" : "Repay"
+    },
+    {
+        "path" : "./cadence/transactions/User/user_repayAll_template.cdc",
+        "name" : "RepayAll"
     },
     {
         "path" : "./cadence/transactions/User/user_liquidate_template.cdc",
