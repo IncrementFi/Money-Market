@@ -4,6 +4,7 @@ import json
 import shutil
 import re
 import ConfigTestnet
+#from scripts.deployment.testnet.DeployUnreadableOnTestnet import OracleDeployer
 
 Keywords = {}
 WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc' }
@@ -433,6 +434,8 @@ configJson["ComptrollerAddress"] = ContractNameToAddress[ComptrollerContractName
 configJson["ContractAddress"] = {}
 for contract in ContractNameToAddress:
     configJson["ContractAddress"][contract] = ContractNameToAddress[contract]
+configJson["ContractAddress"]["ChainAdmin"] = configJson["ContractAddress"][ComptrollerContractName]
+
 #
 configJson["PoolAddress"] = {}
 configJson["PoolName"] = {}
@@ -527,12 +530,20 @@ poolCodePath = [
         "name" : "Redeem"
     },
     {
+        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_redeemAll_template.cdc",
+        "name" : "RedeemAll"
+    },
+    {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_borrow_template.cdc",
         "name" : "Borrow"
     },
     {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_repay_template.cdc",
         "name" : "Repay"
+    },
+    {
+        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_repayAll_template.cdc",
+        "name" : "RepayAll"
     },
     {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_liquidate_template.cdc",
