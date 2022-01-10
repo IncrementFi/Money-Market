@@ -111,11 +111,10 @@ export const updateOraclePrice = async(price) => {
 }
 
 export const initComptroller = async () => {
-    const oracleAddr = await getSimpleOracleAddress()
     const comptrollerDeployer = await getComptrollerAddress()
     const name = "Comptroller/init_comptroller"
     const signers = [comptrollerDeployer]
-    const args = [oracleAddr, 0.5]
+    const args = [0.5]
     return sendTransaction({ name, args, signers })
 }
 

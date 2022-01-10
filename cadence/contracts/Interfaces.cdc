@@ -62,18 +62,6 @@ pub contract interface Interfaces {
         )
     }
 
-    pub resource interface OraclePublic {
-        // Get the given pool's underlying asset price denominated in USD.
-        // Note: Return value of 0.0 means the given pool's price feed is not available.
-        pub fun getUnderlyingPrice(pool: Address): UFix64
-
-        // Return latest reported data in [timestamp, priceData]
-        pub fun latestResult(pool: Address): [UFix64; 2]
-
-        // Return supported markets' addresses
-        pub fun getSupportedFeeds(): [Address]
-    }
-
     pub resource interface ComptrollerPublic {
         // Return error string on condition (or nil)
         pub fun supplyAllowed(

@@ -4,10 +4,9 @@ import json
 import shutil
 import re
 import ConfigTestnet
-#from scripts.deployment.testnet.DeployUnreadableOnTestnet import OracleDeployer
 
 Keywords = {}
-WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc' }
+WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc', 'OracleConfig.cdc', 'OracleInterface.cdc' }
 WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err', 'borrower' }
 
 
@@ -504,10 +503,6 @@ scriptsCodePath = [
     {
         'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_borrower_list.cdc',
         'name': 'QueryMarketBorrowers'
-    },
-    {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/scripts/Oracle/get_feed_latest_result.cdc",
-        "name" : "QuerySimpleOracleFeedLatestResult"
     }
 ]
 for item in scriptsCodePath:
@@ -571,6 +566,7 @@ for item in poolCodePath:
             configJson["Codes"]["Transactions"][name][poolName] = code
 
 #
+"""
 simpleOracleTransactionsPath = [
     {
         "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc",
@@ -589,6 +585,7 @@ for item in simpleOracleTransactionsPath:
         code = ConfigTestnet.Replace0xNameTo0xAddress(code, ContractNameToAddress)
         
         configJson["Codes"]["Transactions"]["SimpleOracle"][name] = code
+"""
 
 #                      
 configJson["Codes"]["Transactions"]["Test"] = {}

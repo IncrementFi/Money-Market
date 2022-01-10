@@ -8,8 +8,8 @@ import ConfigTestnet
 PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
 InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
-OracleDeployer = ConfigTestnet.ExtractOracleDeployer()
-OracleUpdater = ConfigTestnet.ExtractOracleUpdater()
+#OracleDeployer = ConfigTestnet.ExtractOracleDeployer()
+#OracleUpdater = ConfigTestnet.ExtractOracleUpdater()
 ComptrollerDeployer = ConfigTestnet.ExtractComptrollerDeployer()
 
 ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./scripts/deployment/testnet/flow.unreadable.json')
@@ -71,6 +71,21 @@ for poolDeployer in PoolDeployerNameToAddr:
         PoolContractName, ConfigTestnet.UnreadablePath, PoolContractName, poolDeployer))
 
 # Oracle
+print('===============>', 'Apply for oracle reciever certificate')
+for poolDeployer in PoolDeployerNameToAddr:
+    poolAddr = PoolDeployerNameToAddr[poolDeployer]
+    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
+    oracleAddr = poolConfig['oracleAddr']
+    break
+cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/Oracle/apply_reader_certificate.cdc ' + \
+      '--arg Address:{0} '.format(oracleAddr) + \
+      '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
+      '--signer {0}'.format(ComptrollerDeployer) + \
+      '--network testnet'
+print(cmd)
+os.system(cmd)
+
+"""
 # 1.Deploy and setup oracle resource
 print('===============>', 'Oracle setup oracle resource')
 cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/Oracle/admin_create_oracle_resource.cdc ' + \
@@ -120,11 +135,11 @@ for poolDeployer in PoolDeployerNameToAddr:
           '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
           '--network testnet'
     os.system(cmd)
+"""
 
 # Init comptroller
 print('===============>', 'Init comptroller.')
 cmd = 'flow transactions send {0}/transactions/Comptroller/init_comptroller.cdc '.format(ConfigTestnet.UnreadablePath) + \
-      '--arg Address:{0} '.format(DeployerToAddress[OracleDeployer]) + \
       '--arg UFix64:{0} '.format(0.5) + \
       '--signer {0} '.format(ComptrollerDeployer) + \
       '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
@@ -163,6 +178,7 @@ for poolDeployer in PoolDeployerNameToAddr:
           '--arg UFix64:{0} '.format(poolConfig['borrowCap']) + \
           '--arg Bool:{0} '.format(poolConfig['isOpen']) + \
           '--arg Bool:{0} '.format(poolConfig['isMining']) + \
+          '--arg Address:{0} '.format(poolConfig['oracleAddr']) + \
           '--signer {0} '.format(ComptrollerDeployer) + \
           '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
           '--network testnet'

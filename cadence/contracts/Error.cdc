@@ -27,6 +27,9 @@ pub contract Error {
         pub case LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
         pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
+
+        pub case CANNOT_ACCESS_ORACLE_PUBLIC_CAPABILITY // 25
+        pub case INVALID_ORACLE_READER_CERTIFICATE
     }
 
     pub fun ErrorEncode(msg: String, err: ErrorCode): String {

@@ -7,7 +7,7 @@ SignerA=emulator-user-A
 SignerB=emulator-user-B
 SignerAudit=emulator-account
 
-fusdAddr=0x192440c99cb17282
+fusdAddr=0xff8975b2fe6fb6f1
 auditAddr=0xf8d6e0586b0a20c7
 # cmd
 query_user_pool="flow scripts execute ./cadence/scripts/Query/query_user_pool_info.cdc"
@@ -29,8 +29,8 @@ eval $deposit --signer $SignerB --arg UFix64:"999999999.09999999"
 
 eval $borrow --signer $SignerB --arg UFix64:"699999999.0"
 eval $borrow --signer $SignerA --arg UFix64:"1.0"
-eval $repayAll --signer $SignerA
-eval $redeemAll --signer $SignerA
+#eval $repayAll --signer $SignerA
+#eval $redeemAll --signer $SignerA
 
 eval $next_block --signer $SignerAudit
 eval $next_block --signer $SignerAudit

@@ -113,6 +113,10 @@ os.system('flow project deploy --update -f flow_multipool.json')
 # setup intereset rate model
 os.system('./scripts/emulator/emulator-setup-InterestRateModel.sh')
 # setup oracle
+cmd = 'flow transactions send ./cadence/transactions/Oracle/apply_reader_certificate.cdc --arg Address:0x01cf0e2f2f715450 -f flow_multipool.json --signer emulator-account'
+os.system(cmd)
+
+"""
 os.system('./scripts/emulator/emulator-setup-Oracle.sh')
 for poolName in setting.PoolNames+setting.FakePoolNames:
     poolAddr = setting.DictPoolNameToAddr[poolName]
@@ -129,12 +133,11 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         poolAddr, feedPrice)
     print(cmd)
     os.system(cmd)
-
+"""
 
 
 # init comptroller
-oracle_deployer_addr = setting.DictDeployNameToAddr['emulator-oracle-deployer']
-os.system('flow transactions send ./cadence/transactions/Comptroller/init_comptroller.cdc --arg Address:{0} --arg UFix64:{1} --signer emulator-account'.format(oracle_deployer_addr, 0.5))
+os.system('flow transactions send ./cadence/transactions/Comptroller/init_comptroller.cdc --arg UFix64:{0} --signer emulator-account'.format(0.5))
 
 # init pools
 print('-------------', 'init pools')
@@ -162,8 +165,9 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         liquidationPenalty = setting.PoolParams[poolName]['liquidationPenalty']
         collateralFactor = setting.PoolParams[poolName]['collateralFactor']
         borrowCap = setting.PoolParams[poolName]['borrowCap']
-    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg UFix64:{3} --arg Bool:true --arg Bool:true --signer emulator-account'.format(
-        poolAddr, liquidationPenalty, collateralFactor, borrowCap
+        oracleAddr = setting.PoolParams[poolName]['oracleAddr']
+    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg UFix64:{3} --arg Bool:true --arg Bool:true --arg Address:{4} --signer emulator-account'.format(
+        poolAddr, liquidationPenalty, collateralFactor, borrowCap, oracleAddr
     )
     print(cmd)
     os.system(cmd)
@@ -267,10 +271,6 @@ scriptsCodePath = [
     {
         'path': './cadence/scripts/Query/query_market_borrower_list.cdc',
         'name': 'QueryMarketBorrowers'
-    },
-    {
-        "path" : "./cadence/scripts/Oracle/get_feed_latest_result.cdc",
-        "name" : "QuerySimpleOracleFeedLatestResult"
     }
 ]
 for item in scriptsCodePath:

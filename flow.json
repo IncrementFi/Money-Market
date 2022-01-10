@@ -19,8 +19,8 @@
       "source": "./cadence/contracts/BLT.cdc",
       "aliases": { "testnet": "0x48adb192e4b081b0" }
     },
-
-    "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
+    "OracleInterface":                "./cadence/contracts/OracleInterface.cdc",
+		"OracleConfig":                   "./cadence/contracts/OracleConfig.cdc",
     "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
     "Config":                         "./cadence/contracts/Config.cdc",
     "Error":                          "./cadence/contracts/Error.cdc",
@@ -34,7 +34,7 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f" },
+    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "da193159f79102065ceb0c7cfef38910525e10a6a0c8c5109f645cb47f792a47" },
     "emulator-oracle-deployer": { "address": "0x01cf0e2f2f715450", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-oracle-updater":  { "address": "0x179b6b1cb6755e31", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-pool-template":   { "address": "0xf3fcd2c1a78f5eee", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
@@ -71,8 +71,7 @@
         "borrowCap": 0.0,
         "isOpen": true,
         "isMining": true,
-        "oracleCap": 10,
-        "oracleInitialPrice": 48.0,
+        "oracleAddr": "0x01cf0e2f2f715450",
         "isFake": false
       },
       "testnet-pool-FUSD-deployer": {
@@ -87,8 +86,7 @@
         "borrowCap": 0.0,
         "isOpen": true,
         "isMining": true,
-        "oracleCap": 10,
-        "oracleInitialPrice": 1.0,
+        "oracleAddr": "0x179b6b1cb6755e31",
         "isFake": true
       },
       "testnet-pool-BLT-deployer": {
@@ -103,8 +101,7 @@
         "borrowCap": 1000000.0,
         "isOpen": true,
         "isMining": true,
-        "oracleCap": 10,
-        "oracleInitialPrice": 2.0,
+        "oracleAddr": "0xf3fcd2c1a78f5eee",
         "isFake": true
       }
     }
@@ -132,6 +129,8 @@
   "deployments": {
     "emulator": {
       "emulator-account": [
+        "OracleInterface",
+        "OracleConfig",
         "FUSD",
         "Error",
         "Interfaces",
@@ -140,7 +139,6 @@
         "ComptrollerV1"
       ],
       "emulator-oracle-deployer": [
-        "SimpleOracle"
       ],
       "emulator-pool-template": [
         "LendingPool"
@@ -164,7 +162,6 @@
       "testnet-pool-FUSD-deployer": [
       ],
       "testnet-oracle-deployer": [
-        "SimpleOracle"
       ]
     }
   }
