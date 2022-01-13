@@ -456,6 +456,10 @@ pub contract ComptrollerV1 {
                 let scaledLpTokenAmount = scaledAccountSnapshot[1]
                 let scaledBorrowBalance = scaledAccountSnapshot[2]
                 let underlyingPriceInUSD = self.getUnderlyingPrice(poolAddr: poolAddress)
+                assert(
+                   underlyingPriceInUSD != 0.0,
+                    message: Error.ErrorEncode(msg: "Price feed not available for market ".concat(poolAddress.toString()), err: Error.ErrorCode.INVALID_ORACLE_PRICE)
+                )
                 let scaledUnderlyingPriceInUSD = Config.UFix64ToScaledUInt256(underlyingPriceInUSD)
                 let scaleFactor = Config.scaleFactor
                 if (scaledLpTokenAmount > 0) {
@@ -506,7 +510,7 @@ pub contract ComptrollerV1 {
             )
 
             // Check the validity of the oracle address
-            let oracleReaderPublicCap = getAccount(oracleAddr).getCapability<&{OracleInterface.OracleReaderPublic}>(OracleConfig.OracleReaderPublicPath)
+            let oracleReaderPublicCap = getAccount(oracleAddr).getCapability<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath)
             assert(oracleReaderPublicCap.check(), message:
                 Error.ErrorEncode(
                     msg: "Cannot borrow reference to OraclePublic resource at ".concat(oracleAddr.toString()),
@@ -591,20 +595,16 @@ pub contract ComptrollerV1 {
         }
 
         access(self) fun getUnderlyingPrice(poolAddr: Address): UFix64 {
-            let oracleReaderRef = getAccount(self.markets[poolAddr]!.oracleAddr).getCapability<&{OracleInterface.OracleReaderPublic}>(OracleConfig.OracleReaderPublicPath).borrow() ?? panic(
+            let oracleAddr = self.markets[poolAddr]!.oracleAddr
+            let localPriceReaderSuggestedPath = getAccount(oracleAddr).getCapability<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath).borrow()!.getPriceReaderStoragePath()
+            let priceReaderRef = ComptrollerV1.account.borrow<&OracleInterface.PriceReader>(from: localPriceReaderSuggestedPath) ?? panic(
                 Error.ErrorEncode(
-                    msg: "Cannot borrow reference to OraclePublic resource",
-                    err: Error.ErrorCode.CANNOT_ACCESS_ORACLE_PUBLIC_CAPABILITY
-                )
-            )
-            let readerCertificateRef = ComptrollerV1.account.borrow<&OracleInterface.ReaderCertificate>(from: OracleConfig.ReaderCertificateStoragePath) ?? panic(
-                Error.ErrorEncode(
-                    msg: "Cannot borrow reference to Oracle reader certificate",
-                    err: Error.ErrorCode.INVALID_ORACLE_READER_CERTIFICATE
-                )
+                    msg: "Cannot borrow reference to local price reader resource",
+                    err: Error.ErrorCode.CANNOT_ACCESS_ORACLE_LOCAL_PRICE_READER
+                )    
             )
 
-            return oracleReaderRef.getMedianPrice(readerCertificate: readerCertificateRef)
+            return priceReaderRef.getMedianPrice()
         }
 
         pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {

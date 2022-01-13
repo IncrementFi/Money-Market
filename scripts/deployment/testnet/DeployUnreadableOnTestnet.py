@@ -71,19 +71,19 @@ for poolDeployer in PoolDeployerNameToAddr:
         PoolContractName, ConfigTestnet.UnreadablePath, PoolContractName, poolDeployer))
 
 # Oracle
-print('===============>', 'Apply for oracle reciever certificate')
+print('===============>', 'Mint oracle price reader resource')
 for poolDeployer in PoolDeployerNameToAddr:
     poolAddr = PoolDeployerNameToAddr[poolDeployer]
     poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
     oracleAddr = poolConfig['oracleAddr']
-    break
-cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/Oracle/apply_reader_certificate.cdc ' + \
-      '--arg Address:{0} '.format(oracleAddr) + \
-      '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
-      '--signer {0}'.format(ComptrollerDeployer) + \
-      '--network testnet'
-print(cmd)
-os.system(cmd)
+    
+    cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/Oracle/mint_local_price_reader.cdc ' + \
+        '--arg Address:{0} '.format(oracleAddr) + \
+        '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
+        '--signer {0}'.format(ComptrollerDeployer) + \
+        '--network testnet'
+    print(cmd)
+    os.system(cmd)
 
 """
 # 1.Deploy and setup oracle resource

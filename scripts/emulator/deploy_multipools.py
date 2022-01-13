@@ -112,9 +112,13 @@ os.system('flow project deploy --update -f flow_multipool.json')
 ##### setup
 # setup intereset rate model
 os.system('./scripts/emulator/emulator-setup-InterestRateModel.sh')
+
 # setup oracle
-cmd = 'flow transactions send ./cadence/transactions/Oracle/apply_reader_certificate.cdc --arg Address:0x01cf0e2f2f715450 -f flow_multipool.json --signer emulator-account'
-os.system(cmd)
+for poolName in setting.PoolNames+setting.FakePoolNames:
+    if poolName in setting.PoolParams:
+        oracleAddr = setting.PoolParams[poolName]['oracleAddr']
+        cmd = 'flow transactions send ./cadence/transactions/Oracle/mint_local_price_reader.cdc --arg Address:{0} -f flow_multipool.json --signer emulator-account'.format(oracleAddr)
+        os.system(cmd)
 
 """
 os.system('./scripts/emulator/emulator-setup-Oracle.sh')

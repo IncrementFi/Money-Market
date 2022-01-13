@@ -29,7 +29,8 @@ pub contract Error {
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
 
         pub case CANNOT_ACCESS_ORACLE_PUBLIC_CAPABILITY // 25
-        pub case INVALID_ORACLE_READER_CERTIFICATE
+        pub case INVALID_ORACLE_PRICE
+        pub case CANNOT_ACCESS_ORACLE_LOCAL_PRICE_READER
     }
 
     pub fun ErrorEncode(msg: String, err: ErrorCode): String {
