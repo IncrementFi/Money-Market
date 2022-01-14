@@ -78,7 +78,7 @@
       "testnet-pool-FUSD-deployer": {
         "poolName": "FUSD",
         "tokenName": "FUSD",
-        "tokenNameLower": "fusd",
+        "tokenNameLower": "tfusd",
         "interestRateModelDeployer": "testnet-interest-rate-FUSD-deployer",
         "reserveFactor": 0.20,
         "poolSeizeShare": 0.028,
