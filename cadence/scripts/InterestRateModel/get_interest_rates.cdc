@@ -3,7 +3,7 @@ import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRat
 import LendingConfig from "../../contracts/LendingConfig.cdc"
 // TODO: Do not break arguments into multi-lines unless this bug has been fixed: https://github.com/onflow/flow-cadut/issues/15
 
-// Print current model parameters
+/// Print current model parameters
 pub fun main(model: Address, cash: UInt256, borrows: UInt256, reserves: UInt256): [UInt256; 3] {
     let interestRateModelRef = getAccount(model)
         .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
