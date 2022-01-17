@@ -20,19 +20,19 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 
 ### Deploy multipools on emulator:
 1. Run `flow emulator -v` to start emulator
-2. Run `./scripts/deployment/emulator/multipool-deploy.sh` to deploy accounts and contracts.
-3. Run `./scripts/deployment/emulator/multipool-test.sh` for testing.
-   or Run `python ./scripts/testbot/UserRandomEmulator.py 12` for multiple users simulation.
+2. Run `./tools/deployment/emulator/multipool-deploy.sh` to deploy accounts and contracts.
+3. Run `./tools/deployment/emulator/multipool-test.sh` for testing.
+   or Run `python ./tools/testbot/UserRandomEmulator.py 12` for multiple users simulation.
 ###### pool setting:
-./scripts/emulator/multipool_setting.py can be modified to support various pools.
+./tools/emulator/multipool_setting.py can be modified to support various pools.
 ###### clear tmp codes:
-python ./scripts/emulator/gen_tmp_codes.py 1
+python ./tools/emulator/gen_tmp_codes.py 1
 
 ### Deploy on testnet:
-1. Run `python ./scripts/deployment/testnet/GenTmpCodes.py` to generate all empty&mixture codes and configs.
-2. Run `python ./scripts/deployment/testnet/DeployEmptyOnTestnet.py` to deploy empty contracts.
-3. Run `python ./scripts/deployment/testnet/UndeployTestnet.py` to clear your deployment.
-4. Run `python ./scripts/deployment/testnet/DeployUnreadableOnTestnet.py` to deploy all the contracts and initializations.
+1. Run `python ./tools/deployment/testnet/GenTmpCodes.py` to generate all empty&mixture codes and configs.
+2. Run `python ./tools/deployment/testnet/DeployEmptyOnTestnet.py` to deploy empty contracts.
+3. Run `python ./tools/deployment/testnet/UndeployTestnet.py` to clear your deployment.
+4. Run `python ./tools/deployment/testnet/DeployUnreadableOnTestnet.py` to deploy all the contracts and initializations.
 
 
 

@@ -4,9 +4,9 @@ Support simulation testing, stress testing and data visualization.
 ### How to Use
 1. Create some users to interact with the lending pools randomly.
    After running emulator: `./scripts/multipool-deploy.sh`
-  `python ./scripts/testbot/UserRandomEmulator.py 10` to create 10 users.
+  `python ./tools/testbot/UserRandomEmulator.py 10` to create 10 users.
 2. Open data board for visualization.
-  `python ./scripts/testbot/DataBoard.py`
+  `python ./tools/testbot/DataBoard.py`
 
 ### Env
 1. Upgrade python version to 3.9+.

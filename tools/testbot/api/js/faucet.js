@@ -47,4 +47,4 @@ async function Faucet(poolName, userAddr, amount) {
 
 const res = Faucet(PROCESS.argv[2], PROCESS.argv[3], PROCESS.argv[4])
 console.log(res)
-// node scripts/testbot/api/js/Faucet.js Apple 0xe03daebed8ca0615 200.0
+// node tools/testbot/api/js/Faucet.js Apple 0xe03daebed8ca0615 200.0

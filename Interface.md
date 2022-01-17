@@ -1,8 +1,8 @@
 
 ## Tips:
-1. 请先运行./scripts/multipool-deploy.sh
+1. 请先运行./tools/multipool-deploy.sh
    root下会生成deploy.config.emulator.json配置
-   如果需要在emulator上模拟多个池子，请修改: ./scripts/emulator/multipool_setting.py
+   如果需要在emulator上模拟多个池子，请修改: ./tools/emulator/multipool_setting.py
 2. onflow版本有更新，type的版本请更新到0.0.6，"@onflow/types": "^0.0.6"
 3. 合约返回的所有number，都是被scale up的，需要除以1e18，前端暂时显示小数点后8位。
 4. 一些当前borrow limit的计算请使用参数实时计算（比如用户输入不同的deposit金额时）
@@ -108,7 +108,7 @@ flow scripts execute ./cadence/scripts/Query/query_user_position.cdc 0x045a1763c
 * flow transactions send ./cadence/transactions/Test/test_next_block.cdc --signer emulator-account
 
 #### 更新测试网oracle
-flow transactions send ./scripts/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc -f ./scripts/deployment/testnet/flow.unreadable.json --signer testnet-oracle-updater --arg Address:0x63f87ade5fd1e732 --arg UFix64:"3500.0" --network testnet
+flow transactions send ./tools/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc -f ./tools/deployment/testnet/flow.unreadable.json --signer testnet-oracle-updater --arg Address:0x63f87ade5fd1e732 --arg UFix64:"3500.0" --network testnet
 
 
 ## 利率模型曲线绘制:

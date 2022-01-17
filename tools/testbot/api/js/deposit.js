@@ -34,4 +34,4 @@ async function Deposit(poolName, userAddr, amount) {
 
 Deposit(PROCESS.argv[2], PROCESS.argv[3], PROCESS.argv[4])
 
-// node scripts/testbot/api/js/deposit.js FUSD 0xe03daebed8ca0615 2.0
+// node tools/testbot/api/js/deposit.js FUSD 0xe03daebed8ca0615 2.0

@@ -114,9 +114,9 @@ os.system('flow project deploy --update -f flow_multipool.json')
 ############################
 ##### setup
 # setup intereset rate model
-os.system('./scripts/emulator/emulator-setup-InterestRateModel.sh')
+os.system('./tools/emulator/emulator-setup-InterestRateModel.sh')
 # setup oracle
-os.system('./scripts/emulator/emulator-setup-Oracle.sh')
+os.system('./tools/emulator/emulator-setup-Oracle.sh')
 for poolName in setting.PoolNames+setting.FakePoolNames:
     poolAddr = setting.DictPoolNameToAddr[poolName]
     print('----- add oracle price feed ::: ', poolName, poolAddr)
@@ -391,6 +391,6 @@ for poolName in configJson['PoolName']:
 with open("./deploy.config.emulator.json", 'w') as fw:
     json_str = json.dumps(configJson, indent=2)
     fw.write(json_str)
-with open("./scripts/testbot/deploy.config.emulator.json", 'w') as fw:
+with open("./tools/testbot/deploy.config.emulator.json", 'w') as fw:
     json_str = json.dumps(configJson, indent=2)
     fw.write(json_str)

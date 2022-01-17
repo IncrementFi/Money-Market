@@ -291,7 +291,7 @@ with open('./flow.json', 'r') as f:
     for contractName in flow_dict['contracts']:
         if contractName in Keywords:
             FileNameToEncryptName[contractName] = Keywords[contractName]
-with open('./scripts/deployment/testnet/flow.unreadable.json', 'w') as fw:
+with open('./tools/deployment/testnet/flow.unreadable.json', 'w') as fw:
     with open('./flow.json', 'r') as f:
         for line in f:
             line = line.replace('./cadence/contracts/', ConfigTestnet.UnreadablePath+'/contracts/')
@@ -300,8 +300,8 @@ with open('./scripts/deployment/testnet/flow.unreadable.json', 'w') as fw:
             fw.write(line)
 
 # create flow.empty.json
-with open('./scripts/deployment/testnet/flow.empty.json', 'w') as fw:
-    with open('./scripts/deployment/testnet/flow.unreadable.json', 'r') as f:
+with open('./tools/deployment/testnet/flow.empty.json', 'w') as fw:
+    with open('./tools/deployment/testnet/flow.unreadable.json', 'r') as f:
         for line in f:
             line = line.replace('cadence_unreadable', 'cadence_empty')
             fw.write(line)
@@ -310,7 +310,7 @@ with open('./scripts/deployment/testnet/flow.empty.json', 'w') as fw:
 PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
 InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 
-ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./scripts/deployment/testnet/flow.unreadable.json')
+ContractNameToAddress = ConfigTestnet.ExtractContractNameToAddress('./tools/deployment/testnet/flow.unreadable.json')
 PoolNameToAddr = ConfigTestnet.ExtractPoolNames('testnet')
 PoolContractName = ConfigTestnet.GetLendingPoolContractName()
 ComptrollerContractName = ConfigTestnet.GetComptrollerContractName()
@@ -425,7 +425,7 @@ with open(write_path+'/{0}.cdc.addr'.format(PoolContractName), 'w') as fw:
 
 
 # gen deploy.config.testnet.json
-with open('./scripts/deployment/testnet/flow.unreadable.json', 'r') as f:
+with open('./tools/deployment/testnet/flow.unreadable.json', 'r') as f:
     flow_dict = json.load(f)
 configJson = {}
 #
@@ -466,47 +466,47 @@ configJson["Codes"]["Scripts"] = {}
 
 scriptsCodePath = [
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_all_markets.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_all_markets.cdc',
         'name': 'QueryAllMarkets'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_info.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_market_info.cdc',
         'name': 'QueryMarketInfo'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_infos.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_market_infos.cdc',
         'name': 'QueryMarketInfos'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_all_pools.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_all_pools.cdc',
         'name': 'QueryUserAllPools'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_pool_info.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_pool_info.cdc',
         'name': 'QueryUserPoolInfo'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_pool_infos.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_pool_infos.cdc',
         'name': 'QueryUserPoolInfos'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_vault_balance.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_user_position.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_position.cdc',
         'name': 'QueryUserPosition'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_interestrate_model_params.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_market_interestrate_model_params.cdc',
         'name': 'QueryMarketInterestRateModelParams'
     },
     {
-        'path': './scripts/deployment/testnet/cadence_unreadable/scripts/Query/query_market_borrower_list.cdc',
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_market_borrower_list.cdc',
         'name': 'QueryMarketBorrowers'
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/scripts/Oracle/get_feed_latest_result.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/scripts/Oracle/get_feed_latest_result.cdc",
         "name" : "QuerySimpleOracleFeedLatestResult"
     }
 ]
@@ -522,31 +522,31 @@ for item in scriptsCodePath:
 configJson["Codes"]["Transactions"] = {}
 poolCodePath = [
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_deposit_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_deposit_template.cdc",
         "name" : "Deposit"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_redeem_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_redeem_template.cdc",
         "name" : "Redeem"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_redeemAll_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_redeemAll_template.cdc",
         "name" : "RedeemAll"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_borrow_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_borrow_template.cdc",
         "name" : "Borrow"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_repay_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_repay_template.cdc",
         "name" : "Repay"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_repayAll_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_repayAll_template.cdc",
         "name" : "RepayAll"
     },
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/User/user_liquidate_template.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/User/user_liquidate_template.cdc",
         "name" : "Liquidate"
     }
 ]
@@ -573,7 +573,7 @@ for item in poolCodePath:
 #
 simpleOracleTransactionsPath = [
     {
-        "path" : "./scripts/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc",
+        "path" : "./tools/deployment/testnet/cadence_unreadable/transactions/Oracle/updater_upload_feed_data.cdc",
         "name" : "UpdaterUploadFeedData"
     }
 ]

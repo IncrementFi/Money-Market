@@ -6,7 +6,7 @@ import re
 import ConfigTestnet
 
 # Deploy empty contracts without pools
-os.system('flow project deploy -f ./scripts/deployment/testnet/flow.empty.json --update --network testnet')
+os.system('flow project deploy -f ./tools/deployment/testnet/flow.empty.json --update --network testnet')
 # Extracts all pool Deployers
 PoolDeployerNameToAddr = ConfigTestnet.ExtractPoolDeployers('testnet')
 InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
@@ -17,13 +17,13 @@ interestModelContractName = ConfigTestnet.GetInterestContractName()
 for poolDeployer in PoolDeployerNameToAddr:
     print('\n=======> remove ', poolDeployer)
     os.system(
-        'flow accounts remove-contract {0} --signer {1} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+        'flow accounts remove-contract {0} --signer {1} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             poolContractName, poolDeployer
         )
     )
     print('=======> deploy ', poolDeployer)
     os.system(
-        'flow accounts add-contract {0} ./scripts/deployment/testnet/cadence_empty/contracts/{1}.cdc --signer {2} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+        'flow accounts add-contract {0} ./tools/deployment/testnet/cadence_empty/contracts/{1}.cdc --signer {2} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             poolContractName, poolContractName, poolDeployer
         )
     )
@@ -32,20 +32,20 @@ for poolDeployer in PoolDeployerNameToAddr:
 for interestDeployer in InterestDeployerNameToAddr:
     print('\n=======> remove ', interestDeployer)
     os.system(
-        'flow accounts remove-contract {0} --signer {1} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+        'flow accounts remove-contract {0} --signer {1} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             interestModelContractName, interestDeployer
         )
     )
     print('=======> deploy ', interestDeployer)
     os.system(
-        'flow accounts add-contract {0} ./scripts/deployment/testnet/cadence_empty/contracts/{1}.cdc --signer {2} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+        'flow accounts add-contract {0} ./tools/deployment/testnet/cadence_empty/contracts/{1}.cdc --signer {2} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             interestModelContractName, interestModelContractName, interestDeployer
         )
     )
 
 
 # Cache the FlowScan
-with open('./scripts/deployment/testnet/flow.empty.json', 'r') as f:
+with open('./tools/deployment/testnet/flow.empty.json', 'r') as f:
     flow_empty_dict = json.load(f)
 
 for deployer in flow_empty_dict['deployments']['testnet']:

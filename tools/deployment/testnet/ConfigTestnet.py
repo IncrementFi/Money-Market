@@ -5,8 +5,8 @@ global EmptyPath
 global UnreadablePath
 
 
-EmptyPath = './scripts/deployment/testnet/cadence_empty'
-UnreadablePath = './scripts/deployment/testnet/cadence_unreadable'
+EmptyPath = './tools/deployment/testnet/cadence_empty'
+UnreadablePath = './tools/deployment/testnet/cadence_unreadable'
 
 P = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 C = ['f','o','b','c','d','e','p','y','z','q','r','s','g','h','i','j','k','l','m','n','t','u','a','v','w','x']

@@ -19,7 +19,7 @@ InterestDeployerNameToAddr = ConfigTestnet.ExtractInterestDeployers('testnet')
 poolContractName = ConfigTestnet.GetLendingPoolContractName()
 interestContractName = ConfigTestnet.GetInterestContractName()
 
-with open('./scripts/deployment/testnet/flow.empty.json', 'r') as f:
+with open('./tools/deployment/testnet/flow.empty.json', 'r') as f:
     flow_empty_dict = json.load(f)
 
 # Remove contracts in flow.json
@@ -30,7 +30,7 @@ for deployer in flow_empty_dict['deployments']['testnet']:
         contractAddr = flow_empty_dict['accounts'][deployer]['address'][2:]
         print('\n=======>', 'undeploy ', contractName)
         os.system(
-            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             contractName, deployer
         )
     )
@@ -40,7 +40,7 @@ if undeployContractNameSingly == None:
     for poolDeployer in PoolDeployerNameToAddr:
         print('\n=======>', 'undeploy ', poolDeployer)
         os.system(
-            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             poolContractName, poolDeployer
             )
         )
@@ -48,7 +48,7 @@ if undeployContractNameSingly == None:
     for interestDeployer in InterestDeployerNameToAddr:
         print('\n=======>', 'undeploy ', interestDeployer)
         os.system(
-            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./scripts/deployment/testnet/flow.empty.json'.format(
+            'flow accounts remove-contract {0} --signer {1} --network testnet -f ./tools/deployment/testnet/flow.empty.json'.format(
             interestContractName, interestDeployer
             )
         )

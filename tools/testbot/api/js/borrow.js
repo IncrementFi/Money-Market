@@ -6,7 +6,7 @@ const UTILS = require('./utils')
 const ConfigJson = require('../../'+UTILS.ConfigJsonFile)
 
 
-async function Redeem(poolName, userAddr, amount) {
+async function Borrow(poolName, userAddr, amount) {
     const keyConfig = {
         account: userAddr,
         keyIndex: 0,
@@ -16,7 +16,7 @@ async function Redeem(poolName, userAddr, amount) {
     const myAuth = UTILS.authFunc(keyConfig);
     FCL.config()
 
-    var CODE = ConfigJson.Codes.Transactions.Redeem[poolName]
+    var CODE = ConfigJson.Codes.Transactions.Borrow[poolName]
     const response = await FCL.send([
         FCL.transaction`
         ${CODE}
@@ -32,6 +32,6 @@ async function Redeem(poolName, userAddr, amount) {
     return await FCL.tx(response).onceSealed();
 }
 
-Redeem(PROCESS.argv[2], PROCESS.argv[3], PROCESS.argv[4])
+Borrow(PROCESS.argv[2], PROCESS.argv[3], PROCESS.argv[4])
 
-// node scripts/testbot/api/js/redeem.js FUSD 0xe03daebed8ca0615 0.0001
+// node tools/testbot/api/js/borrow.js FUSD 0xe03daebed8ca0615 0.0001

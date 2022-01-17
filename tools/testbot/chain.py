@@ -14,7 +14,7 @@ global BlockHeight
 
 host = '127.0.0.1'
 port = '3569'
-js_path = 'scripts/testbot/api/js/'
+js_path = 'tools/testbot/api/js/'
 
 UserList = []
 PoolAddrs = []

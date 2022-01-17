@@ -23,7 +23,7 @@ for poolDeployer in PoolDeployerNameToAddr:
           '--arg Bool:{0} '.format(poolConfig['isOpen']) + \
           '--arg Bool:{0} '.format(poolConfig['isMining']) + \
           '--signer {0} '.format(ComptrollerDeployer) + \
-          '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
+          '-f ./tools/deployment/testnet/flow.unreadable.json ' + \
           '--network testnet'
     print(cmd)
     os.system(cmd)
@@ -39,7 +39,7 @@ for interestDeployer in InterestDeployerNameToAddr:
           '--arg UInt256:"{0}" '.format(interestConfig['scaledFullUtilInterestRatePerYear']) + \
           '--arg UInt256:"{0}" '.format(interestConfig['scaledCriticalUtilRate']) + \
           '--signer {0} '.format(interestDeployer) + \
-          '-f ./scripts/deployment/testnet/flow.unreadable.json ' + \
+          '-f ./tools/deployment/testnet/flow.unreadable.json ' + \
           '--network testnet'
     print(cmd)
     os.system(cmd)
