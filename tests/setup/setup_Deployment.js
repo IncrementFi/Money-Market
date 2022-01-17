@@ -31,7 +31,7 @@ export const deployLendingPoolContract = async () => {
     await deployContractByName({ to: interfacesAddr, name: "LendingInterfaces" })
     await deployContractByName({ to: configAddr, name: "LendingConfig" })
     await deployContractByName({ to: simpleOracleAddr, name: "SimpleOracle", addressMap })
-    await deployContractByName({ to: comptrollerAddr, name: "ComptrollerV1", addressMap })
+    await deployContractByName({ to: comptrollerAddr, name: "LendingComptroller", addressMap })
     await deployContractByName({ to: interestRateModel, name: "TwoSegmentsInterestRateModel", addressMap });
 
     return deployContractByName({ to: lendingPoolAddr, name: "LendingPool", addressMap })

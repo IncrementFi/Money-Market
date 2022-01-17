@@ -1,7 +1,7 @@
 import FlowToken from "../../contracts/tokens/FlowToken.cdc"
 import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
-import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
+import LendingComptroller from "../../contracts/LendingComptroller.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 
@@ -24,7 +24,7 @@ transaction() {
 
         // Get protocol-issued user certificate
         if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
-            let userCertificate <- ComptrollerV1.IssueUserCertificate()
+            let userCertificate <- LendingComptroller.IssueUserCertificate()
             signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
             signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
         }

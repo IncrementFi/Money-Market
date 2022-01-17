@@ -36,7 +36,7 @@ async def QueryBlockInfo():
 #
 async def QueryAllMarkets():
     code = ConfigJson['Codes']['Scripts']['QueryAllMarkets']
-    auditAddr = ConfigJson["ContractAddress"]["ComptrollerV1"]
+    auditAddr = ConfigJson["ContractAddress"]["LendingComptroller"]
     script = Script(
         code = code,
         arguments=[cadence.Address.from_hex(auditAddr)]
@@ -54,7 +54,7 @@ async def QueryAllMarkets():
 async def QueryMarketInfo(poorAddr):
     global PoolInfos
     code = ConfigJson['Codes']['Scripts']['QueryMarketInfo']
-    auditAddr = ConfigJson["ContractAddress"]["ComptrollerV1"]
+    auditAddr = ConfigJson["ContractAddress"]["LendingComptroller"]
     #poorAddr = '0x192440c99cb17282'
 
     script = Script(
@@ -77,7 +77,7 @@ async def QueryMarketInfo(poorAddr):
 async def QueryUserPoolInfo(userAddr, poorAddr):
     global CurUserInfo
     code = ConfigJson['Codes']['Scripts']['QueryUserPoolInfo']
-    auditAddr = ConfigJson["ContractAddress"]["ComptrollerV1"]
+    auditAddr = ConfigJson["ContractAddress"]["LendingComptroller"]
 
     script = Script(
         code = code,
