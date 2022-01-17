@@ -80,6 +80,9 @@ for name in setting.FakePoolNames:
         os.makedirs(path)
     with open(path+'/prepare_{0}_vault_for_pool.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
+        lowerName = name[:1].lower() + name[1:]
+        if name == 'FUSD': lowerName = lowerName.lower()
+        fusd_vault = fusd_vault.replace('flowToken', lowerName)
         fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
         fusd_vault = fusd_vault.replace('FlowToken', name)
         fusd_vault = fusd_vault.replace('../contracts/tokens/'+name, '../contracts/autogen/'+name)
