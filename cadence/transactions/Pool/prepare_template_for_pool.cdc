@@ -1,5 +1,5 @@
-import FlowToken from "../../contracts/FlowToken.cdc"
-import FungibleToken from "../../contracts/FungibleToken.cdc"
+import FlowToken from "../../contracts/tokens/FlowToken.cdc"
+import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
 transaction() {
     prepare(poolAccount: AuthAccount) {

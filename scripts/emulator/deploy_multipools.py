@@ -88,18 +88,21 @@ with open("./flow_multipool_env.json", 'w') as fw:
 
 
 # deposit base flow token on account
+print('-------------', 'deposit flow to new accounts')
 for deployName in flow_dict['deployments']['emulator']:
     addr = setting.DictDeployNameToAddr[deployName]
     os.system('flow transactions send ./cadence/transactions/Test/emulator_flow_transfer.cdc {0} "100.0" --signer emulator-account'.format(addr))
 
 
 # deploy env contracts: tokens
+print('-------------', 'deploy env contracts')
 os.system('flow project deploy --update -f flow_multipool_env.json')
 
 print('------------- ', 'init pool\'s token vault')
 # call transactions to init token vault.
 for poolName in setting.PoolNames+setting.FakePoolNames:
     cmd = 'flow transactions send ./cadence/transactions/Pool/autogen/prepare_{0}_vault_for_pool.cdc -f flow_multipool.json --signer emulator-pool-tmpdeployer-{1}'.format(poolName, poolName)
+    print(cmd)
     os.system(cmd)
 
 # deploy contracts
