@@ -1,7 +1,7 @@
 import FungibleToken from "./FungibleToken.cdc"
 import LendingInterfaces from "./LendingInterfaces.cdc"
-import Config from "./Config.cdc"
-import Error from "./Error.cdc"
+import LendingConfig from "./LendingConfig.cdc"
+import LendingError from "./LendingError.cdc"
 
 pub contract ComptrollerV1 {
     // The storage path for the Admin resource
@@ -57,24 +57,24 @@ pub contract ComptrollerV1 {
         }
         pub fun setLiquidationPenalty(newLiquidationPenalty: UFix64) {
             pre {
-                newLiquidationPenalty <= 1.0: Error.ErrorEncode(msg: "newLiquidationPenalty out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
+                newLiquidationPenalty <= 1.0: LendingError.ErrorEncode(msg: "newLiquidationPenalty out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
             }
-            let scaledNewLiquidationPenalty = Config.UFix64ToScaledUInt256(newLiquidationPenalty)
+            let scaledNewLiquidationPenalty = LendingConfig.UFix64ToScaledUInt256(newLiquidationPenalty)
             if (self.scaledLiquidationPenalty != scaledNewLiquidationPenalty) {
                 self.scaledLiquidationPenalty = scaledNewLiquidationPenalty
             }
         }
         pub fun setCollateralFactor(newCollateralFactor: UFix64) {
             pre {
-                newCollateralFactor <= 1.0: Error.ErrorEncode(msg: "newCollateralFactor out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
+                newCollateralFactor <= 1.0: LendingError.ErrorEncode(msg: "newCollateralFactor out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
             }
-            let scaledNewCollateralFactor = Config.UFix64ToScaledUInt256(newCollateralFactor)
+            let scaledNewCollateralFactor = LendingConfig.UFix64ToScaledUInt256(newCollateralFactor)
             if (self.scaledCollateralFactor != scaledNewCollateralFactor) {
                 self.scaledCollateralFactor = scaledNewCollateralFactor
             }
         }
         pub fun setBorrowCap(newBorrowCap: UFix64) {
-            let scaledNewBorrowCap = Config.UFix64ToScaledUInt256(newBorrowCap)
+            let scaledNewBorrowCap = LendingConfig.UFix64ToScaledUInt256(newBorrowCap)
             if (self.scaledBorrowCap != scaledNewBorrowCap) {
                 self.scaledBorrowCap = scaledNewBorrowCap
             }
@@ -88,14 +88,14 @@ pub contract ComptrollerV1 {
             borrowCap: UFix64
         ) {
             pre {
-                collateralFactor <= 1.0: Error.ErrorEncode(msg: "collateralFactor out of range 1.0", err: Error.ErrorCode.INVALID_PARAMETERS)
+                collateralFactor <= 1.0: LendingError.ErrorEncode(msg: "collateralFactor out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
             }
             self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
             self.isMining = isMining
-            self.scaledLiquidationPenalty = Config.UFix64ToScaledUInt256(liquidationPenalty)
-            self.scaledCollateralFactor = Config.UFix64ToScaledUInt256(collateralFactor)
-            self.scaledBorrowCap = Config.UFix64ToScaledUInt256(borrowCap)
+            self.scaledLiquidationPenalty = LendingConfig.UFix64ToScaledUInt256(liquidationPenalty)
+            self.scaledCollateralFactor = LendingConfig.UFix64ToScaledUInt256(collateralFactor)
+            self.scaledBorrowCap = LendingConfig.UFix64ToScaledUInt256(borrowCap)
         }
     }
 
@@ -162,7 +162,7 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: 0
             )
             if (scaledLiquidity[1] > scaledLiquidity[0]) {
-                return Error.ErrorEncode(msg: "redeem too much", err: Error.ErrorCode.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER)
+                return LendingError.ErrorEncode(msg: "redeem too much", err: LendingError.ErrorCode.REDEEM_NOT_ALLOWED_POSITION_UNDER_WATER)
             }
 
             // Remove pool out of user markets list if necessary
@@ -194,7 +194,7 @@ pub contract ComptrollerV1 {
             if (scaledBorrowCap != 0) {
                 let scaledTotalBorrowsNew = self.markets[poolAddress]!.poolPublicCap.borrow()!.getPoolTotalBorrowsScaled() + borrowUnderlyingAmountScaled
                 if (scaledTotalBorrowsNew > scaledBorrowCap) {
-                    return Error.ErrorEncode(msg: "borrow too much, exceed market borrowCap", err: Error.ErrorCode.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP)
+                    return LendingError.ErrorEncode(msg: "borrow too much, exceed market borrowCap", err: LendingError.ErrorCode.BORROW_NOT_ALLOWED_EXCEED_BORROW_CAP)
                 }
             }
 
@@ -216,7 +216,7 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: borrowUnderlyingAmountScaled
             )
             if (scaledLiquidity[1] > scaledLiquidity[0]) {
-                return Error.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: Error.ErrorCode.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
+                return LendingError.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: LendingError.ErrorCode.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
             }
             
             ///// 4. TODO: Keep the flywheel moving
@@ -259,7 +259,7 @@ pub contract ComptrollerV1 {
             repayUnderlyingAmountScaled: UInt256
         ): String? {
             pre {
-                self.markets[poolCollateralized]?.isOpen == true: Error.ErrorEncode(msg: "collateral market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
+                self.markets[poolCollateralized]?.isOpen == true: LendingError.ErrorEncode(msg: "collateral market not open", err: LendingError.ErrorCode.MARKET_NOT_OPEN)
             }
 
             let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolBorrowed)
@@ -278,13 +278,13 @@ pub contract ComptrollerV1 {
                 scaledAmountUnderlyingToBorrow: 0
             )
             if (scaledLiquidity[0] >= scaledLiquidity[1]) {
-                return Error.ErrorEncode(msg: "borrower account fully collaterized", err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER)
+                return LendingError.ErrorEncode(msg: "borrower account fully collaterized", err: LendingError.ErrorCode.LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER)
             }
             
             let scaledBorrowBalance = self.markets[poolBorrowed]!.poolPublicCap.borrow()!.getAccountBorrowBalanceScaled(account: borrower)
             // liquidator cannot repay more than closeFactor * borrow
-            if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / Config.scaleFactor) {
-                return Error.ErrorEncode(msg: "liquidator repaid more than closeFactor x accountBorrow", err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY)
+            if (repayUnderlyingAmountScaled > scaledBorrowBalance * self.scaledCloseFactor / LendingConfig.scaleFactor) {
+                return LendingError.ErrorEncode(msg: "liquidator repaid more than closeFactor x accountBorrow", err: LendingError.ErrorCode.LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY)
             }
 
             return nil
@@ -299,7 +299,7 @@ pub contract ComptrollerV1 {
             seizeCollateralPoolLpTokenAmountScaled: UInt256
         ): String? {
             pre {
-                self.markets[collateralPool]?.isOpen == true: Error.ErrorEncode(msg: "Collateral market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
+                self.markets[collateralPool]?.isOpen == true: LendingError.ErrorEncode(msg: "Collateral market not open", err: LendingError.ErrorCode.MARKET_NOT_OPEN)
             }
 
             let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: borrowPool)
@@ -337,12 +337,12 @@ pub contract ComptrollerV1 {
             let borrowPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: borrowPool)
             assert(
                 borrowPoolUnderlyingPriceUSD != 0.0,
-                message: Error.ErrorEncode(msg: "Price feed not available for market ".concat(borrowPool.toString()), err: Error.ErrorCode.UNKNOWN_MARKET)
+                message: LendingError.ErrorEncode(msg: "Price feed not available for market ".concat(borrowPool.toString()), err: LendingError.ErrorCode.UNKNOWN_MARKET)
             )
             let collateralPoolUnderlyingPriceUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: collateralPool)
             assert(
                 collateralPoolUnderlyingPriceUSD != 0.0,
-                message: Error.ErrorEncode(msg: "Price feed not available for market ".concat(collateralPool.toString()), err: Error.ErrorCode.UNKNOWN_MARKET)
+                message: LendingError.ErrorEncode(msg: "Price feed not available for market ".concat(collateralPool.toString()), err: LendingError.ErrorCode.UNKNOWN_MARKET)
             )
             // 1. Accrue interests first to use latest collateralPool states to do calculation
             self.markets[collateralPool]!.poolPublicCap.borrow()!.accrueInterest()
@@ -350,9 +350,9 @@ pub contract ComptrollerV1 {
             // 2. Calculate collateralPool lpTokenSeizedAmount
             let scaledCollateralUnderlyingToLpTokenRate = self.markets[collateralPool]!.poolPublicCap.borrow()!.getUnderlyingToLpTokenRateScaled()
             let scaledCollateralPoolLiquidationIncentive = self.markets[collateralPool]!.scaledLiquidationPenalty
-            let scaledBorrowPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
-            let scaledCollateralPoolUnderlyingPriceUSD = Config.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
-            let scaleFactor = Config.scaleFactor
+            let scaledBorrowPoolUnderlyingPriceUSD = LendingConfig.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
+            let scaledCollateralPoolUnderlyingPriceUSD = LendingConfig.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
+            let scaleFactor = LendingConfig.scaleFactor
             // collatetalPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD x collateralPoolUnderlyingToLpTokenRate
             // seizedCollateralPoolLpTokenAmount = repaidBorrowWithIncentiveInUSD / collatetalPoolLpTokenPriceUSD
             let scaledActualRepaidBorrowWithIncentiveInUSD =
@@ -365,9 +365,9 @@ pub contract ComptrollerV1 {
             let scaledLpTokenAmount = self.markets[collateralPool]!.poolPublicCap.borrow()!.getAccountLpTokenBalanceScaled(account: borrower)
             assert(
                 scaledCollateralLpTokenSeizedAmount <= scaledLpTokenAmount,
-                message: Error.ErrorEncode(
+                message: LendingError.ErrorEncode(
                     msg: "Liquidation seized too much, more than borrower collateralPool supply balance".concat((scaledCollateralLpTokenSeizedAmount).toString().concat(" <= ").concat(scaledLpTokenAmount.toString())),
-                    err: Error.ErrorCode.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
+                    err: LendingError.ErrorCode.LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
                 )
             )
             return scaledCollateralLpTokenSeizedAmount
@@ -383,7 +383,7 @@ pub contract ComptrollerV1 {
         ): String? {
             if (self.markets[callerAddress]?.isOpen != true) {
                 destroy callerCertificate
-                return Error.ErrorEncode(msg: "Market not open", err: Error.ErrorCode.MARKET_NOT_OPEN)
+                return LendingError.ErrorEncode(msg: "Market not open", err: LendingError.ErrorCode.MARKET_NOT_OPEN)
             }
             let callerPoolCertificateType = self.markets[callerAddress]!.poolPublicCap.borrow()!.getPoolCertificateType()
             if (callerCertificate.isInstance(callerPoolCertificateType)) {
@@ -392,7 +392,7 @@ pub contract ComptrollerV1 {
             } else {
                 let errMsg = callerCertificate.getType().identifier.concat("!=").concat(callerPoolCertificateType.identifier)
                 destroy callerCertificate
-                return Error.ErrorEncode(msg: "not called from valid market contract".concat(errMsg), err: Error.ErrorCode.INVALID_POOL_CERTIFICATE)
+                return LendingError.ErrorEncode(msg: "not called from valid market contract".concat(errMsg), err: LendingError.ErrorCode.INVALID_POOL_CERTIFICATE)
             }
         }
 
@@ -447,8 +447,8 @@ pub contract ComptrollerV1 {
                 let scaledLpTokenAmount = scaledAccountSnapshot[1]
                 let scaledBorrowBalance = scaledAccountSnapshot[2]
                 let underlyingPriceInUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress)
-                let scaledUnderlyingPriceInUSD = Config.UFix64ToScaledUInt256(underlyingPriceInUSD)
-                let scaleFactor = Config.scaleFactor
+                let scaledUnderlyingPriceInUSD = LendingConfig.UFix64ToScaledUInt256(underlyingPriceInUSD)
+                let scaleFactor = LendingConfig.scaleFactor
                 if (scaledLpTokenAmount > 0) {
                     sumScaledCollateralWithEffectsNormalized = sumScaledCollateralWithEffectsNormalized +
                         scaledCollateralFactor * scaledUnderlyingPriceInUSD / scaleFactor *
@@ -482,24 +482,24 @@ pub contract ComptrollerV1 {
         access(contract) fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             pre {
                 self.markets.containsKey(poolAddress) == false:
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Market has already been added",
-                        err: Error.ErrorCode.ADD_MARKET_DUPLICATED
+                        err: LendingError.ErrorCode.ADD_MARKET_DUPLICATED
                     )
                     
                 self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress) != 0.0:
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Price feed for market is not available yet",
-                        err: Error.ErrorCode.ADD_MARKET_NO_ORACLE_PRICE
+                        err: LendingError.ErrorCode.ADD_MARKET_NO_ORACLE_PRICE
                     )
                     
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
-            let poolPublicCap = getAccount(poolAddress).getCapability<&{LendingInterfaces.PoolPublic}>(Config.PoolPublicPublicPath)
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message:
-                Error.ErrorEncode(
+                LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic resource",
-                    err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                    err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
             )
 
@@ -517,9 +517,9 @@ pub contract ComptrollerV1 {
         access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool):
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Market has not been added yet",
-                        err: Error.ErrorCode.UNKNOWN_MARKET
+                        err: LendingError.ErrorCode.UNKNOWN_MARKET
                     )
             }
             let oldOpen = self.markets[pool]?.isOpen
@@ -530,15 +530,15 @@ pub contract ComptrollerV1 {
             if (isMining != nil) {
                 self.markets[pool]!.setMiningStatus(isMining: isMining!)
             }
-            let oldLiquidationPenalty = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
+            let oldLiquidationPenalty = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
             if (collateralFactor != nil) {
                 self.markets[pool]!.setCollateralFactor(newCollateralFactor: collateralFactor!)
             }
-            let oldCollateralFactor = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            let oldCollateralFactor = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
             if (liquidationPenalty != nil) {
                 self.markets[pool]!.setLiquidationPenalty(newLiquidationPenalty: liquidationPenalty!)
             }
-            let oldBorrowCap = Config.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
+            let oldBorrowCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
             if (borrowCap != nil) {
                 self.markets[pool]!.setBorrowCap(newBorrowCap: borrowCap!)
             }
@@ -554,35 +554,35 @@ pub contract ComptrollerV1 {
 
         access(contract) fun configOracle(oracleAddress: Address) {
             let oldOracleAddress = (self.oracleCap != nil)? self.oracleCap!.borrow()!.owner?.address : nil
-            self.oracleCap = getAccount(oracleAddress).getCapability<&{LendingInterfaces.OraclePublic}>(Config.OraclePublicPath)
+            self.oracleCap = getAccount(oracleAddress).getCapability<&{LendingInterfaces.OraclePublic}>(LendingConfig.OraclePublicPath)
             emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
         }
 
         access(contract) fun setCloseFactor(newCloseFactor: UFix64) {
             pre {
                 newCloseFactor <= 1.0:
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "newCloseFactor out of range 1.0",
-                        err: Error.ErrorCode.INVALID_PARAMETERS
+                        err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let oldCloseFactor = Config.ScaledUInt256ToUFix64(self.scaledCloseFactor)
-            self.scaledCloseFactor = Config.UFix64ToScaledUInt256(newCloseFactor)
+            let oldCloseFactor = LendingConfig.ScaledUInt256ToUFix64(self.scaledCloseFactor)
+            self.scaledCloseFactor = LendingConfig.UFix64ToScaledUInt256(newCloseFactor)
             emit NewCloseFactor(oldCloseFactor, newCloseFactor)
         }
 
         pub fun getPoolPublicRef(poolAddr: Address): &{LendingInterfaces.PoolPublic} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Error.ErrorCode.UNKNOWN_MARKET
+                        err: LendingError.ErrorCode.UNKNOWN_MARKET
                     )
             }
             return self.markets[poolAddr]!.poolPublicCap.borrow() ?? panic(
-                Error.ErrorEncode(
+                LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic",
-                    err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                    err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
                 )
             )
         }
@@ -594,9 +594,9 @@ pub contract ComptrollerV1 {
         pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Error.ErrorCode.UNKNOWN_MARKET
+                        err: LendingError.ErrorCode.UNKNOWN_MARKET
                     )
             }
             let market = self.markets[poolAddr]!
@@ -629,7 +629,7 @@ pub contract ComptrollerV1 {
                 "marketLiquidationPenalty": market.scaledLiquidationPenalty.toString(),
                 "marketCollateralFactor": market.scaledCollateralFactor.toString(),
                 "marketBorrowCap": market.scaledBorrowCap.toString(),
-                "marketOraclePriceUsd": Config.UFix64ToScaledUInt256(oraclePrice).toString(),
+                "marketOraclePriceUsd": LendingConfig.UFix64ToScaledUInt256(oraclePrice).toString(),
                 "marketSupplierCount": poolRef.getPoolSupplierCount().toString(),
                 "marketBorrowerCount": poolRef.getPoolBorrowerCount().toString(),
                 "marketReserveFactor": poolRef.getPoolReserveFactorScaled().toString()
@@ -659,9 +659,9 @@ pub contract ComptrollerV1 {
         pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct} {
             pre {
                 self.markets.containsKey(poolAddr):
-                    Error.ErrorEncode(
+                    LendingError.ErrorEncode(
                         msg: "Invalid market address",
-                        err: Error.ErrorCode.UNKNOWN_MARKET
+                        err: LendingError.ErrorCode.UNKNOWN_MARKET
                     )
             }
             if (self.accountMarketsIn.containsKey(userAddr) == false || self.accountMarketsIn[userAddr]!.contains(poolAddr) == false) {
@@ -674,9 +674,9 @@ pub contract ComptrollerV1 {
             let scaledAccountRealtime = poolRef.getAccountRealtimeScaled(account: userAddr)
 
             return {
-                //"userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / Config.scaleFactor).toString(),
-                //"userSupplyRealtimeScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
-                "userSupplyScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / Config.scaleFactor).toString(),
+                //"userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / LendingConfig.scaleFactor).toString(),
+                //"userSupplyRealtimeScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / LendingConfig.scaleFactor).toString(),
+                "userSupplyScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / LendingConfig.scaleFactor).toString(),
 
                 //"userBorrowScaled": scaledAccountSnapshot[2].toString(),
                 //"userBorrowRealtimeScaled": scaledAccountRealtime[2].toString(),

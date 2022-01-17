@@ -2,7 +2,7 @@ import FlowToken from "../../contracts/FlowToken.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
-import Config from "../../contracts/Config.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
 
 transaction(amount: UFix64) {
     let flowTokenVault: &FlowToken.Vault
@@ -29,7 +29,7 @@ transaction(amount: UFix64) {
             // accrueInterest() to update with latest pool states used to calculate borrowBalance
             LendingPool.accrueInterest()
             let totalRepayScaled = LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: self.borrowerAddress)
-            amountRepay = Config.ScaledUInt256ToUFix64(totalRepayScaled) + 1.0/Config.ufixScale
+            amountRepay = LendingConfig.ScaledUInt256ToUFix64(totalRepayScaled) + 1.0/LendingConfig.ufixScale
         }
         log("Test repay flowToken ".concat(amountRepay.toString()))
 

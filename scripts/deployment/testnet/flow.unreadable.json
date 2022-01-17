@@ -22,8 +22,8 @@
 
     "SimpleOracle":                   "./scripts/deployment/testnet/cadence_unreadable/contracts/SimpleOracle.cdc",
     "LendingInterfaces":                     "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingInterfaces.cdc",
-    "Config":                         "./scripts/deployment/testnet/cadence_unreadable/contracts/Config.cdc",
-    "Error":                          "./scripts/deployment/testnet/cadence_unreadable/contracts/Error.cdc",
+    "LendingConfig":                         "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingConfig.cdc",
+    "LendingError":                          "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingError.cdc",
     "TwoSegmentsInterestRateModel":   "./scripts/deployment/testnet/cadence_unreadable/contracts/TwoSegmentsInterestRateModel.cdc",
     "ComptrollerV1":                  "./scripts/deployment/testnet/cadence_unreadable/contracts/ComptrollerV1.cdc",
     "LendingPool":                    "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingPool.cdc"
@@ -133,9 +133,9 @@
     "emulator": {
       "emulator-account": [
         "FUSD",
-        "Error",
+        "LendingError",
         "LendingInterfaces",
-        "Config",
+        "LendingConfig",
         "TwoSegmentsInterestRateModel",
         "ComptrollerV1"
       ],
@@ -148,8 +148,8 @@
     },
     "testnet": {
       "testnet-interface-deployer": [
-        "Config",
-        "Error",
+        "LendingConfig",
+        "LendingError",
         "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [

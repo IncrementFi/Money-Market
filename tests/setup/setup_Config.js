@@ -2,7 +2,7 @@ import { deployContractByName, executeScript, mintFlow } from "flow-js-testing";
 import { getConfigDeployerAddress } from "./setup_common";
 
 /**
- * Deploy contract to the Config deployer account.
+ * Deploy contract to the LendingConfig deployer account.
  * @throws Will throw an error if transaction is reverted.
  * @returns {Promise<*>}
  */ 
@@ -13,7 +13,7 @@ export const deployConfigContract = async () => {
 
     return deployContractByName({
         to: ConfigDeployer,
-        name: "Config"
+        name: "LendingConfig"
     });
 }
 
@@ -25,10 +25,10 @@ export const deployConfigContract = async () => {
 export const UFix64ToScaledUInt256 = async (f) => {
     const ConfigDeployerAddress = await getConfigDeployerAddress();
     const code = `
-        import Config from ${ConfigDeployerAddress}
+        import LendingConfig from ${ConfigDeployerAddress}
 
         pub fun main(_ f: UFix64): UInt256 {
-            return Config.UFix64ToScaledUInt256(f)
+            return LendingConfig.UFix64ToScaledUInt256(f)
         }
     `;
     const args = [f];
@@ -43,10 +43,10 @@ export const UFix64ToScaledUInt256 = async (f) => {
 export const ScaledUInt256ToUFix64 = async (s) => {
     const ConfigDeployerAddress = await getConfigDeployerAddress();
     const code = `
-        import Config from ${ConfigDeployerAddress}
+        import LendingConfig from ${ConfigDeployerAddress}
 
         pub fun main(_ s: UInt256): UFix64 {
-            return Config.ScaledUInt256ToUFix64(s)
+            return LendingConfig.ScaledUInt256ToUFix64(s)
         }
     `;
     const args = [s];
@@ -57,12 +57,12 @@ export const ScaledUInt256ToUFix64 = async (s) => {
 export const UFix64MaxBackAndForth = async () => {
     const ConfigDeployerAddress = await getConfigDeployerAddress();
     const code = `
-        import Config from ${ConfigDeployerAddress}
+        import LendingConfig from ${ConfigDeployerAddress}
 
         pub fun main(): Bool {
             let fmax = UFix64.max
-            let scaled_fmax = Config.UFix64ToScaledUInt256(fmax)
-            let fmax_back = Config.ScaledUInt256ToUFix64(scaled_fmax)
+            let scaled_fmax = LendingConfig.UFix64ToScaledUInt256(fmax)
+            let fmax_back = LendingConfig.ScaledUInt256ToUFix64(scaled_fmax)
             return fmax == fmax_back
         }
     `;

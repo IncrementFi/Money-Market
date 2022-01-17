@@ -26,10 +26,10 @@ export const deployLendingPoolContract = async () => {
     // Mint some flow to deployer account for extra storage capacity.
     await mintFlow(lendingPoolAddr, "100.0")
     // Deploy indepencies & pool contracts.
-    const addressMap = { LendingInterfaces: interfacesAddr, Config: configAddr, Error: errorAddr }
-    await deployContractByName({ to: errorAddr, name: "Error" })
+    const addressMap = { LendingInterfaces: interfacesAddr, LendingConfig: configAddr, LendingError: errorAddr }
+    await deployContractByName({ to: errorAddr, name: "LendingError" })
     await deployContractByName({ to: interfacesAddr, name: "LendingInterfaces" })
-    await deployContractByName({ to: configAddr, name: "Config" })
+    await deployContractByName({ to: configAddr, name: "LendingConfig" })
     await deployContractByName({ to: simpleOracleAddr, name: "SimpleOracle", addressMap })
     await deployContractByName({ to: comptrollerAddr, name: "ComptrollerV1", addressMap })
     await deployContractByName({ to: interestRateModel, name: "TwoSegmentsInterestRateModel", addressMap });
