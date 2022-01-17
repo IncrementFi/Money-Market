@@ -1,5 +1,5 @@
 import FungibleToken from "./FungibleToken.cdc"
-import Interfaces from "./Interfaces.cdc"
+import LendingInterfaces from "./LendingInterfaces.cdc"
 import Config from "./Config.cdc"
 import Error from "./Error.cdc"
 
@@ -28,7 +28,7 @@ pub contract ComptrollerV1 {
 
     pub struct Market {
         // Contains functions to query public market data
-        pub let poolPublicCap: Capability<&{Interfaces.PoolPublic}>
+        pub let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
         pub var isOpen: Bool
         // Whether or not liquidity mining is enabled for this market
         pub var isMining: Bool
@@ -80,7 +80,7 @@ pub contract ComptrollerV1 {
             }
         }
         init(
-            poolPublicCap: Capability<&{Interfaces.PoolPublic}>,
+            poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>,
             isOpen: Bool,
             isMining: Bool,
             liquidationPenalty: UFix64,
@@ -101,14 +101,14 @@ pub contract ComptrollerV1 {
 
     // This certificate identifies account address and needs to be stored in storage path locally.
     // User should keep it safe and never give this resource's capability to others
-    pub resource UserCertificate: Interfaces.IdentityCertificate {}
+    pub resource UserCertificate: LendingInterfaces.IdentityCertificate {}
 
     pub fun IssueUserCertificate(): @UserCertificate {
         return <- create UserCertificate()
     }
 
-    pub resource Comptroller: Interfaces.ComptrollerPublic {
-        access(self) var oracleCap: Capability<&{Interfaces.OraclePublic}>?
+    pub resource Comptroller: LendingInterfaces.ComptrollerPublic {
+        access(self) var oracleCap: Capability<&{LendingInterfaces.OraclePublic}>?
         // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0] x scaleFactor
         access(self) var scaledCloseFactor: UInt256
         // { poolAddress => Market States }
@@ -117,7 +117,7 @@ pub contract ComptrollerV1 {
         access(self) let accountMarketsIn: {Address: [Address]}
 
         pub fun supplyAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
@@ -141,7 +141,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun redeemAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
@@ -179,7 +179,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun borrowAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
@@ -227,7 +227,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun repayAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
@@ -252,7 +252,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun liquidateAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolBorrowed: Address,
             poolCollateralized: Address,
             borrower: Address,
@@ -291,7 +291,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun seizeAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             borrowPool: Address,
             collateralPool: Address,
             liquidator: Address,
@@ -378,7 +378,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun callerAllowed(
-            callerCertificate: @{Interfaces.IdentityCertificate},
+            callerCertificate: @{LendingInterfaces.IdentityCertificate},
             callerAddress: Address
         ): String? {
             if (self.markets[callerAddress]?.isOpen != true) {
@@ -495,7 +495,7 @@ pub contract ComptrollerV1 {
                     
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
-            let poolPublicCap = getAccount(poolAddress).getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath)
+            let poolPublicCap = getAccount(poolAddress).getCapability<&{LendingInterfaces.PoolPublic}>(Config.PoolPublicPublicPath)
             assert(poolPublicCap.check() == true, message:
                 Error.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic resource",
@@ -554,7 +554,7 @@ pub contract ComptrollerV1 {
 
         access(contract) fun configOracle(oracleAddress: Address) {
             let oldOracleAddress = (self.oracleCap != nil)? self.oracleCap!.borrow()!.owner?.address : nil
-            self.oracleCap = getAccount(oracleAddress).getCapability<&{Interfaces.OraclePublic}>(Config.OraclePublicPath)
+            self.oracleCap = getAccount(oracleAddress).getCapability<&{LendingInterfaces.OraclePublic}>(Config.OraclePublicPath)
             emit NewOracle(oldOracleAddress, self.oracleCap!.borrow()!.owner!.address)
         }
 
@@ -571,7 +571,7 @@ pub contract ComptrollerV1 {
             emit NewCloseFactor(oldCloseFactor, newCloseFactor)
         }
 
-        pub fun getPoolPublicRef(poolAddr: Address): &{Interfaces.PoolPublic} {
+        pub fun getPoolPublicRef(poolAddr: Address): &{LendingInterfaces.PoolPublic} {
             pre {
                 self.markets.containsKey(poolAddr):
                     Error.ErrorEncode(
@@ -740,6 +740,6 @@ pub contract ComptrollerV1 {
         destroy <-self.account.load<@AnyResource>(from: self.ComptrollerStoragePath)
         self.account.save(<-create Comptroller(), to: self.ComptrollerStoragePath)
         self.account.unlink(self.ComptrollerPublicPath)
-        self.account.link<&{Interfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
+        self.account.link<&{LendingInterfaces.ComptrollerPublic}>(self.ComptrollerPublicPath, target: self.ComptrollerStoragePath)
     }
 }

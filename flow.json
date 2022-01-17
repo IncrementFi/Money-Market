@@ -21,7 +21,7 @@
     },
 
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
+    "LendingInterfaces":                     "./cadence/contracts/LendingInterfaces.cdc",
     "Config":                         "./cadence/contracts/Config.cdc",
     "Error":                          "./cadence/contracts/Error.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
@@ -134,7 +134,7 @@
       "emulator-account": [
         "FUSD",
         "Error",
-        "Interfaces",
+        "LendingInterfaces",
         "Config",
         "TwoSegmentsInterestRateModel",
         "ComptrollerV1"
@@ -150,7 +150,7 @@
       "testnet-interface-deployer": [
         "Config",
         "Error",
-        "Interfaces"
+        "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [
         "ComptrollerV1"

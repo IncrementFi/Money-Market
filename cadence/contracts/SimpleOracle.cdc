@@ -1,4 +1,4 @@
-import Interfaces from "./Interfaces.cdc"
+import LendingInterfaces from "./LendingInterfaces.cdc"
 
 // A simple centralized oracle maintained by the team. Admin can grant updateData role to other managed accounts.
 pub contract SimpleOracle {
@@ -8,7 +8,7 @@ pub contract SimpleOracle {
     pub let OracleStoragePath: StoragePath
     // The private path for the capability to Oracle resource for admin to modify feeds
     pub let OraclePrivatePath: PrivatePath
-    // The public path for the capability to restricted to &{Interfaces.OraclePublic}
+    // The public path for the capability to restricted to &{LendingInterfaces.OraclePublic}
     pub let OraclePublicPath: PublicPath
 
     // The storage path for updater's OracleUpdateProxy resource
@@ -85,7 +85,7 @@ pub contract SimpleOracle {
         access(contract) fun updatePrice(pool: Address, data: UFix64)
     }
 
-    pub resource Oracle: Interfaces.OraclePublic, DataUpdater {
+    pub resource Oracle: LendingInterfaces.OraclePublic, DataUpdater {
         access(self) let feeds: [Address]
         // { poolAddress : Oracle data for pool }
         access(self) let observations: @{Address: RingBuffer}

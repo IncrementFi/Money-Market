@@ -21,7 +21,7 @@
     },
 
     "SimpleOracle":                   "./scripts/deployment/testnet/cadence_empty/contracts/SimpleOracle.cdc",
-    "Interfaces":                     "./scripts/deployment/testnet/cadence_empty/contracts/Interfaces.cdc",
+    "LendingInterfaces":                     "./scripts/deployment/testnet/cadence_empty/contracts/LendingInterfaces.cdc",
     "Config":                         "./scripts/deployment/testnet/cadence_empty/contracts/Config.cdc",
     "Error":                          "./scripts/deployment/testnet/cadence_empty/contracts/Error.cdc",
     "TwoSegmentsInterestRateModel":   "./scripts/deployment/testnet/cadence_empty/contracts/TwoSegmentsInterestRateModel.cdc",
@@ -34,7 +34,7 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f" },
+    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "da193159f79102065ceb0c7cfef38910525e10a6a0c8c5109f645cb47f792a47" },
     "emulator-oracle-deployer": { "address": "0x01cf0e2f2f715450", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-oracle-updater":  { "address": "0x179b6b1cb6755e31", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-pool-template":   { "address": "0xf3fcd2c1a78f5eee", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
@@ -134,7 +134,7 @@
       "emulator-account": [
         "FUSD",
         "Error",
-        "Interfaces",
+        "LendingInterfaces",
         "Config",
         "TwoSegmentsInterestRateModel",
         "ComptrollerV1"
@@ -150,7 +150,7 @@
       "testnet-interface-deployer": [
         "Config",
         "Error",
-        "Interfaces"
+        "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [
         "ComptrollerV1"
