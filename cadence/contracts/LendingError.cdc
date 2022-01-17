@@ -1,7 +1,14 @@
+/**
+
+# Common lending errors
+
+# Author: Increment Labs
+
+*/
 pub contract LendingError {
     pub enum ErrorCode: UInt8 {
         pub case NO_ERROR
-        // Pool related:
+        /// Pool related:
         pub case INVALID_PARAMETERS
         pub case INVALID_USER_CERTIFICATE
         pub case INVALID_POOL_CERTIFICATE
@@ -16,7 +23,7 @@ pub contract LendingError {
         pub case SAME_LIQUIDATOR_AND_BORROWER
         pub case EXTERNAL_SEIZE_FROM_SELF
         pub case EXCEED_TOTAL_RESERVES
-        // Comptroller:
+        /// Comptroller:
         pub case ADD_MARKET_DUPLICATED // 15
         pub case ADD_MARKET_NO_ORACLE_PRICE
         pub case UNKNOWN_MARKET

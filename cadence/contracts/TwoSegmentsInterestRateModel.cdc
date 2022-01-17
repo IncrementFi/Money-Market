@@ -1,15 +1,22 @@
+/**
+
+# Interest Rate Model
+
+# Author: Increment Labs
+
+*/
 import LendingInterfaces from "./LendingInterfaces.cdc"
 import LendingConfig from "./LendingConfig.cdc"
 
 pub contract TwoSegmentsInterestRateModel {
-    // The storage path for the Admin resource
+    /// The storage path for the Admin resource
     pub let InterestRateModelAdminStoragePath: StoragePath
-    // The storage path for the InterestRateModel resource
+    /// The storage path for the InterestRateModel resource
     pub let InterestRateModelStoragePath: StoragePath
-    // The private path for the capability to InterestRateModel which is for admin to update model parameters
+    /// The private path for the capability to InterestRateModel which is for admin to update model parameters
     pub let InterestRateModelPrivatePath: PrivatePath
 
-    // Event which is emitted when Interest Rate Model is created or model parameter gets updated
+    /// Event which is emitted when Interest Rate Model is created or model parameter gets updated
     pub event InterestRateModelUpdated(
         _ oldBlocksPerYear: UInt256, _ newBlocksPerYear: UInt256,
         _ oldScaledBaseRatePerBlock: UInt256, _ newScaledBaseRatePerBlock: UInt256,
@@ -20,18 +27,18 @@ pub contract TwoSegmentsInterestRateModel {
 
     pub resource InterestRateModel: LendingInterfaces.InterestRateModelPublic {
         access(self) let modelName: String
-        // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
+        /// See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt256
-        // The base borrow interest rate per block when utilization rate is 0 (the y-intercept)
+        /// The base borrow interest rate per block when utilization rate is 0 (the y-intercept)
         access(self) var scaledBaseRatePerBlock: UInt256
-        // The multiplier of utilization rate that gives the base slope of the borrow interest rate when utilRate% <= criticalUtilRate%
+        /// The multiplier of utilization rate that gives the base slope of the borrow interest rate when utilRate% <= criticalUtilRate%
         access(self) var scaledBaseMultiplierPerBlock: UInt256
-        // The multiplier of utilization rate that gives the jump slope of the borrow interest rate when utilRate% > criticalUtilRate%
+        /// The multiplier of utilization rate that gives the jump slope of the borrow interest rate when utilRate% > criticalUtilRate%
         access(self) var scaledJumpMultiplierPerBlock: UInt256
-        // The critical point of utilization rate beyond which the jumpMultiplierPerBlock is applied
+        /// The critical point of utilization rate beyond which the jumpMultiplierPerBlock is applied
         access(self) var scaledCriticalUtilRate: UInt256
 
-        // pool's capital utilization rate (scaled up by self.scaleFactor, e.g. 1e18)
+        /// pool's capital utilization rate (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
             if (borrows == 0) {
                 return 0
@@ -39,7 +46,7 @@ pub contract TwoSegmentsInterestRateModel {
             return borrows * LendingConfig.scaleFactor / (cash + borrows - reserves);
         }
 
-        // Get the borrow interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
+        /// Get the borrow interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
             let scaleFactor = LendingConfig.scaleFactor
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
@@ -51,7 +58,7 @@ pub contract TwoSegmentsInterestRateModel {
             }
         }
 
-        // Get the supply interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
+        /// Get the supply interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256 {
             assert(reserveFactor < LendingConfig.scaleFactor, message: "reserveFactor should always be less than 1.0 x scaleFactor")
 
@@ -61,7 +68,7 @@ pub contract TwoSegmentsInterestRateModel {
             return (scaleFactor - reserveFactor) * scaledBorrowRate / scaleFactor * scaledUtilRate / scaleFactor
         }
 
-        //
+        ///
         pub fun getBlocksPerYear(): UInt256 {
             return self.blocksPerYear
         }

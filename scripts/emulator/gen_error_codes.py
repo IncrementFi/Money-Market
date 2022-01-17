@@ -22,7 +22,7 @@ with open('./cadence/contracts/LendingError.cdc', 'r') as f:
             msg = res[1]
             ErrorJson[ErrorIndex] = {}
             ErrorJson[ErrorIndex]['eng'] = msg
-            ErrorJson[ErrorIndex]['chn'] = msg+'的喵'
+            ErrorJson[ErrorIndex]['chn'] = msg
             ErrorIndex = ErrorIndex + 1 
 
 

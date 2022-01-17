@@ -1,29 +1,20 @@
-// Interface definitions all-in-one
+/**
+
+# Lending related interface definitions all-in-one
+
+# Author: Increment Labs
+
+*/
 pub contract interface LendingInterfaces {
-    pub resource interface InterestRateModelPublic {
-        // exposing model specific fields, e.g.: modelName, model params.
-        pub fun getInterestRateModelParams(): {String: AnyStruct}
-        // pool's capital utilization rate (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
-        // Get the borrow interest rate per block (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
-        // Get the supply interest rate per block (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
-        // Get the number of blocks per year.
-        pub fun getBlocksPerYear(): UInt256
-    }
-
-    // IdentityCertificate resource which is used to identify account address or perform caller authentication
-    pub resource interface IdentityCertificate {}
-
+    
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
         pub fun getUnderlyingTypeString(): String
         pub fun getUnderlyingToLpTokenRateScaled(): UInt256
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
-        // Return snapshot of account borrowed balance in scaled UInt256 format
+        /// Return snapshot of account borrowed balance in scaled UInt256 format
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
-        // Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance, scaledAccountBorrowPrincipal, scaledAccountBorrowIndex]
+        /// Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance, scaledAccountBorrowPrincipal, scaledAccountBorrowIndex]
         pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5]
         pub fun getAccountRealtimeScaled(account: Address): [UInt256; 5]
         pub fun getInterestRateModelAddress(): Address
@@ -45,12 +36,12 @@ pub contract interface LendingInterfaces {
         pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
         pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
         
-        // Accrue pool interest and checkpoint latest data to pool states
+        /// Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest()
         pub fun accrueInterestReadonly(): [UInt256; 4]
         pub fun getPoolCertificateType(): Type
-        // Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
-        // so that this public seize function can only be invoked by another LendingPool contract
+        /// Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
+        /// so that this public seize function can only be invoked by another LendingPool contract
         pub fun seize(
             seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
             seizerPool: Address,
@@ -60,20 +51,36 @@ pub contract interface LendingInterfaces {
         )
     }
 
+    pub resource interface InterestRateModelPublic {
+        /// exposing model specific fields, e.g.: modelName, model params.
+        pub fun getInterestRateModelParams(): {String: AnyStruct}
+        /// pool's capital utilization rate (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        /// Get the borrow interest rate per block (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        /// Get the supply interest rate per block (scaled up by scaleFactor, e.g. 1e18)
+        pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
+        /// Get the number of blocks per year.
+        pub fun getBlocksPerYear(): UInt256
+    }
+
+    /// IdentityCertificate resource which is used to identify account address or perform caller authentication
+    pub resource interface IdentityCertificate {}
+
     pub resource interface OraclePublic {
-        // Get the given pool's underlying asset price denominated in USD.
-        // Note: Return value of 0.0 means the given pool's price feed is not available.
+        /// Get the given pool's underlying asset price denominated in USD.
+        /// Note: Return value of 0.0 means the given pool's price feed is not available.
         pub fun getUnderlyingPrice(pool: Address): UFix64
 
-        // Return latest reported data in [timestamp, priceData]
+        /// Return latest reported data in [timestamp, priceData]
         pub fun latestResult(pool: Address): [UFix64; 2]
 
-        // Return supported markets' addresses
+        /// Return supported markets' addresses
         pub fun getSupportedFeeds(): [Address]
     }
 
     pub resource interface ComptrollerPublic {
-        // Return error string on condition (or nil)
+        /// Return error string on condition (or nil)
         pub fun supplyAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
