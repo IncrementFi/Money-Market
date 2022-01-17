@@ -1,5 +1,5 @@
-import FlowToken from "../../contracts/FlowToken.cdc"
-import FungibleToken from "../../contracts/FungibleToken.cdc"
+import FlowToken from "../../contracts/tokens/FlowToken.cdc"
+import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"

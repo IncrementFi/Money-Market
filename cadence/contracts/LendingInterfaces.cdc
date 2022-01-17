@@ -1,5 +1,3 @@
-import FungibleToken from "./FungibleToken.cdc"
-
 // Interface definitions all-in-one
 pub contract interface LendingInterfaces {
     pub resource interface InterestRateModelPublic {
