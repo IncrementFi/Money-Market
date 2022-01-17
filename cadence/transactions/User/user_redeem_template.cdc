@@ -2,7 +2,7 @@ import FlowToken from "../../contracts/FlowToken.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 import ComptrollerV1 from "../../contracts/ComptrollerV1.cdc"
-import Config from "../../contracts/Config.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 
 transaction(amountUnderlyingToRedeem: UFix64) {
@@ -24,12 +24,12 @@ transaction(amountUnderlyingToRedeem: UFix64) {
         log("User redeem flowToken ".concat(amountUnderlyingToRedeem.toString()))
 
         // Get protocol-issued user certificate
-        if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: Config.UserCertificateStoragePath) == nil) {
+        if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
             let userCertificate <- ComptrollerV1.IssueUserCertificate()
-            signer.save(<-userCertificate, to: Config.UserCertificateStoragePath)
-            signer.link<&{LendingInterfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath, target: Config.UserCertificateStoragePath)
+            signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
+            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
         }
-        self.userCertificateCap = signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(Config.UserCertificatePrivatePath)
+        self.userCertificateCap = signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath)
     }
 
     execute {

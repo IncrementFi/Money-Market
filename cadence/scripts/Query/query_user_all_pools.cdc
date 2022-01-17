@@ -1,13 +1,13 @@
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
-import Config from "../../contracts/Config.cdc"
-import Error from "../../contracts/Error.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
+import LendingError from "../../contracts/LendingError.cdc"
 
 pub fun main(userAddr: Address, comptrollerAddr: Address): [Address] {
-    let comptrollerRef = getAccount(comptrollerAddr).getCapability<&{LendingInterfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath).borrow()
+    let comptrollerRef = getAccount(comptrollerAddr).getCapability<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath).borrow()
         ?? panic(
-            Error.ErrorEncode (
+            LendingError.ErrorEncode (
                 msg: "Invailid comptroller cap.",
-                err: Error.ErrorCode.CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
+                err: LendingError.ErrorCode.CANNOT_ACCESS_COMPTROLLER_PUBLIC_CAPABILITY
             )    
         )
     let poolAddrs = comptrollerRef.getUserMarkets(userAddr: userAddr)

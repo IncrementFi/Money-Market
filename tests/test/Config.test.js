@@ -11,7 +11,7 @@ import {
 // We need to set timeout for a higher number, because some transactions might take up some time
 jest.setTimeout(100000);
 
-describe("Config Testsuites", () => {
+describe("LendingConfig Testsuites", () => {
     beforeEach(async () => {
         const basePath = path.resolve(__dirname, "../../cadence");
         // Note: Use different port for different testsuites to run test simultaneously. 
@@ -24,7 +24,7 @@ describe("Config Testsuites", () => {
         return emulator.stop();
     });
 
-    it("Should deploy Config contract", async () => {
+    it("Should deploy LendingConfig contract", async () => {
         await shallPass(deployConfigContract());
     });
 

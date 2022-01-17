@@ -1,4 +1,4 @@
-pub contract Error {
+pub contract LendingError {
     pub enum ErrorCode: UInt8 {
         pub case NO_ERROR
         // Pool related:

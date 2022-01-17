@@ -1,24 +1,24 @@
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
-import Config from "../../contracts/Config.cdc"
-import Error from "../../contracts/Error.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
+import LendingError from "../../contracts/LendingError.cdc"
 
 pub fun main(poolAddr: Address): {String: AnyStruct} {
 
-    let poolPublicCap = getAccount(poolAddr).getCapability<&{LendingInterfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow()
+    let poolPublicCap = getAccount(poolAddr).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath).borrow()
         ?? panic(
-            Error.ErrorEncode (
+            LendingError.ErrorEncode (
                 msg: "Invalid pool capability.",
-                err: Error.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
+                err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
             )
         )
     let interestRateAddress = poolPublicCap.getInterestRateModelAddress()
 
     let interestRateModelRef = getAccount(interestRateAddress)
-        .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
+        .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
         .borrow() ?? panic(
-            Error.ErrorEncode (
+            LendingError.ErrorEncode (
                 msg: "Invalid interest rate model capability.",
-                err: Error.ErrorCode.CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
+                err: LendingError.ErrorCode.CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
             )
         )
     
