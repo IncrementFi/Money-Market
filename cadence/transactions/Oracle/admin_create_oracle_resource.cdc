@@ -1,4 +1,4 @@
-import Interfaces from "../../contracts/Interfaces.cdc"
+import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 
 // Note: Only run once.
@@ -16,7 +16,7 @@ transaction() {
 
         // Create a public capability to Oracle resource that only exposes {OraclePublic} interface to public.
         adminAccount.unlink(SimpleOracle.OraclePublicPath)
-        adminAccount.link<&SimpleOracle.Oracle{Interfaces.OraclePublic}>(
+        adminAccount.link<&SimpleOracle.Oracle{LendingInterfaces.OraclePublic}>(
             SimpleOracle.OraclePublicPath,
             target: SimpleOracle.OracleStoragePath
         )

@@ -8,7 +8,7 @@
   
   
 
-### Config
+### LendingConfig
 
 *  `deployed.json` file:
 Oracle contract and supported feeds deployment address and configuration. The update happenes whichever below conditions meet first.

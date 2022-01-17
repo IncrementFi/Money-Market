@@ -4,28 +4,28 @@
   },
   "contracts": {
     "FungibleToken": {
-      "source": "./cadence/contracts/FungibleToken.cdc",
+      "source": "./cadence/contracts/tokens/FungibleToken.cdc",
       "aliases": { "emulator": "0xee82856bf20e2aa6", "testnet": "0x9a0766d93b6608b7", "mainnet": "0xf233dcee88fe0abe" }
     },
     "FlowToken" : {
-      "source": "./cadence/contracts/FlowToken.cdc",
+      "source": "./cadence/contracts/tokens/FlowToken.cdc",
       "aliases": { "emulator": "0x0ae53cb6e3f42a79", "testnet": "0x7e60df042a9c0868", "mainnet": "0x1654653399040a61" }
     },
     "FUSD" : {
-      "source": "./cadence/contracts/FUSD.cdc",
+      "source": "./cadence/contracts/tokens/FUSD.cdc",
       "aliases": { "testnet": "0xe5b5624186770886", "mainnet": "0x3c5959b568896393" }
     },
     "BLT" : {
-      "source": "./cadence/contracts/BLT.cdc",
+      "source": "./cadence/contracts/tokens/BLT.cdc",
       "aliases": { "testnet": "0x48adb192e4b081b0" }
     },
 
     "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-    "Interfaces":                     "./cadence/contracts/Interfaces.cdc",
-    "Config":                         "./cadence/contracts/Config.cdc",
-    "Error":                          "./cadence/contracts/Error.cdc",
+    "LendingInterfaces":                     "./cadence/contracts/LendingInterfaces.cdc",
+    "LendingConfig":                         "./cadence/contracts/LendingConfig.cdc",
+    "LendingError":                          "./cadence/contracts/LendingError.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
+    "LendingComptroller":                  "./cadence/contracts/LendingComptroller.cdc",
     "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
   },
   "networks": {
@@ -133,11 +133,11 @@
     "emulator": {
       "emulator-account": [
         "FUSD",
-        "Error",
-        "Interfaces",
-        "Config",
+        "LendingError",
+        "LendingInterfaces",
+        "LendingConfig",
         "TwoSegmentsInterestRateModel",
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "emulator-oracle-deployer": [
         "SimpleOracle"
@@ -148,12 +148,12 @@
     },
     "testnet": {
       "testnet-interface-deployer": [
-        "Config",
-        "Error",
-        "Interfaces"
+        "LendingConfig",
+        "LendingError",
+        "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "testnet-interest-rate-FlowToken-deployer": [
       ],

@@ -1,5 +1,5 @@
-import Interfaces from "./Interfaces.cdc"
-import Config from "./Config.cdc"
+import LendingInterfaces from "./LendingInterfaces.cdc"
+import LendingConfig from "./LendingConfig.cdc"
 
 pub contract TwoSegmentsInterestRateModel {
     // The storage path for the Admin resource
@@ -18,7 +18,7 @@ pub contract TwoSegmentsInterestRateModel {
         _ oldScaledCriticalUtilRate: UInt256, _ newScaledCriticalUtilRate: UInt256
     )
 
-    pub resource InterestRateModel: Interfaces.InterestRateModelPublic {
+    pub resource InterestRateModel: LendingInterfaces.InterestRateModelPublic {
         access(self) let modelName: String
         // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt256
@@ -36,12 +36,12 @@ pub contract TwoSegmentsInterestRateModel {
             if (borrows == 0) {
                 return 0
             }
-            return borrows * Config.scaleFactor / (cash + borrows - reserves);
+            return borrows * LendingConfig.scaleFactor / (cash + borrows - reserves);
         }
 
         // Get the borrow interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
-            let scaleFactor = Config.scaleFactor
+            let scaleFactor = LendingConfig.scaleFactor
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
             if (scaledUtilRate <= self.scaledCriticalUtilRate) {
                 return (self.scaledBaseMultiplierPerBlock * scaledUtilRate / scaleFactor + self.scaledBaseRatePerBlock)
@@ -53,11 +53,11 @@ pub contract TwoSegmentsInterestRateModel {
 
         // Get the supply interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256 {
-            assert(reserveFactor < Config.scaleFactor, message: "reserveFactor should always be less than 1.0 x scaleFactor")
+            assert(reserveFactor < LendingConfig.scaleFactor, message: "reserveFactor should always be less than 1.0 x scaleFactor")
 
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
             let scaledBorrowRate = self.getBorrowRate(cash: cash, borrows: borrows, reserves: reserves)
-            let scaleFactor = Config.scaleFactor
+            let scaleFactor = LendingConfig.scaleFactor
             return (scaleFactor - reserveFactor) * scaledBorrowRate / scaleFactor * scaledUtilRate / scaleFactor
         }
 
@@ -70,7 +70,7 @@ pub contract TwoSegmentsInterestRateModel {
             return {
                 "modelName": self.modelName,
                 "blocksPerYear": self.blocksPerYear,
-                "scaleFactor": Config.scaleFactor,
+                "scaleFactor": LendingConfig.scaleFactor,
                 "scaledBaseRatePerBlock": self.scaledBaseRatePerBlock,
                 "scaledBaseMultiplierPerBlock": self.scaledBaseMultiplierPerBlock,
                 "scaledJumpMultiplierPerBlock": self.scaledJumpMultiplierPerBlock,
@@ -86,12 +86,12 @@ pub contract TwoSegmentsInterestRateModel {
             _ newScaledCriticalUtilPoint: UInt256
         ) {
             pre {
-                newScaledCriticalUtilPoint < Config.scaleFactor: "newScaledCriticalUtilRate should be within (0.0, 1.0) x newScaleFactor"
+                newScaledCriticalUtilPoint < LendingConfig.scaleFactor: "newScaledCriticalUtilRate should be within (0.0, 1.0) x newScaleFactor"
                 newScaledZeroUtilInterestRatePerYear <= newScaledCriticalUtilInterestRatePerYear &&
                 newScaledCriticalUtilInterestRatePerYear <= newScaledFullUtilInterestRatePerYear : "Invalid InterestRateModel Parameters"
             }
 
-            let scaleFactor = Config.scaleFactor
+            let scaleFactor = LendingConfig.scaleFactor
             let _blocksPerYear = self.blocksPerYear
             self.blocksPerYear = newBlocksPerYear
             let _scaledBaseRatePerBlock = self.scaledBaseRatePerBlock
@@ -130,12 +130,12 @@ pub contract TwoSegmentsInterestRateModel {
             scaledCriticalUtilPoint: UInt256
         ) {
             pre {
-                scaledCriticalUtilPoint < Config.scaleFactor: "criticalUtilRate should be within (0.0, 1.0) x scaleFactor"
+                scaledCriticalUtilPoint < LendingConfig.scaleFactor: "criticalUtilRate should be within (0.0, 1.0) x scaleFactor"
                 scaledZeroUtilInterestRatePerYear <= scaledCriticalUtilInterestRatePerYear &&
                 scaledCriticalUtilInterestRatePerYear <= scaledFullUtilInterestRatePerYear : "Invalid InterestRateModel Parameters"
             }
 
-            let scaleFactor = Config.scaleFactor
+            let scaleFactor = LendingConfig.scaleFactor
             self.modelName = modelName;
             self.blocksPerYear = blocksPerYear
             self.scaledBaseRatePerBlock = scaledZeroUtilInterestRatePerYear / blocksPerYear

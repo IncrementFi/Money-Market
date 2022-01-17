@@ -173,7 +173,7 @@ async function heartbeat(debug = true) {
 function errorHandler(e) {
   console.log(e);
   let now = (new Date()).toTimeString().split(' ')[0];
-  console.log(`@@@@@ Error caught on ${now}, preparing for a restart...`);
+  console.log(`@@@@@ LendingError caught on ${now}, preparing for a restart...`);
   setTimeout(() => {
     process.exit(1)
   }, 3000)

@@ -11,7 +11,7 @@ console.log(CODE)
 function queryMarketInfo(poolAddr, auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
   
-  //Config.CommonAddressMapping()
+  //LendingConfig.CommonAddressMapping()
 
   return FCL.send(
     [

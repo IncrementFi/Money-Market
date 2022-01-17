@@ -1,7 +1,5 @@
-import FungibleToken from "./FungibleToken.cdc"
-
 // Interface definitions all-in-one
-pub contract interface Interfaces {
+pub contract interface LendingInterfaces {
     pub resource interface InterestRateModelPublic {
         // exposing model specific fields, e.g.: modelName, model params.
         pub fun getInterestRateModelParams(): {String: AnyStruct}
@@ -54,7 +52,7 @@ pub contract interface Interfaces {
         // Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
         // so that this public seize function can only be invoked by another LendingPool contract
         pub fun seize(
-            seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+            seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
             seizerPool: Address,
             liquidator: Address,
             borrower: Address,
@@ -77,35 +75,35 @@ pub contract interface Interfaces {
     pub resource interface ComptrollerPublic {
         // Return error string on condition (or nil)
         pub fun supplyAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
         ): String?
 
         pub fun redeemAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
         ): String?
 
         pub fun borrowAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
         ): String?
         
         pub fun repayAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
         ): String?
 
         pub fun liquidateAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolBorrowed: Address,
             poolCollateralized: Address,
             borrower: Address,
@@ -113,7 +111,7 @@ pub contract interface Interfaces {
         ): String?
 
         pub fun seizeAllowed(
-            poolCertificate: @{Interfaces.IdentityCertificate},
+            poolCertificate: @{LendingInterfaces.IdentityCertificate},
             borrowPool: Address,
             collateralPool: Address,
             liquidator: Address,
@@ -122,7 +120,7 @@ pub contract interface Interfaces {
         ): String?
 
         pub fun callerAllowed(
-            callerCertificate: @{Interfaces.IdentityCertificate},
+            callerCertificate: @{LendingInterfaces.IdentityCertificate},
             callerAddress: Address
         ): String?
 
