@@ -3,13 +3,10 @@ import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
 transaction() {
     prepare(poolAccount: AuthAccount) {
-        log("Transaction Start --------------- prepare_FlowToken_vault_for_pool")
-        log("Create empty FlowToken vault:")
         let preUnderlyingVault <- poolAccount.load<@FungibleToken.Vault>(from: /storage/poolUnderlyingAssetVault)
         if preUnderlyingVault != nil {
             let flowTokenStoragePath = /storage/flowTokenVault
             if (poolAccount.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-                log("Create new local flowToken vault")
                 poolAccount.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
                 poolAccount.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
                 poolAccount.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
@@ -21,6 +18,5 @@ transaction() {
             destroy preUnderlyingVault
         }
         poolAccount.save(<- FlowToken.createEmptyVault(), to: /storage/poolUnderlyingAssetVault)
-        log("End -----------------------------")
     }
 }

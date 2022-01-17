@@ -11,6 +11,5 @@ pub fun main(poolAddr: Address, comptrollerAddr: Address): {String: AnyStruct} {
             )    
         )
     let poolInfo = comptrollerRef.getMarketInfo(poolAddr: poolAddr)
-    log(poolInfo)
     return poolInfo
 }
