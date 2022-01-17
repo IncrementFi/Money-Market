@@ -1,18 +1,29 @@
+/**
+
+# The Comptroller contract of LendingPools.
+
+# Author: Increment Labs
+
+The Comptroller contract will manage all open markets and provide audit and verification of the lendingpools.
+
+*/
 import LendingInterfaces from "./LendingInterfaces.cdc"
 import LendingConfig from "./LendingConfig.cdc"
 import LendingError from "./LendingError.cdc"
 
 pub contract LendingComptroller {
-    // The storage path for the Admin resource
-    pub let AdminStoragePath: StoragePath
-    // The storage path for the Comptroller resource
-    pub let ComptrollerStoragePath: StoragePath
-    pub let ComptrollerPublicPath: PublicPath
-    // The private path for the capability to Comptroller resource for admin functions
-    pub let ComptrollerPrivatePath: PrivatePath
-    // Account address LendingComptroller contract is deployed to, i.e. 'the contract address'
+    /// Account address LendingComptroller contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
 
+    /// The storage path for the Admin resource
+    pub let AdminStoragePath: StoragePath
+    /// The storage path for the Comptroller resource
+    pub let ComptrollerStoragePath: StoragePath
+    pub let ComptrollerPublicPath: PublicPath
+    /// The private path for the capability to Comptroller resource for admin functions
+    pub let ComptrollerPrivatePath: PrivatePath
+    
+    /// events
     pub event MarketAdded(market: Address, marketType: String, liquidationPenalty: UFix64, collateralFactor: UFix64)
     pub event NewOracle(_ oldOracleAddress: Address?, _ newOracleAddress: Address)
     pub event NewCloseFactor(_ oldCloseFactor: UFix64, _ newCloseFactor: UFix64)
@@ -25,23 +36,26 @@ pub contract LendingComptroller {
         oldBorrowCap: UFix64?, newBorrowCap: UFix64?
     )
 
+    /// Market
+    ///
     pub struct Market {
-        // Contains functions to query public market data
+        /// Contains functions to query public market data
         pub let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
+        /// Whether market open
         pub var isOpen: Bool
-        // Whether or not liquidity mining is enabled for this market
+        /// Whether or not liquidity mining is enabled for this market
         pub var isMining: Bool
-        // When liquidation happenes, liquidators repay part of the borrowed amount on behalf of the borrower,
-        // and in return they receive corresponding amount of collateral with an additional incentive.
-        // It's an incentive for the liquidator but a penalty for the liquidated borrower.
-        // Must be in [0.0, 1.0] x scaleFactor
+        /// When liquidation happenes, liquidators repay part of the borrowed amount on behalf of the borrower,
+        /// and in return they receive corresponding amount of collateral with an additional incentive.
+        /// It's an incentive for the liquidator but a penalty for the liquidated borrower.
+        /// Must be in [0.0, 1.0] x scaleFactor
         pub var scaledLiquidationPenalty: UInt256
-        // The most one can borrow against his collateral in this market
-        // Must be in [0.0, 1.0] x scaleFactor
+        /// The most one can borrow against his collateral in this market
+        /// Must be in [0.0, 1.0] x scaleFactor
         pub var scaledCollateralFactor: UInt256
-        // maximum totalBorrows this market can reach.
-        // Any borrow request that makes totalBorrows greater than borrowCap would be rejected
-        // Note: value of 0 represents unlimited cap when market.isOpen is set
+        /// maximum totalBorrows this market can reach.
+        /// Any borrow request that makes totalBorrows greater than borrowCap would be rejected
+        /// Note: value of 0 represents unlimited cap when market.isOpen is set
         pub var scaledBorrowCap: UInt256
         
         pub fun setMarketStatus(isOpen: Bool) {
@@ -49,11 +63,13 @@ pub contract LendingComptroller {
                 self.isOpen = isOpen
             }
         }
+
         pub fun setMiningStatus(isMining: Bool) {
             if (self.isMining != isMining) { 
                 self.isMining = isMining
             }
         }
+
         pub fun setLiquidationPenalty(newLiquidationPenalty: UFix64) {
             pre {
                 newLiquidationPenalty <= 1.0: LendingError.ErrorEncode(msg: "newLiquidationPenalty out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
@@ -63,6 +79,7 @@ pub contract LendingComptroller {
                 self.scaledLiquidationPenalty = scaledNewLiquidationPenalty
             }
         }
+
         pub fun setCollateralFactor(newCollateralFactor: UFix64) {
             pre {
                 newCollateralFactor <= 1.0: LendingError.ErrorEncode(msg: "newCollateralFactor out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
@@ -72,12 +89,14 @@ pub contract LendingComptroller {
                 self.scaledCollateralFactor = scaledNewCollateralFactor
             }
         }
+
         pub fun setBorrowCap(newBorrowCap: UFix64) {
             let scaledNewBorrowCap = LendingConfig.UFix64ToScaledUInt256(newBorrowCap)
             if (self.scaledBorrowCap != scaledNewBorrowCap) {
                 self.scaledBorrowCap = scaledNewBorrowCap
             }
         }
+
         init(
             poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>,
             isOpen: Bool,
@@ -98,23 +117,39 @@ pub contract LendingComptroller {
         }
     }
 
-    // This certificate identifies account address and needs to be stored in storage path locally.
-    // User should keep it safe and never give this resource's capability to others
+    /// UserCertificate
+    ///
+    /// This certificate identifies account address and needs to be stored in storage path locally.
+    /// User should keep it safe and never give this resource's capability to others
+    ///
     pub resource UserCertificate: LendingInterfaces.IdentityCertificate {}
 
+    /// Anyone can apply for a user certificate
+    /// 
     pub fun IssueUserCertificate(): @UserCertificate {
         return <- create UserCertificate()
     }
 
+    /// Comptroller
+    ///
     pub resource Comptroller: LendingInterfaces.ComptrollerPublic {
+        /// Oracle cap
         access(self) var oracleCap: Capability<&{LendingInterfaces.OraclePublic}>?
-        // Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0] x scaleFactor
+        /// Multiplier used to calculate the maximum repayAmount when liquidating a borrow. [0.0, 1.0] x scaleFactor
         access(self) var scaledCloseFactor: UInt256
-        // { poolAddress => Market States }
+        /// { poolAddress => Market States }
         access(self) let markets: {Address: Market}
-        // { accountAddress => markets the account has either provided liquidity to or borrowed from }
+        /// { accountAddress => markets the account has either provided liquidity to or borrowed from }
         access(self) let accountMarketsIn: {Address: [Address]}
 
+        /// Supply audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param supplierAddress - The address of supply
+        /// @Param supplyUnderlyingAmountScaled - Supply amount scaled by 1e18
+        /// @Return error code
+        ///
         pub fun supplyAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
@@ -139,6 +174,16 @@ pub contract LendingComptroller {
             return nil
         }
 
+        /// Redeem audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param redeemerAddress - The address of redeemer
+        /// @Param redeemLpTokenAmountScaled - Redeem amount scaled by 1e18
+        /// @Return error code
+        ///
+        /// Since borrower would decrease his overall collateral ratio across all markets, safety check is important.
+        ///
         pub fun redeemAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
@@ -177,6 +222,14 @@ pub contract LendingComptroller {
             return nil
         }
 
+        /// Borrow audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param borrowerAddress - The address of borrower
+        /// @Param borrowUnderlyingAmountScaled - Borrow amount scaled by 1e18
+        /// @Return error code
+        ///
         pub fun borrowAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
@@ -225,6 +278,14 @@ pub contract LendingComptroller {
             return nil
         }
 
+        /// Repay audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param borrowerAddress - The address of borrower
+        /// @Param repayUnderlyingAmountScaled - Repay amount scaled by 1e18
+        /// @Return error code
+        ///
         pub fun repayAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
@@ -250,6 +311,15 @@ pub contract LendingComptroller {
             return nil
         }
 
+        /// Liquidation audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param poolCollateralized - The address of collateral pool holded by borrower to be repaid.
+        /// @Param borrower - The address of borrower
+        /// @Param repayUnderlyingAmountScaled - The amount repaid on behalf of the liquidator.
+        /// @Return error code
+        ///
         pub fun liquidateAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolBorrowed: Address,
@@ -289,6 +359,16 @@ pub contract LendingComptroller {
             return nil
         }
 
+        /// Seize audit
+        ///
+        /// @Param poolCertificate - Can only be called by one of the valid LendPools
+        /// @Param poolAddress - Caller address
+        /// @Param collateralPool - The address of collateral pool holded by borrower to be repaid
+        /// @Param liquidator - The address of liquidator
+        /// @Param borrower - The address of borrower
+        /// @Param seizeCollateralPoolLpTokenAmountScaled - The amount of Lptoken that the borrower will be liquidated.
+        /// @Return error code
+        ///
         pub fun seizeAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             borrowPool: Address,
@@ -312,12 +392,14 @@ pub contract LendingComptroller {
             } else if (self.accountMarketsIn[liquidator]!.contains(collateralPool) == false) {
                 self.accountMarketsIn[liquidator]!.append(collateralPool)
             }
+
             // Remove pool out of user markets list if necessary
             self.removePoolFromAccountMarketsOnCondition(
                 poolAddress: collateralPool,
                 account: borrower,
                 scaledRedeemOrRepayAmount: seizeCollateralPoolLpTokenAmountScaled
             )
+
             ///// TODO: Keep the flywheel moving
             ///// updateCompSupplyIndex(collateralPool);
             ///// distributeSupplierComp(collateralPool, borrower);
@@ -325,8 +407,9 @@ pub contract LendingComptroller {
             return nil
         }
 
-        // Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
-        // Called in LendingPool.liquidate()
+        /// Given actualRepaidBorrowAmount underlying of borrowPool, calculate seized number of lpTokens of collateralPool
+        /// Called in LendingPool.liquidate()
+        ///
         pub fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address,
             borrowPool: Address,
@@ -395,7 +478,7 @@ pub contract LendingComptroller {
             }
         }
 
-        // Remove pool out of user markets list if necessary
+        /// Remove pool out of user markets list if necessary
         access(self) fun removePoolFromAccountMarketsOnCondition(
             poolAddress: Address,
             account: Address,
@@ -417,13 +500,16 @@ pub contract LendingComptroller {
             return false
         }
 
-        // Calculate what the account liquidity would be if the given amounts were redeemed / borrowed
-        // poolToModify - The market to hypothetically redeem/borrow from
-        // amountLPTokenToRedeem - The number of LPTokens to hypothetically redeem
-        // amountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
-        // Return: 0. hypothetical cross-market total collateral value normalized in usd
-        //         1. hypothetical cross-market tatal borrow value normalized in usd
-        //         3. hypothetical cross-market total supply value normalized in usd
+        /// Calculate what the account liquidity would be if the given amounts were redeemed / borrowed
+        ///
+        /// @Param account - Target account
+        /// @Param poolToModify - The market to hypothetically redeem/borrow from
+        /// @Param scaledAmountLPTokenToRedeem - The number of LPTokens to hypothetically redeem
+        /// @Param scaledAmountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
+        /// @Return: 0. hypothetical cross-market total collateral value normalized in usd
+        ///          1. hypothetical cross-market tatal borrow value normalized in usd
+        ///          2. hypothetical cross-market total supply value normalized in usd
+        ///
         access(self) fun getHypotheticalAccountLiquidity(
             account: Address,
             poolToModify: Address,
@@ -512,7 +598,7 @@ pub contract LendingComptroller {
             )
         }
 
-        // Tune parameters of an already-listed market
+        /// Tune parameters of an already-listed market
         access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool):
@@ -612,17 +698,9 @@ pub contract LendingComptroller {
                 "isMining": market.isMining,
                 "marketAddress": poolAddr,
                 "marketType": poolRef.getUnderlyingTypeString(),
-
-                //"marketSupplyScaled": poolRef.getPoolTotalSupplyScaled().toString(),
-                //"marketSupplyRealtimeScaled": (poolRef.getPoolCash()+accrueInterestRealtimeRes[2]).toString(),
                 "marketSupplyScaled": (poolRef.getPoolCash()+accrueInterestRealtimeRes[2]).toString(),
-
-                //"marketBorrowScaled": poolRef.getPoolTotalBorrowsScaled().toString(),
-                //"marketBorrowRealtimeScaled": accrueInterestRealtimeRes[2].toString(),
                 "marketBorrowScaled": accrueInterestRealtimeRes[2].toString(),
-
                 "marketReserveScaled": poolRef.getPoolTotalReservesScaled().toString(),
-                
                 "marketSupplyApr": poolRef.getPoolSupplyAprScaled().toString(),
                 "marketBorrowApr": poolRef.getPoolBorrowAprScaled().toString(),
                 "marketLiquidationPenalty": market.scaledLiquidationPenalty.toString(),
@@ -642,9 +720,9 @@ pub contract LendingComptroller {
             return self.accountMarketsIn[userAddr]!
         }
 
-        // Return the current account cross-market liquidity snapshot:
-        // [cross-market account collateral value in usd, cross-market account borrows in usd, cross-market account supplies in usd]
-        // Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
+        /// Return the current account cross-market liquidity snapshot:
+        /// [cross-market account collateral value in usd, cross-market account borrows in usd, cross-market account supplies in usd]
+        /// Used in liquidation allowance check, or LTV (loan-to-value) ratio calculation
         pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 3] {
             let scaledLiquidity = self.getHypotheticalAccountLiquidity(
                 account: userAddr,
@@ -673,14 +751,8 @@ pub contract LendingComptroller {
             let scaledAccountRealtime = poolRef.getAccountRealtimeScaled(account: userAddr)
 
             return {
-                //"userSupplyScaled": (scaledAccountSnapshot[1] * scaledAccountSnapshot[0] / LendingConfig.scaleFactor).toString(),
-                //"userSupplyRealtimeScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / LendingConfig.scaleFactor).toString(),
                 "userSupplyScaled": (scaledAccountRealtime[1] * scaledAccountRealtime[0] / LendingConfig.scaleFactor).toString(),
-
-                //"userBorrowScaled": scaledAccountSnapshot[2].toString(),
-                //"userBorrowRealtimeScaled": scaledAccountRealtime[2].toString(),
                 "userBorrowScaled": scaledAccountRealtime[2].toString(),
-
                 "userBorrowPrincipalSnapshotScaled": scaledAccountSnapshot[3].toString(),
                 "userBorrowIndexSnapshotScaled": scaledAccountSnapshot[4].toString(),
                 "userLpTokenBalanceScaled": scaledAccountSnapshot[1].toString()
@@ -695,14 +767,16 @@ pub contract LendingComptroller {
         }
     }
 
+    /// Admin
+    ///
     pub resource Admin {
-        // Admin function to list a new asset pool to the lending market
-        // Note: Do not list a new asset pool before the oracle feed is ready
+        /// Admin function to list a new asset pool to the lending market
+        /// Note: Do not list a new asset pool before the oracle feed is ready
         pub fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
             let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.addMarket(poolAddress: poolAddress, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         }
-        // Admin function to config parameters of a listed-market
+        /// Admin function to config parameters of a listed-market
         pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
             let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configMarket(
@@ -714,12 +788,12 @@ pub contract LendingComptroller {
                 borrowCap: borrowCap
             )
         }
-        // Admin function to set a new oracle
+        /// Admin function to set a new oracle
         pub fun configOracle(oracleAddress: Address) {
             let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configOracle(oracleAddress: oracleAddress)
         }
-        // Admin function to set closeFactor
+        /// Admin function to set closeFactor
         pub fun setCloseFactor(closeFactor: UFix64) {
             let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)

@@ -11,6 +11,6 @@ pub fun main(userAddr: Address, comptrollerAddr: Address): [Address] {
             )    
         )
     let poolAddrs = comptrollerRef.getUserMarkets(userAddr: userAddr)
-    log(poolAddrs)
+    
     return poolAddrs
 }

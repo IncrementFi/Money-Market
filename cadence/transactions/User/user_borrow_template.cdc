@@ -15,14 +15,11 @@ transaction(amountBorrow: UFix64) {
 
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-            log("Create new local flowToken vault")
             signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
         }
         self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
-        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
-        log("User borrow flowToken ".concat(amountBorrow.toString()))
 
         // Get protocol-issued user certificate
         if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {

@@ -6,6 +6,5 @@ pub fun main(userAddr: Address, vaultPath: PublicPath): UFix64 {
         log(0.0)
         return 0.0
     }
-    log(vaultBalance.borrow()!.balance)
     return vaultBalance.borrow()!.balance
 }
