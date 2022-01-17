@@ -1,7 +1,7 @@
 import FlowToken from "../../contracts/FlowToken.cdc"
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
-import Interfaces from "../../contracts/Interfaces.cdc"
+import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import Config from "../../contracts/Config.cdc"
 
 transaction(amount: UFix64) {
