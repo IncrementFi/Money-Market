@@ -1,5 +1,5 @@
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
-import Config from "../../contracts/Config.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 
 pub fun main(): {String: AnyStruct} {

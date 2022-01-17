@@ -1,4 +1,4 @@
-pub contract Config {
+pub contract LendingConfig {
     // TwoSegmentsInterestRateModel.InterestRateModelPublicPath
     pub let InterestRateModelPublicPath: PublicPath
     // SimpleOracle.OraclePublicPath

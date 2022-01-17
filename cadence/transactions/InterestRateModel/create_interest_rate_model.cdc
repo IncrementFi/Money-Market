@@ -1,6 +1,6 @@
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import TwoSegmentsInterestRateModel from "../../contracts/TwoSegmentsInterestRateModel.cdc"
-import Config from "../../contracts/Config.cdc"
+import LendingConfig from "../../contracts/LendingConfig.cdc"
 // TODO: Do not break arguments into multi-lines unless this bug has been fixed: https://github.com/onflow/flow-cadut/issues/15
 
 // Note: Only run once.
@@ -32,9 +32,9 @@ transaction(modelName: String, blocksPerYear: UInt256, scaledZeroUtilInterestRat
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
         // Create a public capability to InterestRateModel resource that only exposes ModelPublic
-        adminAccount.unlink(Config.InterestRateModelPublicPath)
+        adminAccount.unlink(LendingConfig.InterestRateModelPublicPath)
         adminAccount.link<&TwoSegmentsInterestRateModel.InterestRateModel{LendingInterfaces.InterestRateModelPublic}>(
-            Config.InterestRateModelPublicPath,
+            LendingConfig.InterestRateModelPublicPath,
             target: TwoSegmentsInterestRateModel.InterestRateModelStoragePath
         )
     }

@@ -11,7 +11,7 @@ var CODE = ConfigJson.Codes.Scripts['QueryVaultBalance']
 function queryVaultBalance(userAddr, tokenName) {
   if (!userAddr) return Promise.resolve(false);
   
-  // Config.CommonAddressMapping()
+  // LendingConfig.CommonAddressMapping()
 
   const pathPara = {
     "domain": "public",

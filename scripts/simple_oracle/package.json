@@ -4,7 +4,7 @@
   "description": "Simple oracle node",
   "main": "simpel_oracle.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"LendingError: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",

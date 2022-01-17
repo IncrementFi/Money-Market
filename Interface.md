@@ -12,7 +12,7 @@
 ## JS-api
 * TODO
 
-## Error Code:
+## LendingError Code:
 > 如果Flow合约的错误返回是字符串，正则匹配出ErrorCode 或是 ErrorMsg
 > ErrorCode的描述json在 ./increment.errorcode.json
 ```js
