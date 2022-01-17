@@ -1,4 +1,4 @@
-import Interfaces from "./Interfaces.cdc"
+import LendingInterfaces from "./LendingInterfaces.cdc"
 import Config from "./Config.cdc"
 
 pub contract TwoSegmentsInterestRateModel {
@@ -18,7 +18,7 @@ pub contract TwoSegmentsInterestRateModel {
         _ oldScaledCriticalUtilRate: UInt256, _ newScaledCriticalUtilRate: UInt256
     )
 
-    pub resource InterestRateModel: Interfaces.InterestRateModelPublic {
+    pub resource InterestRateModel: LendingInterfaces.InterestRateModelPublic {
         access(self) let modelName: String
         // See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt256

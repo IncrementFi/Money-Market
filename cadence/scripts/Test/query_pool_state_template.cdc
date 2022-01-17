@@ -1,4 +1,4 @@
-import Interfaces from "../../contracts/Interfaces.cdc"
+import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import Config from "../../contracts/Config.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 

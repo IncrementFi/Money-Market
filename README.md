@@ -57,6 +57,6 @@ python ./scripts/emulator/gen_tmp_codes.py 1
 | Name | Address |
 | -------- | ------- |
 | Config | [0xa914b5106275c637](https://testnet.flowscan.org/account/0xa914b5106275c637) |
-| Interfaces | [0xa914b5106275c637](https://testnet.flowscan.org/account/0xa914b5106275c637) |
+| LendingInterfaces | [0xa914b5106275c637](https://testnet.flowscan.org/account/0xa914b5106275c637) |
 | SimpleOracle | [0x00bb0ede202e2a11](https://testnet.flowscan.org/account/0x00bb0ede202e2a11) |
 | OracleUpdater | [0xed8eaa1512ba24aa](https://testnet.flowscan.org/account/0xed8eaa1512ba24aa) |

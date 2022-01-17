@@ -1,5 +1,5 @@
 {
-    "Interfaces": {
+    "LendingInterfaces": {
         "emulator": "0xf8d6e0586b0a20c7",
         "testnet": "0x01",
         "mainnet": "0x01"

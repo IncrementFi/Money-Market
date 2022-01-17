@@ -18,7 +18,7 @@ export const deployInterestRateModel = async () => {
 
     await deployContractByName({
         to: interestRateModelDeployer,
-        name: "Interfaces"
+        name: "LendingInterfaces"
     });
 
     await deployContractByName({
@@ -27,7 +27,7 @@ export const deployInterestRateModel = async () => {
     });
 
     // Must use deployed InterestRateModelInterface.
-    const addressMap = { Interfaces: interestRateModelDeployer, Config: interestRateModelDeployer };
+    const addressMap = { LendingInterfaces: interestRateModelDeployer, Config: interestRateModelDeployer };
     return deployContractByName({
         to: interestRateModelDeployer,
         name: "TwoSegmentsInterestRateModel",

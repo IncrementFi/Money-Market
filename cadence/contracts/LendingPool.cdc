@@ -1,5 +1,5 @@
 import FungibleToken from "./FungibleToken.cdc"
-import Interfaces from "./Interfaces.cdc"
+import LendingInterfaces from "./LendingInterfaces.cdc"
 import Config from "./Config.cdc"
 import Error from "./Error.cdc"
 
@@ -48,9 +48,9 @@ pub contract LendingPool {
 
     // Model used to calculate underlying asset's borrow interest rate
     pub var interestRateModelAddress: Address?
-    pub var interestRateModelCap: Capability<&{Interfaces.InterestRateModelPublic}>?
+    pub var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
     pub var comptrollerAddress: Address?
-    pub var comptrollerCap: Capability<&{Interfaces.ComptrollerPublic}>?
+    pub var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
     access(self) let underlyingAssetType: Type
     // Save underlying asset deposited into this pool
     access(self) let underlyingVault: @FungibleToken.Vault
@@ -166,7 +166,7 @@ pub contract LendingPool {
     }
 
     // Check whether or not the given certificate is issued by system
-    access(self) fun checkUserCertificateType(certCap: Capability<&{Interfaces.IdentityCertificate}>): Bool {
+    access(self) fun checkUserCertificateType(certCap: Capability<&{LendingInterfaces.IdentityCertificate}>): Bool {
         return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
     }
 
@@ -292,7 +292,7 @@ pub contract LendingPool {
     // @numLpTokenToRedeem - the special value of `UFIx64.max` indicating to redeem all virtual LP tokens the redeemer has
     // Since redeemer decreases his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun redeem(
-        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
         numLpTokenToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
@@ -320,7 +320,7 @@ pub contract LendingPool {
     // @numUnderlyingToRedeem - the special value of `UFIx64.max` indicating to redeem all the underlying liquidity
     // the redeemer has provided to this pool
     pub fun redeemUnderlying(
-        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
         numUnderlyingToRedeem: UFix64
     ): @FungibleToken.Vault {
         pre {
@@ -349,7 +349,7 @@ pub contract LendingPool {
     // which is stored in user account and can only be given by its owner
     // Since borrower would decrease his overall collateral ratio across all markets, safety check happenes inside comptroller
     pub fun borrow(
-        userCertificateCap: Capability<&{Interfaces.IdentityCertificate}>,
+        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
         borrowAmount: UFix64,
     ): @FungibleToken.Vault {
         pre {
@@ -500,7 +500,7 @@ pub contract LendingPool {
         } else {
             // Seize external
             let externalPoolPublicRef = getAccount(poolCollateralizedToSeize)
-                .getCapability<&{Interfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow() 
+                .getCapability<&{LendingInterfaces.PoolPublic}>(Config.PoolPublicPublicPath).borrow() 
                     ?? panic(
                         Error.ErrorEncode(
                             msg: "Cannot borrow reference to external PoolPublic resource",
@@ -529,7 +529,7 @@ pub contract LendingPool {
     // Only used for "external" seize. Run-time type check of pool certificate ensures it can only be called by other supported markets.
     // @seizerPool: The external pool seizing the current collateral pool (i.e. borrowPool)
     pub fun seize(
-        seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+        seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
         seizerPool: Address,
         liquidator: Address,
         borrower: Address,
@@ -605,9 +605,9 @@ pub contract LendingPool {
         emit ReservesAdded(donator: self.poolAddress, scaledAddedUnderlyingAmount: scaledAddedUnderlyingReserves, scaledNewTotalReserves: self.scaledTotalReserves)
     }
 
-    pub resource PoolCertificate: Interfaces.IdentityCertificate {}
+    pub resource PoolCertificate: LendingInterfaces.IdentityCertificate {}
 
-    pub resource PoolPublic: Interfaces.PoolPublic {
+    pub resource PoolPublic: LendingInterfaces.PoolPublic {
         pub fun getPoolAddress(): Address {
             return LendingPool.poolAddress
         }
@@ -780,7 +780,7 @@ pub contract LendingPool {
             return Type<@LendingPool.PoolCertificate>()
         }
         pub fun seize(
-            seizerPoolCertificate: @{Interfaces.IdentityCertificate},
+            seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
             seizerPool: Address,
             liquidator: Address,
             borrower: Address,
@@ -805,7 +805,7 @@ pub contract LendingPool {
                 let oldInterestRateModelAddress = LendingPool.interestRateModelAddress
                 LendingPool.interestRateModelAddress = newInterestRateModelAddress
                 LendingPool.interestRateModelCap = getAccount(newInterestRateModelAddress)
-                    .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
+                    .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
                 emit NewInterestRateModel(oldInterestRateModelAddress, newInterestRateModelAddress)
             }
             return
@@ -859,7 +859,7 @@ pub contract LendingPool {
                 let oldComptrollerAddress = LendingPool.comptrollerAddress
                 LendingPool.comptrollerAddress = newComptrollerAddress
                 LendingPool.comptrollerCap = getAccount(newComptrollerAddress)
-                    .getCapability<&{Interfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath)
+                    .getCapability<&{LendingInterfaces.ComptrollerPublic}>(Config.ComptrollerPublicPath)
                 emit NewComptroller(oldComptrollerAddress, newComptrollerAddress)
             }
         }
@@ -896,7 +896,7 @@ pub contract LendingPool {
             LendingPool.scaledPoolSeizeShare = Config.UFix64ToScaledUInt256(poolSeizeShare)
             LendingPool.interestRateModelAddress = interestRateModelAddress
             LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
-                .getCapability<&{Interfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
+                .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(Config.InterestRateModelPublicPath)
         }
 
         // Admin function to withdraw pool reserve
@@ -958,6 +958,6 @@ pub contract LendingPool {
         destroy <-self.account.load<@AnyResource>(from: self.PoolPublicStoragePath)
         self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
         self.account.unlink(self.PoolPublicPublicPath)
-        self.account.link<&{Interfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
+        self.account.link<&{LendingInterfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
     }
 }
