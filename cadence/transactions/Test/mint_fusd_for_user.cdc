@@ -1,5 +1,5 @@
-import FUSD from "../../contracts/FUSD.cdc"
-import FungibleToken from "../../contracts/FungibleToken.cdc"
+import FUSD from "../../contracts/tokens/FUSD.cdc"
+import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
 transaction(mintAmount: UFix64) {
 

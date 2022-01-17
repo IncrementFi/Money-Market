@@ -25,12 +25,12 @@ if len(sys.argv) > 1 and sys.argv[1] == '1':
     exit()
 
 # generate fake pool token contracts: Apple.cdc, Peach.cdc
-with open('./cadence/contracts/FUSD.cdc', 'r') as f:
+with open('./cadence/contracts/tokens/FUSD.cdc', 'r') as f:
     token_template = f.read()
 for name in setting.FakePoolNames:
     tokenContractName = name
     token_contract = token_template
-    token_contract = token_contract.replace('./FungibleToken.cdc', '../FungibleToken.cdc')
+    token_contract = token_contract.replace('./FungibleToken.cdc', '../tokens/FungibleToken.cdc')
     token_contract = token_contract.replace('FUSD', tokenContractName)
 
     lowerName = tokenContractName[:1].lower() + tokenContractName[1:]
@@ -82,7 +82,7 @@ for name in setting.FakePoolNames:
         fusd_vault = transaction_template
         fusd_vault = fusd_vault.replace('../../contracts', '../../../contracts')
         fusd_vault = fusd_vault.replace('FlowToken', name)
-        fusd_vault = fusd_vault.replace('../contracts/'+name, '../contracts/autogen/'+name)
+        fusd_vault = fusd_vault.replace('../contracts/tokens/'+name, '../contracts/autogen/'+name)
         fw.write(fusd_vault)
 
 # generate init_pool_Apple.cdc, using template init_pool_template.cdc
@@ -124,7 +124,7 @@ for name in setting.FakePoolNames:
         os.makedirs(path)
     with open(path+'/mint_{0}_for_user.cdc'.format(name), 'w') as fw:
         fusd_vault = transaction_template
-        fusd_vault = fusd_vault.replace('contracts/FUSD.cdc', 'contracts/autogen/FUSD.cdc')
+        fusd_vault = fusd_vault.replace('contracts/tokens/FUSD.cdc', 'contracts/autogen/FUSD.cdc')
         fusd_vault = fusd_vault.replace('FUSD', name)
         lowerName = name[:1].lower() + name[1:]
         if name == 'FUSD':

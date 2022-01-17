@@ -1,4 +1,4 @@
-import FungibleToken from "../../contracts/FungibleToken.cdc"
+import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
 pub fun main(userAddr: Address, vaultPath: PublicPath): UFix64 {
     let vaultBalance = getAccount(userAddr).getCapability<&{FungibleToken.Balance}>(vaultPath)
