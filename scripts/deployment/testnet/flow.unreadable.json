@@ -4,28 +4,28 @@
   },
   "contracts": {
     "FungibleToken": {
-      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FungibleToken.cdc",
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/tokens/FungibleToken.cdc",
       "aliases": { "emulator": "0xee82856bf20e2aa6", "testnet": "0x9a0766d93b6608b7", "mainnet": "0xf233dcee88fe0abe" }
     },
     "FlowToken" : {
-      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FlowToken.cdc",
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/tokens/FlowToken.cdc",
       "aliases": { "emulator": "0x0ae53cb6e3f42a79", "testnet": "0x7e60df042a9c0868", "mainnet": "0x1654653399040a61" }
     },
     "FUSD" : {
-      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/FUSD.cdc",
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/tokens/FUSD.cdc",
       "aliases": { "testnet": "0xe5b5624186770886", "mainnet": "0x3c5959b568896393" }
     },
     "BLT" : {
-      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/BLT.cdc",
+      "source": "./scripts/deployment/testnet/cadence_unreadable/contracts/tokens/BLT.cdc",
       "aliases": { "testnet": "0x48adb192e4b081b0" }
     },
 
     "SimpleOracle":                   "./scripts/deployment/testnet/cadence_unreadable/contracts/SimpleOracle.cdc",
-    "Interfaces":                     "./scripts/deployment/testnet/cadence_unreadable/contracts/Interfaces.cdc",
-    "Config":                         "./scripts/deployment/testnet/cadence_unreadable/contracts/Config.cdc",
-    "Error":                          "./scripts/deployment/testnet/cadence_unreadable/contracts/Error.cdc",
+    "LendingInterfaces":                     "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingInterfaces.cdc",
+    "LendingConfig":                         "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingConfig.cdc",
+    "LendingError":                          "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingError.cdc",
     "TwoSegmentsInterestRateModel":   "./scripts/deployment/testnet/cadence_unreadable/contracts/TwoSegmentsInterestRateModel.cdc",
-    "ComptrollerV1":                  "./scripts/deployment/testnet/cadence_unreadable/contracts/ComptrollerV1.cdc",
+    "LendingComptroller":                  "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingComptroller.cdc",
     "LendingPool":                    "./scripts/deployment/testnet/cadence_unreadable/contracts/LendingPool.cdc"
   },
   "networks": {
@@ -34,7 +34,7 @@
     "testnet": "access.devnet.nodes.onflow.org:9000"
   },
   "accounts": {
-    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "b15fd31d0847f028abdb617da70a3f7a7e63ae8fdd63882cb47c54b6bec2605f" },
+    "emulator-account": { "address": "0xf8d6e0586b0a20c7", "key": "da193159f79102065ceb0c7cfef38910525e10a6a0c8c5109f645cb47f792a47" },
     "emulator-oracle-deployer": { "address": "0x01cf0e2f2f715450", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-oracle-updater":  { "address": "0x179b6b1cb6755e31", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
     "emulator-pool-template":   { "address": "0xf3fcd2c1a78f5eee", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
@@ -133,11 +133,11 @@
     "emulator": {
       "emulator-account": [
         "FUSD",
-        "Error",
-        "Interfaces",
-        "Config",
+        "LendingError",
+        "LendingInterfaces",
+        "LendingConfig",
         "TwoSegmentsInterestRateModel",
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "emulator-oracle-deployer": [
         "SimpleOracle"
@@ -148,12 +148,12 @@
     },
     "testnet": {
       "testnet-interface-deployer": [
-        "Config",
-        "Error",
-        "Interfaces"
+        "LendingConfig",
+        "LendingError",
+        "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "testnet-interest-rate-FlowToken-deployer": [
       ],

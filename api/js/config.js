@@ -5,8 +5,8 @@ const network = 'emulator'; // testnet, mainnet
 
 function CommonAddressMapping() {
   FCL.config()
-    .put("0xInterfaces", address["Interfaces"][network])
-    .put("0xConfig", address["Config"][network])
+    .put("0xInterfaces", address["LendingInterfaces"][network])
+    .put("0xConfig", address["LendingConfig"][network])
     .put("0xFungibleToken", address["FungibleToken"][network])
     .put("0xFUSD", address["FUSD"][network])
   

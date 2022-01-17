@@ -10,7 +10,7 @@ var CODE = ConfigJson.Codes.Scripts['QueryUserAllPools']
 function queryUserAllPools(userAddr, auditAddr) {
   if (!auditAddr) return Promise.resolve(false);
   
-  // Config.CommonAddressMapping()
+  // LendingConfig.CommonAddressMapping()
 
   return FCL.send(
     [

@@ -8,7 +8,7 @@ import re
 ErrorIdentifierStart = False
 ErrorIndex = 0
 ErrorJson = {}
-with open('./cadence/contracts/Error.cdc', 'r') as f:
+with open('./cadence/contracts/LendingError.cdc', 'r') as f:
     for line in f:
         line = line.strip()
         if line.startswith('pub enum '): ErrorIdentifierStart = True

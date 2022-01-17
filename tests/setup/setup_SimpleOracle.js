@@ -18,11 +18,11 @@ export const getOracleContractAddress = async () => {
 
     await deployContractByName({
         to: oracleDeployer,
-        name: "Interfaces"
+        name: "LendingInterfaces"
     });
 
     // Must use deployed OracleInterface.
-    const addressMap = { Interfaces: oracleDeployer };
+    const addressMap = { LendingInterfaces: oracleDeployer };
     return deployContractByName({
         to: oracleDeployer,
         name: "SimpleOracle",

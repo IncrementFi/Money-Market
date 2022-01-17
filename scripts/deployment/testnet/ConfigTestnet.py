@@ -22,7 +22,7 @@ def Encrypt(w):
     return ww
 
 def GetComptrollerContractName():
-    return 'ComptrollerV1'
+    return 'LendingComptroller'
 def GetLendingPoolContractName():
     return 'LendingPool'
 def GetInterestContractName():

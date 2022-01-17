@@ -1,15 +1,15 @@
-pub contract Config {
+pub contract LendingConfig {
     // TwoSegmentsInterestRateModel.InterestRateModelPublicPath
     pub let InterestRateModelPublicPath: PublicPath
     // SimpleOracle.OraclePublicPath
     pub let OraclePublicPath: PublicPath
     // SimpleOracle.UpdaterPublicPath
     pub let UpdaterPublicPath: PublicPath
-    // value taken from ComptrollerV1.ComptrollerPublicPath
+    // value taken from LendingComptroller.ComptrollerPublicPath
     pub let ComptrollerPublicPath: PublicPath
-    // value taken from ComptrollerV1.UserCertificateStoragePath
+    // value taken from LendingComptroller.UserCertificateStoragePath
     pub var UserCertificateStoragePath: StoragePath
-    // value taken from ComptrollerV1.UserCertificatePrivatePath
+    // value taken from LendingComptroller.UserCertificatePrivatePath
     pub var UserCertificatePrivatePath: PrivatePath
     // value taken from LendingPool.PoolPublicPublicPath
     pub var PoolPublicPublicPath: PublicPath
