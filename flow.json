@@ -25,7 +25,7 @@
     "LendingConfig":                         "./cadence/contracts/LendingConfig.cdc",
     "LendingError":                          "./cadence/contracts/LendingError.cdc",
     "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-    "ComptrollerV1":                  "./cadence/contracts/ComptrollerV1.cdc",
+    "LendingComptroller":                  "./cadence/contracts/LendingComptroller.cdc",
     "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
   },
   "networks": {
@@ -137,7 +137,7 @@
         "LendingInterfaces",
         "LendingConfig",
         "TwoSegmentsInterestRateModel",
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "emulator-oracle-deployer": [
         "SimpleOracle"
@@ -153,7 +153,7 @@
         "LendingInterfaces"
       ],
       "testnet-comptroller-deployer": [
-        "ComptrollerV1"
+        "LendingComptroller"
       ],
       "testnet-interest-rate-FlowToken-deployer": [
       ],

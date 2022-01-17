@@ -20,7 +20,7 @@ function queryAllMarkets(auditAddr) {
     ]).then(FCL.decode);
 }
 
-queryAllMarkets(ConfigJson["ContractAddress"]["ComptrollerV1"])
+queryAllMarkets(ConfigJson["ContractAddress"]["LendingComptroller"])
 
 module.exports = {
   queryAllMarkets

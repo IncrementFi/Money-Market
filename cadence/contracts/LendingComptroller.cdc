@@ -2,7 +2,7 @@ import LendingInterfaces from "./LendingInterfaces.cdc"
 import LendingConfig from "./LendingConfig.cdc"
 import LendingError from "./LendingError.cdc"
 
-pub contract ComptrollerV1 {
+pub contract LendingComptroller {
     // The storage path for the Admin resource
     pub let AdminStoragePath: StoragePath
     // The storage path for the Comptroller resource
@@ -10,7 +10,7 @@ pub contract ComptrollerV1 {
     pub let ComptrollerPublicPath: PublicPath
     // The private path for the capability to Comptroller resource for admin functions
     pub let ComptrollerPrivatePath: PrivatePath
-    // Account address ComptrollerV1 contract is deployed to, i.e. 'the contract address'
+    // Account address LendingComptroller contract is deployed to, i.e. 'the contract address'
     pub let comptrollerAddress: Address
 
     pub event MarketAdded(market: Address, marketType: String, liquidationPenalty: UFix64, collateralFactor: UFix64)
@@ -373,7 +373,7 @@ pub contract ComptrollerV1 {
         }
 
         pub fun getUserCertificateType(): Type {
-            return Type<@ComptrollerV1.UserCertificate>()
+            return Type<@LendingComptroller.UserCertificate>()
         }
 
         pub fun callerAllowed(
@@ -699,12 +699,12 @@ pub contract ComptrollerV1 {
         // Admin function to list a new asset pool to the lending market
         // Note: Do not list a new asset pool before the oracle feed is ready
         pub fun addMarket(poolAddress: Address, liquidationPenalty: UFix64, collateralFactor: UFix64) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
+            let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.addMarket(poolAddress: poolAddress, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         }
         // Admin function to config parameters of a listed-market
         pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
+            let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configMarket(
                 pool: pool,
                 isOpen: isOpen,
@@ -716,12 +716,12 @@ pub contract ComptrollerV1 {
         }
         // Admin function to set a new oracle
         pub fun configOracle(oracleAddress: Address) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
+            let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configOracle(oracleAddress: oracleAddress)
         }
         // Admin function to set closeFactor
         pub fun setCloseFactor(closeFactor: UFix64) {
-            let comptrollerRef = ComptrollerV1.account.borrow<&Comptroller>(from: ComptrollerV1.ComptrollerStoragePath) ?? panic("lost local comptroller")
+            let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.setCloseFactor(newCloseFactor: closeFactor)
         }
     }
