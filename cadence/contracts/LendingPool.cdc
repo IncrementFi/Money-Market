@@ -4,13 +4,8 @@
 
 # Author: Increment Labs
 
-The core funtions of the pool support supply, redeem, borrow and repay.
-When user supplies the underlying asset, LendingPool will mint the lpTokens according to the exchange rate and store it in the contract.
-The exchange rate will increase as the borrow interest accrues, then allowing suppliers to make a profit.
-
-Pools with different underlying assets will share one contract code.
-When the lpTokens of one pool is supplied as collateral, the underyling assets of another pool can be lent.
-It is necessary for users to manage their borrows to prevent unnecessary losses from liquidation.
+Core functionalities of the lending pool smart contract supporting cross-market supply, redeem, borrow, repay, and liquidation.
+Multiple LendingPool contracts will be deployed for each of the different pooled underlying FungibleTokens.
 
 */
 import FungibleToken from "./tokens/FungibleToken.cdc"

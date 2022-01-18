@@ -4,7 +4,7 @@
 
 # Author: Increment Labs
 
-The Comptroller contract will manage all open markets and provide audit and verification of the lendingpools.
+The Comptroller contract manages market parameters and provides safety auditing before actions being applied to LendingPools.
 
 */
 import LendingInterfaces from "./LendingInterfaces.cdc"
@@ -168,9 +168,6 @@ pub contract LendingComptroller {
                 self.accountMarketsIn[supplierAddress]!.append(poolAddress)
             }
 
-            ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(poolAddress);
-            ///// distributeSupplierComp(poolAddress, supplierAddress);
             return nil
         }
 
@@ -216,9 +213,6 @@ pub contract LendingComptroller {
                 scaledRedeemOrRepayAmount: redeemLpTokenAmountScaled
             )
 
-            ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(poolAddress);
-            ///// distributeSupplierComp(poolAddress, redeemerAddress);
             return nil
         }
 
@@ -271,10 +265,6 @@ pub contract LendingComptroller {
                 return LendingError.ErrorEncode(msg: "borrow too much, more than collaterized position value", err: LendingError.ErrorCode.BORROW_NOT_ALLOWED_POSITION_UNDER_WATER)
             }
             
-            ///// 4. TODO: Keep the flywheel moving
-            ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
-            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
             return nil
         }
 
@@ -304,10 +294,6 @@ pub contract LendingComptroller {
                 scaledRedeemOrRepayAmount: repayUnderlyingAmountScaled
             )
 
-            ///// TODO: Keep the flywheel moving
-            ///// Exp memory borrowIndex = Exp({mantissa: CToken(cToken).borrowIndex()});
-            ///// updateCompBorrowIndex(poolAddress, borrowIndex);
-            ///// distributeBorrowerComp(poolAddress, borrowerAddress, borrowIndex);
             return nil
         }
 
@@ -400,10 +386,6 @@ pub contract LendingComptroller {
                 scaledRedeemOrRepayAmount: seizeCollateralPoolLpTokenAmountScaled
             )
 
-            ///// TODO: Keep the flywheel moving
-            ///// updateCompSupplyIndex(collateralPool);
-            ///// distributeSupplierComp(collateralPool, borrower);
-            ///// distributeSupplierComp(collateralPool, liquidator);
             return nil
         }
 
