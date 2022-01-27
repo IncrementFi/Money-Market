@@ -24,6 +24,8 @@ transaction() {
 
         // Get protocol-issued user certificate
         if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
+            destroy <-signer.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
+
             let userCertificate <- LendingComptroller.IssueUserCertificate()
             signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
             signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
