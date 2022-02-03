@@ -7,7 +7,7 @@ import ConfigTestnet
 #from scripts.deployment.testnet.DeployUnreadableOnTestnet import OracleDeployer
 
 Keywords = {}
-WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc' }
+WhiteFileList = { 'FlowToken.cdc', 'FungibleToken.cdc', 'FUSD.cdc', 'Kibble.cdc', 'FBTC.cdc', 'FETH.cdc', 'BLT.cdc', 'USDC.cdc', 'OracleConfig.cdc', 'OracleInterface.cdc' }
 WhiteKeywords = { 'borrow', 'timestamp', 'deposit', 'balance', 'withdraw', 'err', 'borrower' }
 
 

@@ -11,12 +11,21 @@ UnreadablePath = './tools/deployment/testnet/cadence_unreadable'
 P = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 C = ['f','o','b','c','d','e','p','y','z','q','r','s','g','h','i','j','k','l','m','n','t','u','a','v','w','x']
 
+encodeIndex = -1
 def Encrypt(w):
+    global encodeIndex
+    encodeIndex = encodeIndex + 1
+    if encodeIndex < 26: return P[encodeIndex]
+    if encodeIndex >= 26 and encodeIndex < 26*2: return 'acwes'+P[encodeIndex-26] + 'erf'
+    if encodeIndex >= 26*2 and encodeIndex < 26*3: return 'bt'+P[encodeIndex-26*2]+'powe'
+    if encodeIndex >= 26*3 and encodeIndex < 26*4: return 'eaa'+P[encodeIndex-26*3]+'lsa'
+    if encodeIndex >= 26*4 and encodeIndex < 26*5: return 'eas'+P[encodeIndex-26*4]+'lsa'
+    if encodeIndex >= 26*5 and encodeIndex < 26*6: return 'eae'+P[encodeIndex-26*5]+'lsa'
+    #return w
     ww = w[::-1] 
     for i in range(0, 10):
         ww = ww.replace(str(i), chr(ord('a')+i))
     l = len(ww)
-    #ww = ww[:int(l/2)] + ww[int(l/3):] + ww + ww[int(l/4) : int(l/4*3)]
     for i in range(0, len(P)):
         ww = ww.replace(P[i], C[i])
     return ww

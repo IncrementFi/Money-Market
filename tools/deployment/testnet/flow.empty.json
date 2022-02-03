@@ -15,17 +15,30 @@
             "source": "./tools/deployment/testnet/cadence_empty/contracts/tokens/FUSD.cdc",
             "aliases": { "testnet": "0xe5b5624186770886", "mainnet": "0x3c5959b568896393" }
         },
+        "USDC" : {
+            "source": "./tools/deployment/testnet/cadence_empty/contracts/tokens/USDC.cdc",
+            "aliases": { "testnet": "0xe5b5624186770886" }
+        },
         "BLT" : {
             "source": "./tools/deployment/testnet/cadence_empty/contracts/tokens/BLT.cdc",
             "aliases": { "testnet": "0x48adb192e4b081b0" }
         },
+        "OracleInterface" : {
+            "source": "./tools/deployment/testnet/cadence_empty/contracts/env/OracleInterface.cdc",
+            "aliases": { "emulator": "0xf8d6e0586b0a20c7", "testnet": "0x2a9b59c3e2b72ee0" }
+        },
+        "OracleConfig" : {
+            "source": "./tools/deployment/testnet/cadence_empty/contracts/env/OracleConfig.cdc",
+            "aliases": { "emulator": "0xf8d6e0586b0a20c7", "testnet": "0x2a9b59c3e2b72ee0" }
+        },
         "SimpleOracle":                   "./tools/deployment/testnet/cadence_empty/contracts/SimpleOracle.cdc",
-        "LendingInterfaces":                     "./tools/deployment/testnet/cadence_empty/contracts/LendingInterfaces.cdc",
-        "LendingConfig":                         "./tools/deployment/testnet/cadence_empty/contracts/LendingConfig.cdc",
-        "LendingError":                          "./tools/deployment/testnet/cadence_empty/contracts/LendingError.cdc",
+        "LendingInterfaces":              "./tools/deployment/testnet/cadence_empty/contracts/LendingInterfaces.cdc",
+        "LendingConfig":                  "./tools/deployment/testnet/cadence_empty/contracts/LendingConfig.cdc",
+        "LendingError":                   "./tools/deployment/testnet/cadence_empty/contracts/LendingError.cdc",
         "TwoSegmentsInterestRateModel":   "./tools/deployment/testnet/cadence_empty/contracts/TwoSegmentsInterestRateModel.cdc",
-        "LendingComptroller":                  "./tools/deployment/testnet/cadence_empty/contracts/LendingComptroller.cdc",
-        "LendingPool":                    "./tools/deployment/testnet/cadence_empty/contracts/LendingPool.cdc"
+        "LendingComptroller":             "./tools/deployment/testnet/cadence_empty/contracts/LendingComptroller.cdc",
+        "LendingPool":                    "./tools/deployment/testnet/cadence_empty/contracts/LendingPool.cdc",
+        "LendingOracle":                  "./tools/deployment/testnet/cadence_empty/contracts/LendingOracle.cdc"
     },
     "networks": {
         "emulator": "127.0.0.1:3569",
@@ -42,16 +55,17 @@
         "emulator-user-C":          { "address": "0x120e725050340cab", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
         "emulator-user-D":          { "address": "0xf669cb8d41ce0c74", "key": { "privateKey": "14b15e83fc8b1725e1f949fd9770041ed35631c3035aa569654f9f795674f782", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256" } },
         
-        "testnet-comptroller-deployer":    {"address": "0xf3ccb984310eca39", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-interest-rate-FlowToken-deployer":  {"address": "0x21c8f30131939cfd", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-interest-rate-FUSD-deployer":       {"address": "0x2a6caf9d0382405e", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-interface-deployer":      {"address": "0xe7525011db2e04f4", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-oracle-deployer":         {"address": "0xb9ea46f9e5fc5504", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-comptroller-deployer":    {"address": "0x09068778698543f7", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-interest-rate-FlowToken-deployer":  {"address": "0xed613ea5787f4328", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-interest-rate-FUSD-deployer":       {"address": "0xfb355b96e17b4949", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-interface-deployer":      {"address": "0x1f52e24bf0814996", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-oracle-deployer":         {"address": "0xf2d5e5a95edaf3cc", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
         "testnet-oracle-updater":          {"address": "0x078095ae53d01b36", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
 
-        "testnet-pool-FlowToken-deployer": {"address": "0x15618cff53d00e4a", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-pool-FUSD-deployer":      {"address": "0x1e4bbe669f557063", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
-        "testnet-pool-BLT-deployer":      {"address": "0xfa2c07bb8eaf70bc", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-pool-FlowToken-deployer": {"address": "0x16b25c744f20f313", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-pool-FUSD-deployer":      {"address": "0x00e63947d624f972", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-pool-BLT-deployer":       {"address": "0xe481809ac7def9ad", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
+        "testnet-pool-USDC-deployer":      {"address": "0x0bcc0bde1aa1875b", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
         
         "testnet-liquidator":              {"address": "0x6d692450d591524c", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
         
@@ -63,6 +77,7 @@
             "tokenName": "Flow",
             "tokenNameLower": "flowToken",
             "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
+            "oracleAddr": "0xcbdb5a7b89c3c844",
             "reserveFactor": 0.20,
             "poolSeizeShare": 0.028,
             "liquidationPenalty": 0.10,
@@ -76,9 +91,27 @@
         },
         "testnet-pool-FUSD-deployer": {
             "poolName": "FUSD",
-            "tokenName": "FUSD",
-            "tokenNameLower": "tfusd",
+            "tokenName": "test_FUSD",
+            "tokenNameLower": "test_fusd",
             "interestRateModelDeployer": "testnet-interest-rate-FUSD-deployer",
+            "oracleAddr": "0x3b220a3372190656",
+            "reserveFactor": 0.20,
+            "poolSeizeShare": 0.028,
+            "liquidationPenalty": 0.05,
+            "collateralFactor": 0.80,
+            "borrowCap": 0.0,
+            "isOpen": true,
+            "isMining": true,
+            "oracleCap": 10,
+            "oracleInitialPrice": 1.0,
+            "isFake": true
+        },
+        "testnet-pool-USDC-deployer": {
+            "poolName": "USDC",
+            "tokenName": "test_USDC",
+            "tokenNameLower": "test_usdc",
+            "interestRateModelDeployer": "testnet-interest-rate-FUSD-deployer",
+            "oracleAddr": "0xc911d6ddfae70ce8",
             "reserveFactor": 0.20,
             "poolSeizeShare": 0.028,
             "liquidationPenalty": 0.05,
@@ -92,9 +125,10 @@
         },
         "testnet-pool-BLT-deployer": {
             "poolName": "BLT",
-            "tokenName": "BLT",
-            "tokenNameLower": "bLT",
+            "tokenName": "test_BLT",
+            "tokenNameLower": "test_blt",
             "interestRateModelDeployer": "testnet-interest-rate-FlowToken-deployer",
+            "oracleAddr": "0x2d766f00eb1d0c37",
             "reserveFactor": 0.20,
             "poolSeizeShare": 0.028,
             "liquidationPenalty": 0.20,
@@ -136,7 +170,8 @@
             "LendingInterfaces",
             "LendingConfig",
             "TwoSegmentsInterestRateModel",
-            "LendingComptroller"
+            "LendingComptroller",
+            "LendingOracle"
         ],
         "emulator-oracle-deployer": [
             "SimpleOracle"
@@ -163,7 +198,7 @@
         "testnet-pool-FUSD-deployer": [
         ],
         "testnet-oracle-deployer": [
-            "SimpleOracle"
+            "LendingOracle"
         ]
         }
     }

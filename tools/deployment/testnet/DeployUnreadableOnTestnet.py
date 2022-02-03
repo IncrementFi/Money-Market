@@ -71,7 +71,21 @@ for poolDeployer in PoolDeployerNameToAddr:
         PoolContractName, ConfigTestnet.UnreadablePath, PoolContractName, poolDeployer))
 
 # Oracle
+for poolDeployer in PoolDeployerNameToAddr:
+    poolAddr = PoolDeployerNameToAddr[poolDeployer]
+    poolConfig = ConfigTestnet.ExtractPoolConfig(poolDeployer, 'testnet')
+    print('===============>', 'add oracle price feed ::: ', poolAddr)
+    cmd = 'flow transactions send {0}/transactions/Oracle/add_price_feed.cdc '.format(ConfigTestnet.UnreadablePath) + \
+          '--arg Address:{0} '.format(poolAddr) + \
+          '--arg Address:{0} '.format(poolConfig['oracleAddr']) + \
+          '--signer {0} '.format(OracleDeployer) + \
+          '-f ./tools/deployment/testnet/flow.unreadable.json ' + \
+          '--network testnet'
+    print(cmd)
+    os.system(cmd)
+
 # 1.Deploy and setup oracle resource
+"""
 print('===============>', 'Oracle setup oracle resource')
 cmd = 'flow transactions send '+ ConfigTestnet.UnreadablePath +'/transactions/Oracle/admin_create_oracle_resource.cdc ' + \
         '--signer {0} '.format(OracleDeployer) + \
@@ -120,6 +134,7 @@ for poolDeployer in PoolDeployerNameToAddr:
           '-f ./tools/deployment/testnet/flow.unreadable.json ' + \
           '--network testnet'
     os.system(cmd)
+"""
 
 # Init comptroller
 print('===============>', 'Init comptroller.')
