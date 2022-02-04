@@ -35,7 +35,7 @@ This is a pool-based, algorithmically-set interest rate, decentralized money mar
     │   ├── create_interest_rate_model.cdc      /* Create an interest rate model resource. Each LendingPool could have its own interest rate model */
     │   └── update_model_params.cdc             /* Update parameters of an interest rate model */
     ├── Oracle
-    │   ├── add_price_feed.cdc                  /* add new oracle price and :endingPoool mapping */
+    │   ├── add_price_feed.cdc                  /* Specify which decentralized price feed is used by the given LendingPool contract */
     │   ├── admin_add_price_feed.cdc            /* Only used for SimpleOracle unittest */
     │   ├── ...                                 /* Only used      ......      unittest */
     │   └── updater_upload_feed_data.cdc        /* Only used for SimpleOracle unittest */
