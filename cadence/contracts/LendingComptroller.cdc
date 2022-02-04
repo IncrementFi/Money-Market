@@ -121,6 +121,7 @@ pub contract LendingComptroller {
     ///
     /// This certificate identifies account address and needs to be stored in storage path locally.
     /// User should keep it safe and never give this resource's capability to others
+    /// It is more convenient to use a resource certificate on flow for authentication than signing a signature.
     ///
     pub resource UserCertificate: LendingInterfaces.IdentityCertificate {}
 
