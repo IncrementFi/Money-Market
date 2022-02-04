@@ -1,4 +1,4 @@
-# 💰Money Market
+# 💰 Decentralized Money Market
 
 This is a pool-based, algorithmically-set interest rate, decentralized money market for fungible tokens on Flow blockchain. It aggregates user supplied funds into smart contracts, any deposited fungible tokens are also used as collaterals for borrowing other fungible tokens.
 ## 🧩 Project Overview
@@ -12,44 +12,44 @@ This is a pool-based, algorithmically-set interest rate, decentralized money mar
 ## 📖 Directory Layout
 ```js
 ├── contracts
-│   ├── LendingComptroller.cdc  /* mainly provides safety auditing before actions being applied to LendingPools */
-│   ├── LendingConfig.cdc       /* common configurations, such as path to prevent hardcoding */
-│   ├── LendingError.cdc        /* error codes */
-│   ├── LendingInterfaces.cdc   /* all interface descriptions for public capabilities */
-│   ├── LendingOracle.cdc       /* PriceReader mapping between external oracles and lending pools */
-│   ├── LendingPool.cdc         /* implementation of LendingPools, mainly including supply/redeem/borrow/repay */
-│   ├── SimpleOracle.cdc        /* only for testing use, single node oracle */
-│   └── TwoSegmentsInterestRateModel.cdc  /* an interest rate model, linear piecewise function. */
+│   ├── LendingConfig.cdc                       /* Common paths and constants */
+│   ├── LendingError.cdc                        /* Error codes */
+│   ├── LendingInterfaces.cdc                   /* All public resource interfaces */
+│   ├── TwoSegmentsInterestRateModel.cdc        /* Basic interest rate model used by the money market */
+│   ├── LendingComptroller.cdc                  /* Safety auditing before any side effects were applied to LendingPool */
+│   ├── LendingPool.cdc                         /* Each of supported FungibleTokens on the money market has a corresponding LendingPool contract deployed & configured */
+│   ├── LendingOracle.cdc                       /* A proxy contract to read from decentralized price feeds and formalize the result using OraclePublic interface */
+│   └── SimpleOracle.cdc                        /* A single node oracle only used for unittest purpose */
 │
 ├── scripts
-│   ├── InterestRateModel       /* queries for parameters of interest rate */
-│   ├── Oracle                  /* queries for oracle states */
-│   └── Query                   /* set of queries for pool&user info */
+│   ├── InterestRateModel                       /* Query interest rate parameters */
+│   ├── Oracle                                  /* Query oracle data */
+│   └── Query                                   /* Query LendingPool & user info */
 │
-└── transactions                                /* transactions */
+└── transactions
     ├── Comptroller
-    │   ├── add_market.cdc                      /* add new pools to market */
-    │   ├── config_market.cdc                   /* configure the parameters of market */
-    │   └── init_comptroller.cdc                /* comptroller initialization */
+    │   ├── add_market.cdc                      /* Add a new LendingPool to the money market */
+    │   ├── config_market.cdc                   /* Configure an existing LendingPool's parameters */
+    │   └── init_comptroller.cdc                /* Comptroller initialization */
     ├── InterestRateModel
-    │   ├── create_interest_rate_model.cdc      /* create the resource of interest rate model */
-    │   └── update_model_params.cdc             /* set rate parameters */
+    │   ├── create_interest_rate_model.cdc      /* Create an interest rate model resource. Each LendingPool could have its own interest rate model */
+    │   └── update_model_params.cdc             /* Update parameters of an interest rate model */
     ├── Oracle
     │   ├── add_price_feed.cdc                  /* add new oracle price and :endingPoool mapping */
-    │   ├── admin_add_price_feed.cdc            /* use for local testing */
-    │   ├── ...
-    │   └── updater_upload_feed_data.cdc        /* for simple oracle use only */
-    ├── Pool                                    /* templates for each pool */
-    │   ├── init_pool_template.cdc              /* initialization of the LendingPool */
-    │   └── prepare_template_for_pool.cdc       /* preparation before creating the pool */
+    │   ├── admin_add_price_feed.cdc            /* Only used for SimpleOracle unittest */
+    │   ├── ...                                 /* Only used      ......      unittest */
+    │   └── updater_upload_feed_data.cdc        /* Only used for SimpleOracle unittest */
+    ├── Pool
+    │   ├── init_pool_template.cdc              /* Initialization of each LendingPool */
+    │   └── prepare_template_for_pool.cdc       /* Preparation tx before deploying LendingPool contract */
     └── User
-        ├── user_borrow_template.cdc            /* template for borrow */
-        ├── user_deposit_template.cdc           /* template for supply */
-        ├── user_liquidate_template.cdc         /* template for liquidation */
-        ├── user_redeemAll_template.cdc         /* redeem all, no mantissa */
-        ├── user_redeem_template.cdc            /* template for redeem */
-        ├── user_repayAll_template.cdc          /* repay all, no mantissa */
-        └── user_repay_template.cdc             /* template for repay borrow */
+        ├── user_borrow_template.cdc            /* Template file for user borrow tx */
+        ├── user_deposit_template.cdc           /* Template file for user supply (deposit) tx */
+        ├── user_liquidate_template.cdc         /* Template file for liquidation tx */
+        ├── user_redeemAll_template.cdc         /* Template file for user redeem all tx */
+        ├── user_redeem_template.cdc            /* Template file for user redeem (withdraw) tx */
+        ├── user_repayAll_template.cdc          /* Template file for user repay all borrows tx */
+        └── user_repay_template.cdc             /* Template file for user repay borrow tx */
 ```
 <br>
 
