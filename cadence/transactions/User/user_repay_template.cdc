@@ -9,18 +9,14 @@ transaction(amount: UFix64) {
     let borrowerAddress: Address
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_repay_flowToken")
-        
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-            log("Create new local flowToken vault")
             signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
             signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
         }
         self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
         self.borrowerAddress = signer.address
-        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
     }
 
     execute {
@@ -31,7 +27,6 @@ transaction(amount: UFix64) {
             let totalRepayScaled = LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: self.borrowerAddress)
             amountRepay = LendingConfig.ScaledUInt256ToUFix64(totalRepayScaled) + 1.0/LendingConfig.ufixScale
         }
-        log("Test repay flowToken ".concat(amountRepay.toString()))
 
         let inUnderlyingVault <- self.flowTokenVault.withdraw(amount: amountRepay)
         let leftVault <- LendingPool.repayBorrow(borrower: self.borrowerAddress, repayUnderlyingVault: <-inUnderlyingVault)
@@ -40,8 +35,5 @@ transaction(amount: UFix64) {
         } else {
             destroy leftVault
         }
-        
-        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
-        log("End -----------------------------")
     }
 }
