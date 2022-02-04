@@ -455,6 +455,7 @@ for poolName in PoolNameToAddr:
         "VaultBalancePath": lowerPoolName+"Balance",
         "TokenAddress": configJson["ContractAddress"][poolName],
         "PoolAddress":  poolAddr,
+        "TokenKey": "A."+configJson["ContractAddress"][poolName][2:]+"."+poolName,
         "Fake": poolConfig['isFake']
     }
     configJson["PoolAddress"][poolAddr] = info
@@ -641,7 +642,8 @@ for poolName in configJson['PoolName']:
             "poolName": nameConfig["PoolName"],
             "tokenName": nameConfig["TokenName"],
             "marketAddress": nameConfig["PoolAddress"],
-            "tokenAddress": nameConfig["TokenAddress"]
+            "tokenAddress": nameConfig["TokenAddress"],
+            "tokenKey": "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
         }
     )
 del configJson['PoolName']

@@ -211,7 +211,8 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         "TokenName": poolTokenName,
         "VaultBalancePath": lowerPoolName+"Balance",
         "TokenAddress": configJson["ContractAddress"][poolName],
-        "PoolAddress":  setting.DictPoolNameToAddr[poolName]
+        "PoolAddress":  setting.DictPoolNameToAddr[poolName],
+        "TokenKey": "A." + configJson["ContractAddress"][poolName][2:] + "." + poolName
     }
     configJson["PoolAddress"][poolAddr] = info
     configJson["PoolName"][poolName] = info
@@ -383,7 +384,8 @@ for poolName in configJson['PoolName']:
             "poolName": nameConfig["PoolName"],
             "tokenName": nameConfig["TokenName"],
             "marketAddress": nameConfig["PoolAddress"],
-            "tokenAddress": nameConfig["TokenAddress"]
+            "tokenAddress": nameConfig["TokenAddress"],
+            "tokenKey": "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
         }
     )
 
