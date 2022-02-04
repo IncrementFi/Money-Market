@@ -343,7 +343,7 @@ pub contract LendingPool {
     /// @Param numLpTokenToRedeem - The number of lpTokens to redeem into underlying
     /// @Return The redeemed vault resource of pool's underlying token
     ///
-    /// @Notice Please keep your certificate resource safe, and this is your redeem certificate.
+    /// @Notice It is more convenient to use a resource certificate on flow for authentication than signing a signature.
     ///
     /// RedeemerAddress is inferred from the private capability to the IdentityCertificate resource,
     /// which is stored in user account and can only be given by its owner.
@@ -380,7 +380,7 @@ pub contract LendingPool {
     /// @Param numUnderlyingToRedeem - The amount of underlying to receive from redeeming lpTokens
     /// @Return The redeemed vault resource of pool's underlying token
     ///
-    /// @Notice Please keep your certificate resource safe, and this is your redeem certificate.
+    /// @Notice It is more convenient to use a resource certificate on flow for authentication than signing a signature.
     ///
     /// RedeemerAddress is inferred from the private capability to the IdentityCertificate resource,
     /// which is stored in user account and can only be given by its owner.
@@ -417,7 +417,7 @@ pub contract LendingPool {
     /// @Param borrowAmount - The amount of the underlying asset to borrow
     /// @Return The vault of borrow asset
     ///
-    /// @Notice Please keep your certificate resource safe, and this is your redeem certificate.
+    /// @Notice It is more convenient to use a resource certificate on flow for authentication than signing a signature.
     ///
     /// Since borrower would decrease his overall collateral ratio across all markets, safety check happenes inside comptroller
     ///
