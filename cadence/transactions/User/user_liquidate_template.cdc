@@ -7,13 +7,8 @@ transaction(amountLiquidate: UFix64, borrower: Address, seizePoolAddr: Address) 
     let liquidatorAddr: Address
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- liquidate_flowToken_pool")
-        log("Test liquidate FlowToken ".concat(amountLiquidate.toString()))
-
         let flowTokenStoragePath = /storage/flowTokenVault
-        
         self.flowTokenVault  = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
-        log("liquidator's vault ".concat(self.flowTokenVault.balance.toString()))
         self.liquidatorAddr = signer.address
     }
 
@@ -30,8 +25,6 @@ transaction(amountLiquidate: UFix64, borrower: Address, seizePoolAddr: Address) 
         } else {
             destroy leftVault
         }
-
-        log("End -----------------------------")
     }
 }
  

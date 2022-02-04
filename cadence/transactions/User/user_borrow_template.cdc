@@ -11,8 +11,6 @@ transaction(amountBorrow: UFix64) {
     let userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>
 
     prepare(signer: AuthAccount) {
-        log("Transaction Start --------------- user_borrow_flowToken")
-
         let flowTokenStoragePath = /storage/flowTokenVault
         if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
             signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
@@ -38,8 +36,5 @@ transaction(amountBorrow: UFix64) {
     execute {
         let borrowVault <- LendingPool.borrow(userCertificateCap: self.userCertificateCap, borrowAmount: amountBorrow)
         self.flowTokenVault.deposit(from: <-borrowVault)
-
-        log("User left flowToken ".concat(self.flowTokenVault.balance.toString()))
-        log("End -----------------------------")
     }
 }
