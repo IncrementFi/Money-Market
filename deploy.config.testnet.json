@@ -163,5 +163,39 @@
       "tokenAddress": "0x48adb192e4b081b0",
       "tokenKey": "A.48adb192e4b081b0.BLT"
     }
-  ]
+  ],
+  "Tokens": {
+    "A.7e60df042a9c0868.FlowToken": {
+      "tokenName": "FlowToken",
+      "tokenAddress": "0x7e60df042a9c0868",
+      "showName": "Flow",
+      "vaultPath": "flowTokenVault",
+      "vaultBalancePath": "flowTokenBalance",
+      "vaultReceiverPath": "flowTokenReceiver"
+    },
+    "A.e5b5624186770886.FUSD": {
+      "tokenName": "FUSD",
+      "tokenAddress": "0xe5b5624186770886",
+      "showName": "FUSD",
+      "vaultPath": "test_fusdVault",
+      "vaultBalancePath": "test_fusdBalance",
+      "vaultReceiverPath": "test_fusdReceiver"
+    },
+    "A.e5b5624186770886.USDC": {
+      "tokenName": "USDC",
+      "tokenAddress": "0xe5b5624186770886",
+      "showName": "USDC",
+      "vaultPath": "test_usdcVault",
+      "vaultBalancePath": "test_usdcBalance",
+      "vaultReceiverPath": "test_usdcReceiver"
+    },
+    "A.48adb192e4b081b0.BLT": {
+      "tokenName": "BLT",
+      "tokenAddress": "0x48adb192e4b081b0",
+      "showName": "BLT",
+      "vaultPath": "test_bltVault",
+      "vaultBalancePath": "test_bltBalance",
+      "vaultReceiverPath": "test_bltReceiver"
+    }
+  }
 }

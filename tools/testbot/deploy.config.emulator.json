@@ -202,5 +202,39 @@
       "tokenAddress": "0xf8d6e0586b0a20c7",
       "tokenKey": "A.f8d6e0586b0a20c7.USDC"
     }
-  ]
+  ],
+  "Tokens": {
+    "A.f8d6e0586b0a20c7.FUSD": {
+      "tokenName": "FUSD",
+      "tokenAddress": "0xf8d6e0586b0a20c7",
+      "showName": "FUSD",
+      "vaultPath": "fusdVault",
+      "vaultBalancePath": "fusdBalance",
+      "vaultReceiverPath": "fusdReceiver"
+    },
+    "A.0ae53cb6e3f42a79.FlowToken": {
+      "tokenName": "FlowToken",
+      "tokenAddress": "0x0ae53cb6e3f42a79",
+      "showName": "Flow",
+      "vaultPath": "flowTokenVault",
+      "vaultBalancePath": "flowTokenBalance",
+      "vaultReceiverPath": "flowTokenReceiver"
+    },
+    "A.f8d6e0586b0a20c7.BLT": {
+      "tokenName": "BLT",
+      "tokenAddress": "0xf8d6e0586b0a20c7",
+      "showName": "BLT",
+      "vaultPath": "bLTVault",
+      "vaultBalancePath": "bLTBalance",
+      "vaultReceiverPath": "bLTReceiver"
+    },
+    "A.f8d6e0586b0a20c7.USDC": {
+      "tokenName": "USDC",
+      "tokenAddress": "0xf8d6e0586b0a20c7",
+      "showName": "USDC",
+      "vaultPath": "uSDCVault",
+      "vaultBalancePath": "uSDCBalance",
+      "vaultReceiverPath": "uSDCReceiver"
+    }
+  }
 }

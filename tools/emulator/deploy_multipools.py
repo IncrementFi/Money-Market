@@ -376,8 +376,10 @@ with open("./cadence/transactions/Test/emulator_flow_transfer.cdc", 'r') as f:
     configJson["Codes"]["Transactions"]["Test"]["MintFlowToken"] = codeMapping
 
 configJson['Pools'] = []
+configJson['Tokens'] = {}
 for poolName in configJson['PoolName']:
     nameConfig = configJson['PoolName'][poolName]
+    tokenKey = "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
     configJson['Pools'].append(
         {
             "vaultBalancePath": nameConfig["VaultBalancePath"],
@@ -385,9 +387,18 @@ for poolName in configJson['PoolName']:
             "tokenName": nameConfig["TokenName"],
             "marketAddress": nameConfig["PoolAddress"],
             "tokenAddress": nameConfig["TokenAddress"],
-            "tokenKey": "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
+            "tokenKey": tokenKey
         }
     )
+    configJson['Tokens'][tokenKey] = {
+            "tokenName": nameConfig["PoolName"],
+            "tokenAddress": nameConfig["TokenAddress"],
+            "showName": nameConfig["TokenName"],
+            "vaultPath": nameConfig["LowerPoolName"]+'Vault',
+            "vaultBalancePath": nameConfig["LowerPoolName"]+'Balance',
+            "vaultReceiverPath": nameConfig["LowerPoolName"]+'Receiver',
+        }
+
 
 ###
 with open("./deploy.config.emulator.json", 'w') as fw:
