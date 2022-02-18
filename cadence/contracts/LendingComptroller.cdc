@@ -515,6 +515,10 @@ pub contract LendingComptroller {
                 let scaledLpTokenAmount = scaledAccountSnapshot[1]
                 let scaledBorrowBalance = scaledAccountSnapshot[2]
                 let underlyingPriceInUSD = self.oracleCap!.borrow()!.getUnderlyingPrice(pool: poolAddress)
+                assert(
+                    underlyingPriceInUSD != 0.0,
+                    message: LendingError.ErrorEncode(msg: "Price feed not available for market ".concat(poolAddress.toString()), err: LendingError.ErrorCode.UNKNOWN_MARKET)
+                )
                 let scaledUnderlyingPriceInUSD = LendingConfig.UFix64ToScaledUInt256(underlyingPriceInUSD)
                 let scaleFactor = LendingConfig.scaleFactor
                 if (scaledLpTokenAmount > 0) {

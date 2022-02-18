@@ -634,8 +634,10 @@ configJson["Codes"]["Transactions"]["Test"]["MintAll"] = mergeMintContract
 
 
 configJson['Pools'] = []
+configJson['Tokens'] = {}
 for poolName in configJson['PoolName']:
     nameConfig = configJson['PoolName'][poolName]
+    tokenKey = "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
     configJson['Pools'].append(
         {
             "vaultBalancePath": nameConfig["VaultBalancePath"],
@@ -643,9 +645,18 @@ for poolName in configJson['PoolName']:
             "tokenName": nameConfig["TokenName"],
             "marketAddress": nameConfig["PoolAddress"],
             "tokenAddress": nameConfig["TokenAddress"],
-            "tokenKey": "A."+nameConfig["TokenAddress"][2:]+"."+nameConfig["PoolName"]
+            "tokenKey": tokenKey
         }
     )
+    configJson['Tokens'][tokenKey] = {
+            "tokenName": nameConfig["PoolName"],
+            "tokenAddress": nameConfig["TokenAddress"],
+            "showName": nameConfig["TokenName"],
+            "vaultPath": nameConfig["LowerPoolName"]+'Vault',
+            "vaultBalancePath": nameConfig["LowerPoolName"]+'Balance',
+            "vaultReceiverPath": nameConfig["LowerPoolName"]+'Receiver',
+        }
+
 del configJson['PoolName']
 ###
 with open("./deploy.config.testnet.json", 'w') as fw:
