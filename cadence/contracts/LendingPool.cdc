@@ -60,7 +60,7 @@ pub contract LendingPool {
     pub var interestRateModelAddress: Address?
     pub var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
     
-    /// The address of the comtroller contract
+    /// The address of the comptroller contract
     pub var comptrollerAddress: Address?
     pub var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
 

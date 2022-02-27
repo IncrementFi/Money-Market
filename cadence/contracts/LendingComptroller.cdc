@@ -418,8 +418,8 @@ pub contract LendingComptroller {
             let scaledBorrowPoolUnderlyingPriceUSD = LendingConfig.UFix64ToScaledUInt256(borrowPoolUnderlyingPriceUSD)
             let scaledCollateralPoolUnderlyingPriceUSD = LendingConfig.UFix64ToScaledUInt256(collateralPoolUnderlyingPriceUSD)
             let scaleFactor = LendingConfig.scaleFactor
-            // collatetalPoolLpTokenPriceUSD = collateralPoolUnderlyingPriceUSD x collateralPoolUnderlyingToLpTokenRate
-            // seizedCollateralPoolLpTokenAmount = repaidBorrowWithIncentiveInUSD / collatetalPoolLpTokenPriceUSD
+            
+            
             let scaledActualRepaidBorrowWithIncentiveInUSD =
                 scaledBorrowPoolUnderlyingPriceUSD * (scaleFactor + scaledCollateralPoolLiquidationIncentive) / scaleFactor *
                     actualRepaidBorrowAmountScaled / scaleFactor
