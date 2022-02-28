@@ -136,6 +136,6 @@ export const addMarket = async (liquidationPenalty, collateralFactor, borrowCap,
 
     const name = "Comptroller/add_market"
     const signers = [comptrollerDeployer]
-    const args = [lendingPoolDeployer, liquidationPenalty, collateralFactor, borrowCap, isOpen, isMining]
+    const args = [lendingPoolDeployer, liquidationPenalty, collateralFactor, borrowCap, 0.0, isOpen, isMining]
     return sendTransaction({ name, args, signers })
 }

@@ -66,7 +66,7 @@ describe("LendingPool Testsuites", () => {
         await shallPass( supply( userAddr1, toUFix64(50) ) )
         await shallPass( borrow( userAddr1, toUFix64(20) ) )
 
-        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), false, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), toUFix64(200000000.0), false, true)
 
         await shallRevert( supply( userAddr1, toUFix64(1) ) )
         await shallRevert( borrow( userAddr1, toUFix64(1) ) )
@@ -78,7 +78,7 @@ describe("LendingPool Testsuites", () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), toUFix64(200000000.0), true, true)
 
         await supply( userAddr1, toUFix64(100) )
         await borrow( userAddr1, toUFix64(20) )
@@ -93,7 +93,7 @@ describe("LendingPool Testsuites", () => {
         const userAddr1 = await getAccountAddress("user1")
         await mintFlow(userAddr1, "100.0")
 
-        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(100000000.0), toUFix64(200000000.0), true, true)
 
         await supply( userAddr1, toUFix64(100) )
         await borrow( userAddr1, toUFix64(20) )
@@ -151,9 +151,22 @@ describe("LendingPool Testsuites", () => {
 
         await supply( userAddr1, toUFix64(100) )
 
-        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(10.0), true, true)
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(10.0), toUFix64(200000000.0), true, true)
 
         await shallRevert( borrow( userAddr1, toUFix64(11) ) )
         await shallPass( borrow( userAddr1, toUFix64(10) ) )
+    });
+
+    it("Market's supply cap test.", async () => {
+        const userAddr1 = await getAccountAddress("user1")
+        const poolAddr = await getLendingPoolAddress()
+        await mintFlow(userAddr1, "100.0")
+
+        await supply( userAddr1, toUFix64(100) )
+
+        await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(10.0), toUFix64(20.0), true, true)
+
+        await shallRevert( supply( userAddr1, toUFix64(21) ) )
+        await shallPass( supply( userAddr1, toUFix64(19) ) )
     });
 });
