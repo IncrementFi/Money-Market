@@ -1,6 +1,6 @@
 import LendingComptroller from "../../contracts/LendingComptroller.cdc"
 
-transaction(poolAddr: Address, liquidationPenalty: UFix64, collateralFactor: UFix64, borrowCap: UFix64, isOpen: Bool, isMining: Bool) {
+transaction(poolAddr: Address, liquidationPenalty: UFix64, collateralFactor: UFix64, borrowCap: UFix64, supplyCap: UFix64, isOpen: Bool, isMining: Bool) {
 
     let comptrollerAdminRef: &LendingComptroller.Admin
 
@@ -10,6 +10,6 @@ transaction(poolAddr: Address, liquidationPenalty: UFix64, collateralFactor: UFi
 
     execute {
         self.comptrollerAdminRef.addMarket(poolAddress: poolAddr, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)   
-        self.comptrollerAdminRef.configMarket(pool: poolAddr, isOpen: isOpen, isMining: isMining, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: borrowCap)
+        self.comptrollerAdminRef.configMarket(pool: poolAddr, isOpen: isOpen, isMining: isMining, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: borrowCap, supplyCap: supplyCap)
     }
 }

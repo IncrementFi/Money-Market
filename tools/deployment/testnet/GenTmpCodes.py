@@ -491,12 +491,20 @@ scriptsCodePath = [
         'name': 'QueryUserPoolInfos'
     },
     {
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_users_pool_infos.cdc',
+        'name': 'QueryUsersPoolInfos'
+    },
+    {
         'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
     {
         'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_position.cdc',
         'name': 'QueryUserPosition'
+    },
+    {
+        'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_user_positions.cdc',
+        'name': 'QueryUserPositions'
     },
     {
         'path': './tools/deployment/testnet/cadence_unreadable/scripts/Query/query_market_interestrate_model_params.cdc',

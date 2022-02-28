@@ -20,10 +20,10 @@ FakePoolNames = ['BLT', 'USDC']
 
 
 PoolParams = {}
-PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
-PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
-PoolParams['BLT']        = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':2.35, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
-PoolParams['USDC']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
+PoolParams['FUSD']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0, 'supplyCap': 10000000000.0 }
+PoolParams['FlowToken']  = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':14.15, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0, 'supplyCap': 10000000000.0 }
+PoolParams['BLT']        = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':2.35, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':1000.0, 'supplyCap': 1000.0 }
+PoolParams['USDC']       = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':1.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0, 'supplyCap': 10000000000.0 }
 #PoolParams['FBTC']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':60000.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
 #PoolParams['FETH']      = { 'reserveFactor':0.01, 'poolSeizeShare':0.028, 'OraclePrice':4000.0, 'liquidationPenalty':0.05, 'collateralFactor':0.80, 'borrowCap':10000000000.0 }
 

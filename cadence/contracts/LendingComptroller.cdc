@@ -33,7 +33,8 @@ pub contract LendingComptroller {
         oldIsMining: Bool?, newIsMining: Bool?,
         oldLiquidationPenalty: UFix64?, newLiquidationPenalty: UFix64?,
         oldCollateralFactor: UFix64?, newCollateralFactor: UFix64?,
-        oldBorrowCap: UFix64?, newBorrowCap: UFix64?
+        oldBorrowCap: UFix64?, newBorrowCap: UFix64?,
+        oldSupplyCap: UFix64?, newSupplyCap: UFix64?
     )
 
     /// Market
@@ -57,6 +58,10 @@ pub contract LendingComptroller {
         /// Any borrow request that makes totalBorrows greater than borrowCap would be rejected
         /// Note: value of 0 represents unlimited cap when market.isOpen is set
         pub var scaledBorrowCap: UInt256
+        /// maximum Supply amount this market can reach.
+        /// Note: value of 0 represents unlimited cap when market.isOpen is set
+        pub var scaledSupplyCap: UInt256
+
         
         pub fun setMarketStatus(isOpen: Bool) {
             if (self.isOpen != isOpen) {
@@ -97,13 +102,21 @@ pub contract LendingComptroller {
             }
         }
 
+        pub fun setSupplyCap(newSupplyCap: UFix64) {
+            let scaledNewSupplyCap = LendingConfig.UFix64ToScaledUInt256(newSupplyCap)
+            if (self.scaledSupplyCap != scaledNewSupplyCap) {
+                self.scaledSupplyCap = scaledNewSupplyCap
+            }
+        }
+
         init(
             poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>,
             isOpen: Bool,
             isMining: Bool,
             liquidationPenalty: UFix64,
             collateralFactor: UFix64,
-            borrowCap: UFix64
+            borrowCap: UFix64,
+            supplyCap: UFix64
         ) {
             pre {
                 collateralFactor <= 1.0: LendingError.ErrorEncode(msg: "collateralFactor out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
@@ -114,6 +127,7 @@ pub contract LendingComptroller {
             self.scaledLiquidationPenalty = LendingConfig.UFix64ToScaledUInt256(liquidationPenalty)
             self.scaledCollateralFactor = LendingConfig.UFix64ToScaledUInt256(collateralFactor)
             self.scaledBorrowCap = LendingConfig.UFix64ToScaledUInt256(borrowCap)
+            self.scaledSupplyCap = LendingConfig.UFix64ToScaledUInt256(supplyCap)
         }
     }
 
@@ -160,6 +174,19 @@ pub contract LendingComptroller {
             let err = self.callerAllowed(callerCertificate: <- poolCertificate, callerAddress: poolAddress)
             if (err != nil) {
                 return err
+            }
+
+            // Supply limit check if not unlimited supplyCap
+            let market = self.markets[poolAddress]!
+            let scaledSupplyCap = market.scaledSupplyCap
+            let poolRef = market.poolPublicCap.borrow()!
+
+            if (scaledSupplyCap != 0) {
+                let scaledTotalSupplyNew = supplyUnderlyingAmountScaled + poolRef.getPoolCash() + poolRef.getPoolTotalBorrowsScaled()
+                
+                if (scaledTotalSupplyNew > scaledSupplyCap) {
+                    return LendingError.ErrorEncode(msg: "supply too much, exceed market supplyCap", err: LendingError.ErrorCode.SUPPLY_NOT_ALLOWED_EXCEED_SUPPLY_CAP)
+                }
             }
 
             // Add to user markets list
@@ -576,7 +603,7 @@ pub contract LendingComptroller {
             )
 
             self.markets[poolAddress] =
-                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: 0.0)
+                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: 0.0, supplyCap: 0.0)
             emit MarketAdded(
                 market: poolAddress,
                 marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
@@ -586,7 +613,7 @@ pub contract LendingComptroller {
         }
 
         /// Tune parameters of an already-listed market
-        access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+        access(contract) fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?, supplyCap: UFix64?) {
             pre {
                 self.markets.containsKey(pool):
                     LendingError.ErrorEncode(
@@ -614,13 +641,18 @@ pub contract LendingComptroller {
             if (borrowCap != nil) {
                 self.markets[pool]!.setBorrowCap(newBorrowCap: borrowCap!)
             }
+            let oldSupplyCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledSupplyCap ?? (0 as UInt256))
+            if (supplyCap != nil) {
+                self.markets[pool]!.setSupplyCap(newSupplyCap: supplyCap!)
+            }
             emit ConfigMarketParameters(
                 market: pool,
                 oldIsOpen: oldOpen, newIsOpen: self.markets[pool]?.isOpen,
                 oldIsMining: oldMining, newIsMining: self.markets[pool]?.isMining,
                 oldLiquidationPenalty: oldLiquidationPenalty, newLiquidationPenalty: liquidationPenalty,
                 oldCollateralFactor: oldCollateralFactor, newCollateralFactor: collateralFactor,
-                oldBorrowCap: oldBorrowCap, newBorrowCap: borrowCap
+                oldBorrowCap: oldBorrowCap, newBorrowCap: borrowCap,
+                oldSupplyCap: oldSupplyCap, newSupplyCap: supplyCap
             )
         }
 
@@ -693,6 +725,7 @@ pub contract LendingComptroller {
                 "marketLiquidationPenalty": market.scaledLiquidationPenalty.toString(),
                 "marketCollateralFactor": market.scaledCollateralFactor.toString(),
                 "marketBorrowCap": market.scaledBorrowCap.toString(),
+                "marketSupplyCap": market.scaledSupplyCap.toString(),
                 "marketOraclePriceUsd": LendingConfig.UFix64ToScaledUInt256(oraclePrice).toString(),
                 "marketSupplierCount": poolRef.getPoolSupplierCount().toString(),
                 "marketBorrowerCount": poolRef.getPoolBorrowerCount().toString(),
@@ -764,7 +797,7 @@ pub contract LendingComptroller {
             comptrollerRef.addMarket(poolAddress: poolAddress, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor)
         }
         /// Admin function to config parameters of a listed-market
-        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?) {
+        pub fun configMarket(pool: Address, isOpen: Bool?, isMining: Bool?, liquidationPenalty: UFix64?, collateralFactor: UFix64?, borrowCap: UFix64?, supplyCap: UFix64?) {
             let comptrollerRef = LendingComptroller.account.borrow<&Comptroller>(from: LendingComptroller.ComptrollerStoragePath) ?? panic("lost local comptroller")
             comptrollerRef.configMarket(
                 pool: pool,
@@ -772,7 +805,8 @@ pub contract LendingComptroller {
                 isMining: isMining,
                 liquidationPenalty: liquidationPenalty,
                 collateralFactor: collateralFactor,
-                borrowCap: borrowCap
+                borrowCap: borrowCap,
+                supplyCap: supplyCap
             )
         }
         /// Admin function to set a new oracle

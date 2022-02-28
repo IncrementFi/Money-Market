@@ -176,6 +176,7 @@ for poolDeployer in PoolDeployerNameToAddr:
           '--arg UFix64:{0} '.format(poolConfig['liquidationPenalty']) + \
           '--arg UFix64:{0} '.format(poolConfig['collateralFactor']) + \
           '--arg UFix64:{0} '.format(poolConfig['borrowCap']) + \
+          '--arg UFix64:{0} '.format(poolConfig['supplyCap']) + \
           '--arg Bool:{0} '.format(poolConfig['isOpen']) + \
           '--arg Bool:{0} '.format(poolConfig['isMining']) + \
           '--signer {0} '.format(ComptrollerDeployer) + \

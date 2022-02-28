@@ -11,13 +11,13 @@ import {
     getSimpleOracleAddress,
 } from "./setup_Deployment";
 
-export const configMarket = async (liquidationPenalty, collateralFactor, borrowCap, isOpen, isMining) => {
+export const configMarket = async (liquidationPenalty, collateralFactor, borrowCap, supplyCap, isOpen, isMining) => {
     const comptrollerDeployer = await getComptrollerAddress()
     const lendingPoolDeployer = await getLendingPoolAddress()
 
     const name = "Comptroller/config_market"
     const signers = [comptrollerDeployer]
-    const args = [lendingPoolDeployer, liquidationPenalty, collateralFactor, borrowCap, isOpen, isMining]
+    const args = [lendingPoolDeployer, liquidationPenalty, collateralFactor, borrowCap, supplyCap, isOpen, isMining]
     return sendTransaction({ name, args, signers })
 }
 

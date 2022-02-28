@@ -162,8 +162,9 @@ for poolName in setting.PoolNames+setting.FakePoolNames:
         liquidationPenalty = setting.PoolParams[poolName]['liquidationPenalty']
         collateralFactor = setting.PoolParams[poolName]['collateralFactor']
         borrowCap = setting.PoolParams[poolName]['borrowCap']
-    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg UFix64:{3} --arg Bool:true --arg Bool:true --signer emulator-account'.format(
-        poolAddr, liquidationPenalty, collateralFactor, borrowCap
+        supplyCap = setting.PoolParams[poolName]['supplyCap']
+    cmd = 'flow transactions send ./cadence/transactions/Comptroller/add_market.cdc --arg Address:{0} --arg UFix64:{1} --arg UFix64:{2} --arg UFix64:{3} --arg UFix64:{4} --arg Bool:true --arg Bool:true --signer emulator-account'.format(
+        poolAddr, liquidationPenalty, collateralFactor, borrowCap, supplyCap
     )
     print(cmd)
     os.system(cmd)
@@ -253,12 +254,20 @@ scriptsCodePath = [
         'name': 'QueryUserPoolInfos'
     },
     {
+        'path': './cadence/scripts/Query/query_users_pool_infos.cdc',
+        'name': 'QueryUsersPoolInfos'
+    },
+    {
         'path': './cadence/scripts/Query/query_vault_balance.cdc',
         'name': 'QueryVaultBalance'
     },
     {
         'path': './cadence/scripts/Query/query_user_position.cdc',
         'name': 'QueryUserPosition'
+    },
+    {
+        'path': './cadence/scripts/Query/query_user_positions.cdc',
+        'name': 'QueryUserPositions'
     },
     {
         'path': './cadence/scripts/Query/query_market_interestrate_model_params.cdc',

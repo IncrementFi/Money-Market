@@ -170,8 +170,7 @@
             "LendingInterfaces",
             "LendingConfig",
             "TwoSegmentsInterestRateModel",
-            "LendingComptroller",
-            "LendingOracle"
+            "LendingComptroller"
         ],
         "emulator-oracle-deployer": [
             "SimpleOracle"
