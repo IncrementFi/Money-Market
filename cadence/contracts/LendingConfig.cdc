@@ -7,13 +7,13 @@
 */
 pub contract LendingConfig {
     /// TwoSegmentsInterestRateModel.InterestRateModelPublicPath
-    pub let InterestRateModelPublicPath: PublicPath
+    pub var InterestRateModelPublicPath: PublicPath
     /// SimpleOracle.OraclePublicPath
-    pub let OraclePublicPath: PublicPath
+    pub var OraclePublicPath: PublicPath
     /// SimpleOracle.UpdaterPublicPath
-    pub let UpdaterPublicPath: PublicPath
+    pub var UpdaterPublicPath: PublicPath
     /// value taken from LendingComptroller.ComptrollerPublicPath
-    pub let ComptrollerPublicPath: PublicPath
+    pub var ComptrollerPublicPath: PublicPath
     /// value taken from LendingComptroller.UserCertificateStoragePath
     pub var UserCertificateStoragePath: StoragePath
     /// value taken from LendingComptroller.UserCertificatePrivatePath
@@ -29,6 +29,8 @@ pub contract LendingConfig {
     pub let scaleFactor: UInt256
     /// 100_000_000.0, i.e. 1.0e8
     pub let ufixScale: UFix64
+    /// Reserved parameter fields: {ParamName: Value}
+    access(self) let _reservedFields: {String: AnyStruct}
 
     /// Utility function to convert a UFix64 number to its scaled equivalent in UInt256 format
     /// e.g. 184467440737.09551615 (UFix64.max) => 184467440737095516150000000000
@@ -60,5 +62,6 @@ pub contract LendingConfig {
         self.scaleFactor = 1_000_000_000_000_000_000
         // 1.0e8
         self.ufixScale = 100_000_000.0
+        self._reservedFields = {}
     }
 }
