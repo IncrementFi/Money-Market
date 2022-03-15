@@ -17,6 +17,8 @@ pub contract LendingOracle {
     pub let OracleStoragePath: StoragePath
     /// The public path for the capability to restricted to &{LendingInterfaces.OraclePublic}
     pub let OraclePublicPath: PublicPath
+    /// Reserved parameter fields: {ParamName: Value}
+    access(self) let _reservedFields: {String: AnyStruct}
 
 
     pub event PriceFeedAdded(for pool: Address, oracleAddr: Address)
@@ -26,6 +28,8 @@ pub contract LendingOracle {
     pub resource OracleReaders: LendingInterfaces.OraclePublic {
         access(self) let feeds: [Address]
         access(self) let oracleAddrDict: {Address: Address}
+        /// Reserved parameter fields: {ParamName: Value}
+        access(self) let _reservedFields: {String: AnyStruct}
 
 
         /// Return underlying asset price of the pool, denominated in USD.
@@ -110,6 +114,7 @@ pub contract LendingOracle {
         init () {
             self.feeds = []
             self.oracleAddrDict = {}
+            self._reservedFields = {}
         }
 
         destroy() {
@@ -148,6 +153,6 @@ pub contract LendingOracle {
         // Create a public capability to Oracle resource that only exposes {OraclePublic} interface to public.
         self.account.unlink(self.OraclePublicPath)
         self.account.link<&{LendingInterfaces.OraclePublic}>(self.OraclePublicPath, target: self.OracleStoragePath)
-        
+        self._reservedFields = {}
     }
 }

@@ -36,6 +36,8 @@ pub contract LendingPool {
     pub var scaledPoolSeizeShare: UInt256
     /// { supplierAddress => # of virtual lpToken the supplier owns, scaled up by 1e18 }
     access(self) let accountLpTokens: {Address: UInt256}
+    /// Reserved parameter fields: {ParamName: Value}
+    access(self) let _reservedFields: {String: AnyStruct}
 
     /// BorrowSnapshot
     ///
@@ -1101,6 +1103,7 @@ pub contract LendingPool {
         self.interestRateModelCap = nil
         self.comptrollerAddress = nil
         self.comptrollerCap = nil
+        self._reservedFields = {}
         self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath)
             ?? panic("Deployer should own zero-balanced underlying asset vault first")
         self.underlyingAssetType = self.underlyingVault.getType()

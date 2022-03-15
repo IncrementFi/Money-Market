@@ -22,6 +22,8 @@ pub contract LendingComptroller {
     pub let ComptrollerPublicPath: PublicPath
     /// The private path for the capability to Comptroller resource for admin functions
     pub let ComptrollerPrivatePath: PrivatePath
+    /// Reserved parameter fields: {ParamName: Value}
+    access(self) let _reservedFields: {String: AnyStruct}
     
     /// events
     pub event MarketAdded(market: Address, marketType: String, liquidationPenalty: UFix64, collateralFactor: UFix64)
@@ -61,6 +63,8 @@ pub contract LendingComptroller {
         /// maximum Supply amount this market can reach.
         /// Note: value of 0 represents unlimited cap when market.isOpen is set
         pub var scaledSupplyCap: UInt256
+        /// Reserved parameter fields: {ParamName: Value}
+        access(self) let _reservedFields: {String: AnyStruct}
 
         
         pub fun setMarketStatus(isOpen: Bool) {
@@ -128,6 +132,7 @@ pub contract LendingComptroller {
             self.scaledCollateralFactor = LendingConfig.UFix64ToScaledUInt256(collateralFactor)
             self.scaledBorrowCap = LendingConfig.UFix64ToScaledUInt256(borrowCap)
             self.scaledSupplyCap = LendingConfig.UFix64ToScaledUInt256(supplyCap)
+            self._reservedFields = {}
         }
     }
 
@@ -156,6 +161,8 @@ pub contract LendingComptroller {
         access(self) let markets: {Address: Market}
         /// { accountAddress => markets the account has either provided liquidity to or borrowed from }
         access(self) let accountMarketsIn: {Address: [Address]}
+        /// Reserved parameter fields: {ParamName: Value}
+        access(self) let _reservedFields: {String: AnyStruct}
 
         /// Supply audit
         ///
@@ -784,6 +791,7 @@ pub contract LendingComptroller {
             self.scaledCloseFactor = 0
             self.markets = {}
             self.accountMarketsIn = {}
+            self._reservedFields = {}
         }
     }
 
@@ -827,6 +835,7 @@ pub contract LendingComptroller {
         self.ComptrollerPublicPath = /public/comptrollerModule
         self.ComptrollerPrivatePath = /private/comptrollerModule
         self.comptrollerAddress = self.account.address
+        self._reservedFields = {}
 
         destroy <-self.account.load<@AnyResource>(from: self.AdminStoragePath)
         self.account.save(<-create Admin(), to: self.AdminStoragePath)

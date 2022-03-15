@@ -15,6 +15,8 @@ pub contract TwoSegmentsInterestRateModel {
     pub let InterestRateModelStoragePath: StoragePath
     /// The private path for the capability to InterestRateModel which is for admin to update model parameters
     pub let InterestRateModelPrivatePath: PrivatePath
+    /// Reserved parameter fields: {ParamName: Value}
+    access(self) let _reservedFields: {String: AnyStruct}
 
     /// Event which is emitted when Interest Rate Model is created or model parameter gets updated
     pub event InterestRateModelUpdated(
@@ -37,6 +39,8 @@ pub contract TwoSegmentsInterestRateModel {
         access(self) var scaledJumpMultiplierPerBlock: UInt256
         /// The critical point of utilization rate beyond which the jumpMultiplierPerBlock is applied
         access(self) var scaledCriticalUtilRate: UInt256
+        /// Reserved parameter fields: {ParamName: Value}
+        access(self) let _reservedFields: {String: AnyStruct}
 
         /// pool's capital utilization rate (scaled up by self.scaleFactor, e.g. 1e18)
         pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
@@ -149,6 +153,7 @@ pub contract TwoSegmentsInterestRateModel {
             self.scaledBaseMultiplierPerBlock = (scaledCriticalUtilInterestRatePerYear - scaledZeroUtilInterestRatePerYear) * scaleFactor / scaledCriticalUtilPoint / blocksPerYear
             self.scaledJumpMultiplierPerBlock = (scaledFullUtilInterestRatePerYear - scaledCriticalUtilInterestRatePerYear) * scaleFactor / (scaleFactor - scaledCriticalUtilPoint) / blocksPerYear
             self.scaledCriticalUtilRate = scaledCriticalUtilPoint
+            self._reservedFields = {}
             emit InterestRateModelUpdated(
                 0, self.blocksPerYear,
                 0, self.scaledBaseRatePerBlock,
@@ -200,6 +205,7 @@ pub contract TwoSegmentsInterestRateModel {
         self.InterestRateModelAdminStoragePath = /storage/InterestRateModelAdmin
         self.InterestRateModelStoragePath = /storage/InterestRateModel
         self.InterestRateModelPrivatePath = /private/InterestRateModel
+        self._reservedFields = {}
 
         destroy <-self.account.load<@AnyResource>(from: self.InterestRateModelAdminStoragePath)
         self.account.save(<-create Admin(), to: self.InterestRateModelAdminStoragePath)
