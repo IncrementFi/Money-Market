@@ -56,7 +56,7 @@ pub contract LendingConfig {
         self.ComptrollerPublicPath = /public/comptrollerModule
         self.UserCertificateStoragePath = /storage/userCertificate_increment
         self.UserCertificatePrivatePath = /private/userCertificate_increment
-        self.PoolPublicPublicPath = /public/poolPublic
+        self.PoolPublicPublicPath = /public/incrementLendingPoolPublic
 
         // 1e18
         self.scaleFactor = 1_000_000_000_000_000_000

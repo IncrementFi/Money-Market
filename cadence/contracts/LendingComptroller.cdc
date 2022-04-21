@@ -124,6 +124,7 @@ pub contract LendingComptroller {
         ) {
             pre {
                 collateralFactor <= 1.0: LendingError.ErrorEncode(msg: "collateralFactor out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
+                liquidationPenalty <= 1.0: LendingError.ErrorEncode(msg: "liquidationPenalty out of range 1.0", err: LendingError.ErrorCode.INVALID_PARAMETERS)
             }
             self.poolPublicCap = poolPublicCap
             self.isOpen = isOpen
