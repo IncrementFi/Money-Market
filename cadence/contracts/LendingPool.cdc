@@ -957,6 +957,13 @@ pub contract LendingPool {
     pub resource PoolAdmin {
         /// Admin function to call accrueInterest() to checkpoint latest states, and then update the interest rate model
         pub fun setInterestRateModel(newInterestRateModelAddress: Address) {
+            post {
+                LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true:
+                    LendingError.ErrorEncode(
+                        msg: "Invalid contract address of the new interest rate",
+                        err: LendingError.ErrorCode.CANNOT_ACCESS_INTEREST_RATE_MODEL_CAPABILITY
+                    )
+            }
             LendingPool.accrueInterest()
             
             if (newInterestRateModelAddress != LendingPool.interestRateModelAddress) {
@@ -1083,10 +1090,10 @@ pub contract LendingPool {
     }
 
     init() {
-        self.PoolAdminStoragePath = /storage/poolAdmin
+        self.PoolAdminStoragePath = /storage/incrementLendingPoolAdmin
         self.UnderlyingAssetVaultStoragePath = /storage/poolUnderlyingAssetVault
-        self.PoolPublicStoragePath = /storage/poolPublic
-        self.PoolPublicPublicPath = /public/poolPublic
+        self.PoolPublicStoragePath = /storage/incrementLendingPoolPublic
+        self.PoolPublicPublicPath = /public/incrementLendingPoolPublic
 
         self.poolAddress = self.account.address
         self.scaledInitialExchangeRate = LendingConfig.scaleFactor
