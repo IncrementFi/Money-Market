@@ -33,8 +33,8 @@ describe("LendingConfig Testsuites", () => {
 
         // UFix64.min to test no truncation
         let fmin = toUFix64(0.00000001)
-        let scaled_fmin = await UFix64ToScaledUInt256(fmin)
-        let fmin_back = await ScaledUInt256ToUFix64(scaled_fmin)
+        let [scaled_fmin] = await UFix64ToScaledUInt256(fmin)
+        let [fmin_back] = await ScaledUInt256ToUFix64(scaled_fmin)
         expect(fmin).toBe(fmin_back)
         expect(scaled_fmin).toBe(0.00000001 * 1e18)
     });
@@ -42,7 +42,7 @@ describe("LendingConfig Testsuites", () => {
     it("Test UFix64.max with 10^18 Scale should not overflow", async () => {
         await deployConfigContract();
 
-        let equal = await UFix64MaxBackAndForth()
+        let [equal] = await UFix64MaxBackAndForth()
         expect(equal).toBe(true)
     });
 });

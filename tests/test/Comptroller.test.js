@@ -83,7 +83,7 @@ describe("LendingPool Testsuites", () => {
         await supply( userAddr1, toUFix64(100) )
         await borrow( userAddr1, toUFix64(20) )
 
-        //const liquidity = await queryUserLiquidity(userAddr1)
+        //const [liquidity] = await queryUserLiquidity(userAddr1)
         await shallRevert( redeem( userAddr1, toUFix64(75) ) )
 
         await shallPass( redeem( userAddr1, toUFix64(74) ) )
@@ -109,10 +109,10 @@ describe("LendingPool Testsuites", () => {
         await mintFlow(userAddr1, "100.0")
 
         await supply( userAddr1, toUFix64(100) )
-        const prePools = await queryUserAllPools(userAddr1)
+        const [prePools] = await queryUserAllPools(userAddr1)
 
         await redeem( userAddr1, toUFix64(100) )
-        const aftPools = await queryUserAllPools(userAddr1)
+        const [aftPools] = await queryUserAllPools(userAddr1)
         
         expect(prePools).toContain(poolAddr)
 
@@ -128,7 +128,7 @@ describe("LendingPool Testsuites", () => {
         await borrow( userAddr1, toUFix64(50) )
         
         await updateOraclePrice(toUFix64(1.0))
-        const liquidity = await queryUserLiquidity(userAddr1)
+        const [liquidity] = await queryUserLiquidity(userAddr1)
 
         // collateral value
         expect(
@@ -162,7 +162,8 @@ describe("LendingPool Testsuites", () => {
         const poolAddr = await getLendingPoolAddress()
         await mintFlow(userAddr1, "100.0")
 
-        await supply( userAddr1, toUFix64(100) )
+        await shallPass( supply( userAddr1, toUFix64(100) ) )
+        await shallPass( redeem( userAddr1, toUFix64(100) ) )
 
         await configMarket(toUFix64(0.05), toUFix64(0.8), toUFix64(10.0), toUFix64(20.0), true, true)
 
