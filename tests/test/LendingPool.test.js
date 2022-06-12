@@ -103,17 +103,17 @@ describe("LendingPool Testsuites", () => {
         const depositAmount = BigNumber("0.00000001")
         await mintFlow(userAddr1, totalAmount.toFixed(8))
 
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
         
         // supply
         await shallPass( supply( userAddr1, depositAmount.toFixed(8) ) )
         await shallRevert( supply( userAddr1, totalAmount.plus(0.00000001).toFixed(8) ) )
 
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
         
         const mintRate = CalculateLpTokenMintRate(
             BigNumber(prePoolState.TotalCash),
@@ -161,16 +161,16 @@ describe("LendingPool Testsuites", () => {
         const depositAmount = BigNumber("99999999.99999999")
         await mintFlow(userAddr1, totalAmount.toFixed(8))
 
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
         
         // supply
         await shallPass( supply( userAddr1, depositAmount.toFixed(8) ) )
 
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
 
         const mintRate = CalculateLpTokenMintRate(
             BigNumber(prePoolState.TotalCash),
@@ -224,17 +224,17 @@ describe("LendingPool Testsuites", () => {
         await mintFlow( userAddr1, totalAmount.toFixed(8) )
         await supply( userAddr1, depositAmount.toFixed(8) )
 
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
 
         // redeem
         await shallRevert( redeem( userAddr1, depositAmount.plus(0.00000001).toFixed(8) ) )
         await shallPass( redeem( userAddr1, redeemAmount.toFixed(8) ) )
         
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
 
         const mintRate = CalculateLpTokenMintRate(
             BigNumber(prePoolState.TotalCash),
@@ -287,10 +287,10 @@ describe("LendingPool Testsuites", () => {
         await nextBlock()
 
         
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
-        const preInterestState = await queryFlowTokenInterestRate(
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
+        const [preInterestState] = await queryFlowTokenInterestRate(
             BigNumber(prePoolState.TotalCash).toNumber(),
             BigNumber(prePoolState.TotalBorrows).toNumber(),
             BigNumber(prePoolState.TotalReserves).toNumber()
@@ -299,9 +299,9 @@ describe("LendingPool Testsuites", () => {
         // borrow
         await shallPass( borrow( userAddr1, borrowAmount.toFixed(8) ) )
         
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
         
         // Pool's vault should withdraw certain underlying tokens when borrowing
         expect(
@@ -362,17 +362,17 @@ describe("LendingPool Testsuites", () => {
         await nextBlock()
         
         
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
-        const preInterestState = await queryFlowTokenInterestRate()
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
+        const [preInterestState] = await queryFlowTokenInterestRate()
         
         // repay
         await shallPass( repay( userAddr1, repayAmount.toFixed(8) ) )
         
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
         
         // Under one borrower, the totalBorrow should close to the user's borrow snapshot if borrowIndex is up-to-date.
         // Be tolarent of the loss of precision
@@ -436,16 +436,16 @@ describe("LendingPool Testsuites", () => {
         await nextBlock()
         await nextBlock()
         
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
-        const preInterestState = await queryFlowTokenInterestRate()
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
+        const [preInterestState] = await queryFlowTokenInterestRate()
         // repay
         await shallPass( repay( userAddr1, repayAmount.toFixed(8) ) )
         
-        const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftLocalBalance] = await getFlowBalance(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
         
         const curBorrowIndex = BigNumber(aftPoolState.BorrowIndex)
         const preBorrowPrincipal = BigNumber(preUserState[3])
@@ -514,10 +514,10 @@ describe("LendingPool Testsuites", () => {
         await nextBlock()
 
         
-        const preLocalBalance = await getFlowBalance(userAddr1)
-        const prePoolState = await queryFlowTokenPoolState()
-        const preUserState = await queryUserPoolState(userAddr1)
-        const preInterestState = await queryFlowTokenInterestRate(
+        const [preLocalBalance] = await getFlowBalance(userAddr1)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preUserState] = await queryUserPoolState(userAddr1)
+        const [preInterestState] = await queryFlowTokenInterestRate(
             BigNumber(prePoolState.TotalCash).toNumber(),
             BigNumber(prePoolState.TotalBorrows).toNumber(),
             BigNumber(prePoolState.TotalReserves).toNumber()
@@ -527,8 +527,8 @@ describe("LendingPool Testsuites", () => {
         await nextBlock()
         
         const aftLocalBalance = await getFlowBalance(userAddr1)
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftUserState = await queryUserPoolState(userAddr1)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftUserState] = await queryUserPoolState(userAddr1)
 
         const accrueRes = CalculateAccrueInterest(prePoolState, aftPoolState.BlockNumber, preInterestState)
 

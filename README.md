@@ -89,8 +89,7 @@ Public Key 	 95efe052cc2e1be2162cb4c273ab86a4602369536fac60e835c63ee5fc856ad7f6f
 4. Run `python ./tools/deployment/testnet/DeployUnreadableOnTestnet.py` to deploy all the contracts and initializations.
 
 ### Deploy on mainnet:
-TODO
-<br>
+* https://docs.increment.fi/protocols/decentralized-money-market/deployment-addresses#mainnet
 
 ## 🔎 Unittest with [flow-js-testing](https://github.com/onflow/flow-js-testing):
 * Docs: https://docs.onflow.org/flow-js-testing/
@@ -100,7 +99,7 @@ TODO
 * **Note**: To get unittest framework work properly, do NOT break transaction & script arguments into multiple lines, until [this issue](https://github.com/onflow/flow-cadut/issues/15) gets fixed.
 
 ### Run tests:
-* `npm test`
+* `npm run test`
 
 ### Testnet Faucet:
 * https://testnet-faucet.onflow.org/

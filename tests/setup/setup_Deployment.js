@@ -41,7 +41,7 @@ export const deployLendingPoolContract = async () => {
  * Create underlying vault for LendingPool
  * @returns {Promise<*>}
  */
- export const preparePoolUnderlyingVault = async() => {
+export const preparePoolUnderlyingVault = async() => {
     const poolDeployer = await getLendingPoolAddress()
     const name = "Pool/prepare_template_for_pool"
     const signers = [poolDeployer]

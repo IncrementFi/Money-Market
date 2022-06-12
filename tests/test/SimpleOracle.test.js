@@ -43,33 +43,33 @@ describe("SimpleOracle Testsuites", () => {
 
         // test initial status
         const oracleAddress = await getOracleContractAddress();
-        let feeds = await getSupportedDataFeeds(oracleAddress);
+        let [feeds] = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(0);
 
         // test add price feed
         const testYToken1 = await getAccountAddress("pool1");
         await shallPass(adminAddPriceFeed(testYToken1, 100));
-        feeds = await getSupportedDataFeeds(oracleAddress);
+        [feeds] = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(1);
         expect(feeds).toContain(testYToken1);
 
         // test add duplicate feeds no duplicate result
         await shallPass(adminAddPriceFeed(testYToken1, 100));
-        feeds = await getSupportedDataFeeds(oracleAddress);
+        [feeds] = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(1);
         expect(feeds).toContain(testYToken1);
 
         // test add multiple feeds
         const testYToken2 = await getAccountAddress("pool2");
         await shallPass(adminAddPriceFeed(testYToken2, 50));
-        feeds = await getSupportedDataFeeds(oracleAddress);
+        [feeds] = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(2);
         expect(feeds).toContain(testYToken1);
         expect(feeds).toContain(testYToken2);
 
         // test Remove price feed
         await shallPass(adminRemovePriceFeed(testYToken2));
-        feeds = await getSupportedDataFeeds(oracleAddress);
+        [feeds] = await getSupportedDataFeeds(oracleAddress);
         expect(feeds.length).toBe(1);
         expect(feeds).toContain(testYToken1);
         expect(feeds).not.toContain(testYToken2);
@@ -81,27 +81,27 @@ describe("SimpleOracle Testsuites", () => {
 
         // Check initial setup status
         const updater = await getAccountAddress("feed-updater");
-        let setupResult = await checkUpdaterSetupStatus(updater);
+        let [setupResult] = await checkUpdaterSetupStatus(updater);
         expect(setupResult).toBe(false);
 
         // Setup updater account, the status should still be false as it's not yet granted with updateCapability.
         await shallPass(updaterSetupAccount(updater));
-        setupResult = await checkUpdaterSetupStatus(updater);
+        [setupResult] = await checkUpdaterSetupStatus(updater);
         expect(setupResult).toBe(false);
 
         // Admin grant updateCapability to updater and now it's been setup.
         await shallPass(adminGrantUpdateRole(updater));
-        setupResult = await checkUpdaterSetupStatus(updater);
+        [setupResult] = await checkUpdaterSetupStatus(updater);
         expect(setupResult).toBe(true);
 
         // Admin revoke updateCapability then check updater status.
         await shallPass(adminRevokeUpdateRole());
-        setupResult = await checkUpdaterSetupStatus(updater);
+        [setupResult] = await checkUpdaterSetupStatus(updater);
         expect(setupResult).toBe(false);
 
         // Let's grant and check once again.
         await shallPass(adminGrantUpdateRole(updater));
-        setupResult = await checkUpdaterSetupStatus(updater);
+        [setupResult] = await checkUpdaterSetupStatus(updater);
         expect(setupResult).toBe(true);
     });
 
@@ -122,7 +122,7 @@ describe("SimpleOracle Testsuites", () => {
         const data = [toUFix64(35.5), toUFix64(36.6), toUFix64(37.7), toUFix64(38.8)];
         for (let i = 0; i < data.length; i++) {
             await shallPass(updaterUpdateData(updater, testYToken1, data[i]));
-            let res = await getFeedLatestResult(oracleAddress, testYToken1);
+            let [res] = await getFeedLatestResult(oracleAddress, testYToken1);
             expect(res[1]).toBe(data[i]);
         }
     });

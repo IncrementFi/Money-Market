@@ -115,14 +115,14 @@ describe("LendingPool Testsuites", () => {
 
         await nextBlock()
 
-        const prePoolState = await queryFlowTokenPoolState()
-        const preBorrowerState = await queryUserPoolState(borrower)
+        const [prePoolState] = await queryFlowTokenPoolState()
+        const [preBorrowerState] = await queryUserPoolState(borrower)
 
         const seizePoolAddr = await getLendingPoolAddress()
         const curBorrowBalance = BigNumber(prePoolState['TotalBorrows'])
         const liquidateAmount = curBorrowBalance.times(0.5).dividedBy(1e18)
         const liquidateAmountError = liquidateAmount.plus(BigNumber(0.001))
-        const preInterestState = await queryFlowTokenInterestRate(
+        const [preInterestState] = await queryFlowTokenInterestRate(
             BigNumber(prePoolState.TotalCash).toNumber(),
             BigNumber(prePoolState.TotalBorrows).toNumber(),
             BigNumber(prePoolState.TotalReserves).toNumber()
@@ -131,9 +131,9 @@ describe("LendingPool Testsuites", () => {
         //await shallRevert( liquidate(liquidator, borrower, seizePoolAddr, liquidateAmountError.toFixed(8)) )
         await shallPass( liquidate(liquidator, borrower, seizePoolAddr, liquidateAmount.toFixed(8)) )
 
-        const aftPoolState = await queryFlowTokenPoolState()
-        const aftBorrowerState = await queryUserPoolState(borrower)
-        const aftLiuidatorState = await queryUserPoolState(liquidator)
+        const [aftPoolState] = await queryFlowTokenPoolState()
+        const [aftBorrowerState] = await queryUserPoolState(borrower)
+        const [aftLiuidatorState] = await queryUserPoolState(liquidator)
         
         const curBorrowIndex = BigNumber(aftPoolState.BorrowIndex)
         const preBorrowPrincipal = BigNumber(preBorrowerState[3])

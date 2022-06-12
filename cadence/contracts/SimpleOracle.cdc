@@ -108,7 +108,7 @@ pub contract SimpleOracle {
 
         /// Return pool's latest data point in form of (timestamp, data)
         pub fun latestResult(pool: Address): [UFix64; 2] {
-            let dataRef: &RingBuffer = &self.observations[pool] as &RingBuffer
+            let dataRef: &RingBuffer = (&self.observations[pool] as &RingBuffer?)!
             if (dataRef == nil || dataRef.isEmpty()) {
                 return [0.0, 0.0]
             }
@@ -158,7 +158,7 @@ pub contract SimpleOracle {
 
         access(contract) fun updatePrice(pool: Address, data: UFix64) {
             if (self.feeds.contains(pool)) {
-                let dataRef: &RingBuffer = &self.observations[pool] as &RingBuffer
+                let dataRef: &RingBuffer = (&self.observations[pool] as &RingBuffer?)!
                 let now = getCurrentBlock().timestamp
                 dataRef.enqueue(Observation(timestamp: now, data: data))
                 emit DataUpdated(for: pool, at: now, data: data)

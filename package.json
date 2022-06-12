@@ -1,23 +1,18 @@
 {
   "dependencies": {
-    "@babel/core": "^7.15.5",
-    "@babel/preset-env": "^7.15.6",
     "@onflow/fcl": "^0.0.76",
     "@onflow/types": "^0.0.6",
-    "babel-jest": "^27.2.0",
-    "bignumber.js": "^9.0.1",
-    "flow-js-testing": "^0.1.13",
-    "jest": "^27.2.0"
+    "bignumber.js": "^9.0.1"
   },
   "name": "IncrementFi",
   "description": "Decentralized Money Market on Flow",
   "version": "1.0.1",
   "main": "index.js",
   "directories": {
-    "test": "test"
+    "test": "tests"
   },
   "scripts": {
-    "test": "jest --coverage"
+    "test": "jest --coverage --runInBand"
   },
   "repository": {
     "type": "git",
@@ -28,5 +23,14 @@
   "bugs": {
     "url": "https://github.com/IncrementFi/Money-Market/issues"
   },
-  "homepage": "https://github.com/IncrementFi/Money-Market/blob/main/README.md"
+  "homepage": "https://github.com/IncrementFi/Money-Market/blob/main/README.md",
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "babel-jest": "^27.3.1",
+    "flow-js-testing": "^0.2.3-alpha.5",
+    "jest": "^27.3.1",
+    "jest-environment-node": "^27.3.1"
+  },
+  "keywords": []
 }

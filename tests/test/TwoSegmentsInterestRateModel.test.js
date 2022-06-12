@@ -52,7 +52,7 @@ describe("InterestRateModel Testsuites", () => {
 
         const admin = await getInterestRateModelAdmin();
         const scaleFactor = 1e18;
-        const createTxResult = await shallPass(createInterestRateModel(
+        const [createTxResult] = await shallPass(createInterestRateModel(
             admin,
             "TwoSegmentsInterestRateModelV1-test",
             12614400,
@@ -61,7 +61,7 @@ describe("InterestRateModel Testsuites", () => {
             35 * scaleFactor / 100,  // 0.35
             80 * scaleFactor / 100   // 0.8
         ));
-        const modelParams = await getInterestRateModelParams();
+        const [modelParams] = await getInterestRateModelParams();
         const eventData = createTxResult.events[0].data;
         expect(eventData.newBlocksPerYear).toBe(modelParams.blocksPerYear);
         expect(eventData.newScaledBaseRatePerBlock).toBe(modelParams.scaledBaseRatePerBlock);
@@ -87,7 +87,7 @@ describe("InterestRateModel Testsuites", () => {
             35 * scaleFactor / 100, // 0.35
             80 * scaleFactor / 100  // 0.8
         ));     
-        const interestRates = await getInterestRateData(
+        const [interestRates] = await getInterestRateData(
             100 * scaleFactor,
             400 * scaleFactor,
             0
@@ -113,9 +113,9 @@ describe("InterestRateModel Testsuites", () => {
             35 * scaleFactor / 100,  // 0.35
             80 * scaleFactor / 100   // 0.8
         ));
-        const oldParams = await getInterestRateModelParams();
+        const [oldParams] = await getInterestRateModelParams();
         // Update model params
-        const updateTxResult = await shallPass(updateInterestRateModelParams(
+        const [updateTxResult] = await shallPass(updateInterestRateModelParams(
             admin,
             31536000,
             0.5 * scaleFactor / 100,  // 0.005
@@ -124,7 +124,7 @@ describe("InterestRateModel Testsuites", () => {
             75 * scaleFactor / 100    // 0.75
         ));
         const updateEventData = updateTxResult.events[0].data;
-        const newParams = await getInterestRateModelParams();
+        const [newParams] = await getInterestRateModelParams();
         // Manual calculation and do the comparison to double check. Should be '2536783358'
         let calculateScaledBaseMultiplierPerBlock = Math.trunc((0.065 - 0.005) / 0.75 * 1e18 / 31536000)
         expect(updateEventData.newScaledBaseMultiplierPerBlock).toBe(calculateScaledBaseMultiplierPerBlock)
