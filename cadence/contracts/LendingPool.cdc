@@ -494,15 +494,17 @@ pub contract LendingPool {
         
         // Updates borrow states, deposit repay Vault into pool underlying vault and return any remaining Vault
         let scaledAccountTotalBorrowsNew = scaledAccountTotalBorrows > scaledRepayAmount ? scaledAccountTotalBorrows - scaledRepayAmount : (0 as UInt256)
-        self.underlyingVault.deposit(from: <-repayUnderlyingVault)
+        //self.underlyingVault.deposit(from: <-repayUnderlyingVault)
         self.scaledTotalBorrows = self.scaledTotalBorrows - scaledActualRepayAmount
         emit Repay(borrower: borrower, scaledActualRepayAmount: scaledActualRepayAmount, scaledBorrowerTotalBorrows: scaledAccountTotalBorrowsNew, scaledPoolTotalBorrows: self.scaledTotalBorrows)
         if (scaledAccountTotalBorrows > scaledRepayAmount) {
             self.accountBorrows[borrower] = BorrowSnapshot(principal: scaledAccountTotalBorrowsNew, interestIndex: self.scaledBorrowIndex)
+            self.underlyingVault.deposit(from: <-repayUnderlyingVault)
             return nil
         } else {
             self.accountBorrows.remove(key: borrower)
             let surplusAmount = LendingConfig.ScaledUInt256ToUFix64(scaledRepayAmount - scaledAccountTotalBorrows)
+            self.underlyingVault.deposit(from: <-repayUnderlyingVault)
             return <- self.underlyingVault.withdraw(amount: surplusAmount)
         }
     }
@@ -1124,6 +1126,6 @@ pub contract LendingPool {
         destroy <-self.account.load<@AnyResource>(from: self.PoolPublicStoragePath)
         self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
         self.account.unlink(self.PoolPublicPublicPath)
-        self.account.link<&{LendingInterfaces.PoolPublic}>(self.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
+        self.account.link<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
     }
 }
