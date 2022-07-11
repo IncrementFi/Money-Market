@@ -494,7 +494,6 @@ pub contract LendingPool {
         
         // Updates borrow states, deposit repay Vault into pool underlying vault and return any remaining Vault
         let scaledAccountTotalBorrowsNew = scaledAccountTotalBorrows > scaledRepayAmount ? scaledAccountTotalBorrows - scaledRepayAmount : (0 as UInt256)
-        //self.underlyingVault.deposit(from: <-repayUnderlyingVault)
         self.scaledTotalBorrows = self.scaledTotalBorrows - scaledActualRepayAmount
         emit Repay(borrower: borrower, scaledActualRepayAmount: scaledActualRepayAmount, scaledBorrowerTotalBorrows: scaledAccountTotalBorrowsNew, scaledPoolTotalBorrows: self.scaledTotalBorrows)
         if (scaledAccountTotalBorrows > scaledRepayAmount) {
