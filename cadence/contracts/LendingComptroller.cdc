@@ -637,11 +637,11 @@ pub contract LendingComptroller {
             if (isMining != nil) {
                 self.markets[pool]!.setMiningStatus(isMining: isMining!)
             }
-            let oldLiquidationPenalty = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
+            let oldCollateralFactor = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
             if (collateralFactor != nil) {
                 self.markets[pool]!.setCollateralFactor(newCollateralFactor: collateralFactor!)
             }
-            let oldCollateralFactor = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            let oldLiquidationPenalty = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
             if (liquidationPenalty != nil) {
                 self.markets[pool]!.setLiquidationPenalty(newLiquidationPenalty: liquidationPenalty!)
             }
