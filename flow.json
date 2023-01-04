@@ -31,14 +31,39 @@
             "source": "./cadence/contracts/env/OracleConfig.cdc",
             "aliases": { "emulator": "0xf8d6e0586b0a20c7", "testnet": "0x2a9b59c3e2b72ee0" }
         },
-        "SimpleOracle":                   "./cadence/contracts/SimpleOracle.cdc",
-        "LendingInterfaces":              "./cadence/contracts/LendingInterfaces.cdc",
-        "LendingConfig":                  "./cadence/contracts/LendingConfig.cdc",
-        "LendingError":                   "./cadence/contracts/LendingError.cdc",
+        "SimpleOracle": "./cadence/contracts/SimpleOracle.cdc",
+        "LendingInterfaces": {
+            "source": "./cadence/contracts/LendingInterfaces.cdc",
+            "aliases": {
+                "mainnet": "0x2df970b6cdee5735"
+            }
+        },
+        "LendingConfig": {
+            "source": "./cadence/contracts/LendingConfig.cdc",
+            "aliases": {
+                "mainnet": "0x2df970b6cdee5735"
+            }
+        },
+        "LendingError": {
+            "source": "./cadence/contracts/LendingError.cdc",
+            "aliases": {
+                "mainnet": "0x2df970b6cdee5735"
+            }
+        },
+        "LendingComptroller": {
+            "source": "./cadence/contracts/LendingComptroller.cdc",
+            "aliases": {
+                "mainnet": "0xf80cb737bfe7c792"
+            }
+        },
+        "LendingOracle": {
+            "source": "./cadence/contracts/LendingOracle.cdc",
+            "aliases": {
+                "mainnet": "0x72d3a05910b6ffa3"
+            }
+        },
         "TwoSegmentsInterestRateModel":   "./cadence/contracts/TwoSegmentsInterestRateModel.cdc",
-        "LendingComptroller":             "./cadence/contracts/LendingComptroller.cdc",
-        "LendingPool":                    "./cadence/contracts/LendingPool.cdc",
-        "LendingOracle":                  "./cadence/contracts/LendingOracle.cdc"
+        "LendingPool":                    "./cadence/contracts/LendingPool.cdc"
     },
     "networks": {
         "emulator": "127.0.0.1:3569",
@@ -68,7 +93,6 @@
         "testnet-pool-USDC-deployer":      {"address": "0x0bcc0bde1aa1875b", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}},
         
         "testnet-liquidator":              {"address": "0x6d692450d591524c", "key":{ "privateKey": "3e173ab34b4629ee8e16ee95a6aacb5f088fc95e53ba28ef0f528bf8bcce51ec", "type": "hex", "index": 0, "signatureAlgorithm": "ECDSA_secp256k1", "hashAlgorithm": "SHA3_256"}}
-        
     },
     "pools" : {
         "testnet": {
