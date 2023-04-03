@@ -37,6 +37,9 @@ pub contract LendingPool {
     /// { supplierAddress => # of virtual lpToken the supplier owns, scaled up by 1e18 }
     access(self) let accountLpTokens: {Address: UInt256}
     /// Reserved parameter fields: {ParamName: Value}
+    /// Used fields:
+    ///   |__ 1. "flashloanRateBps" -> UInt64
+    ///   |__ 2. "lock" -> Bool
     access(self) let _reservedFields: {String: AnyStruct}
 
     /// BorrowSnapshot
@@ -101,6 +104,10 @@ pub contract LendingPool {
     pub event NewPoolSeizeShare(_ oldPoolSeizeShare: UFix64, _ newPoolSeizeShare: UFix64)
     /// Event emitted when the comptroller is changed
     pub event NewComptroller(_ oldComptrollerAddress: Address?, _ newComptrollerAddress: Address)
+    /// Event emitted when the flashloanRateChanged is changed
+    pub event FlashloanRateChanged(oldRateBps: UInt64, newRateBps: UInt64)
+    /// Event emitted when the flashloan is executed
+    pub event Flashloan(executor: Address, originator: Address, amount: UFix64, executorCallback: Type)
 
     // Return underlying asset's type of current pool
     pub fun getUnderlyingAssetType(): String {
@@ -220,7 +227,13 @@ pub contract LendingPool {
                     msg: "Supplied vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -243,6 +256,7 @@ pub contract LendingPool {
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
         emit Supply(supplier: supplierAddr, scaledSuppliedUnderlyingAmount: scaledAmount, scaledMintedLpTokenAmount: scaledMintVirtualAmount)
+        self.setLock(false)
     }
 
     /// Redeems lpTokens for the underlying asset's vault
@@ -367,13 +381,22 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
-        return <- self.redeemInternal(
+        let res <- self.redeemInternal(
             redeemer: redeemerAddress,
             numLpTokenToRedeem: numLpTokenToRedeem,
             numUnderlyingToRedeem: 0.0
         )
+
+        self.setLock(false)
+        return <- res
     }
 
     /// User redeems lpTokens for a specified amount of underlying asset
@@ -404,13 +427,22 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
-        return <- self.redeemInternal(
+        let res <- self.redeemInternal(
             redeemer: redeemerAddress,
             numLpTokenToRedeem: 0.0,
             numUnderlyingToRedeem: numUnderlyingToRedeem
         )
+
+        self.setLock(false)
+        return <- res
     }
 
     /// User borrows underlying asset from the pool.
@@ -439,7 +471,13 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -467,7 +505,10 @@ pub contract LendingPool {
         let scaledBorrowBalanceNew = scaledBorrowAmount + self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
         self.accountBorrows[borrower] = BorrowSnapshot(principal: scaledBorrowBalanceNew, interestIndex: self.scaledBorrowIndex)
         emit Borrow(borrower: borrower, scaledBorrowAmount: scaledBorrowAmount, scaledBorrowerTotalBorrows: scaledBorrowBalanceNew, scaledPoolTotalBorrows: self.scaledTotalBorrows)
-        return <- self.underlyingVault.withdraw(amount: borrowAmount)
+        
+        let res <- self.underlyingVault.withdraw(amount: borrowAmount)
+        self.setLock(false)
+        return <- res
     }
 
     /// Repay the borrower's borrow
@@ -525,11 +566,20 @@ pub contract LendingPool {
                     msg: "Repaid vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         // Accrues interests and checkpoints latest states
         self.accrueInterest()
 
-        return <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
+        let res <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
+
+        self.setLock(false)
+        return <- res
     }
 
     /// Liquidates the borrowers collateral.
@@ -555,7 +605,13 @@ pub contract LendingPool {
                     msg: "Liquidator repaid vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -622,6 +678,8 @@ pub contract LendingPool {
             collateralPoolToSeize: poolCollateralizedToSeize,
             scaledCollateralPoolLpTokenSeized: scaledCollateralLpTokenSeizedAmount
         )
+
+        self.setLock(false)
         return <-remainingVault
     }
 
@@ -648,7 +706,13 @@ pub contract LendingPool {
                     msg: "External seize only, seizerPool cannot be current pool",
                     err: LendingError.ErrorCode.EXTERNAL_SEIZE_FROM_SELF
                 )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
         // 1. Check and verify caller from another LendingPool contract
         let err = self.comptrollerCap!.borrow()!.callerAllowed(
             callerCertificate: <- seizerPoolCertificate,
@@ -665,6 +729,8 @@ pub contract LendingPool {
             borrower: borrower,
             scaledBorrowerLpTokenToSeize: scaledBorrowerCollateralLpTokenToSeize
         )
+
+        self.setLock(false)
     }
 
     /// Internal seize
@@ -716,10 +782,69 @@ pub contract LendingPool {
         emit ReservesAdded(donator: self.poolAddress, scaledAddedUnderlyingAmount: scaledAddedUnderlyingReserves, scaledNewTotalReserves: self.scaledTotalReserves)
     }
 
+    /// An executor contract can request to use the whole liquidity of current LendingPool and perform custom operations (like arbitrage, liquidation, et al.), as long as:
+    ///   1. executor implements FlashLoanExecutor resource interface and sets up corresponding resource to receive & process requested tokens, and
+    ///   2. executor repays back requested amount + fees (dominated by 'flashloanRateBps x amount'), and
+    /// all in one atomic function call.
+    /// @params: User-definited extra data passed to executor for further auth/check/decode
+    ///
+    pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {
+        pre {
+            requestedAmount > 0.0 && requestedAmount < self.underlyingVault.balance: LendingError.ErrorEncode(
+                    msg: "LendingError: flashloan invalid requested amount",
+                    err: LendingError.ErrorCode.INVALID_PARAMETERS
+                )
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        post {
+            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
+        }
+        self.setLock(true)
+
+        // Accrues interests and checkpoints latest states
+        self.accrueInterest()
+
+        let underlyingBalanceBefore = self.underlyingVault.balance
+        var tokenOut <-self.underlyingVault.withdraw(amount: requestedAmount)
+
+        let tokenIn <- executorCap.borrow()!.executeAndRepay(loanedToken: <- tokenOut, params: params)
+
+        assert(tokenIn.isInstance(self.underlyingAssetType), message:
+            LendingError.ErrorEncode(
+                msg: "LendingError: flashloan repaid incompatible token",
+                err: LendingError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
+        assert(tokenIn.balance >= requestedAmount * (1.0 + UFix64(self.getFlashloanRateBps()) / 10000.0), message:
+            LendingError.ErrorEncode(
+                msg: "LendingError: flashloan insufficient repayment",
+                err: LendingError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
+
+        self.underlyingVault.deposit(from: <- tokenIn)
+        
+        emit Flashloan(executor: executorCap.borrow()!.owner!.address, originator: self.account.address, amount: requestedAmount, executorCallback: executorCap.borrow()!.getType())
+
+        self.setLock(false)
+    }
+
     /// Check whether or not the given certificate is issued by system
     ///
     access(self) fun checkUserCertificateType(certCap: Capability<&{LendingInterfaces.IdentityCertificate}>): Bool {
         return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
+    }
+
+    access(self) fun getLock(): Bool {
+        return (self._reservedFields["lock"] as! Bool?) ?? false
+    }
+
+    access(self) fun setLock(_ lock: Bool) {
+        self._reservedFields["lock"] = lock
+    }
+
+    pub fun getFlashloanRateBps(): UInt64 {
+        return (LendingPool._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
     }
 
     /// PoolCertificate
@@ -924,6 +1049,11 @@ pub contract LendingPool {
             return scaledSupplyRatePerBlock * blocksPerYear
         }
 
+        /// The default flashloan rate is 5 bps (0.05%)
+        pub fun getFlashloanRateBps(): UInt64 {
+            return LendingPool.getFlashloanRateBps()
+        }
+
         pub fun accrueInterest() {
             LendingPool.accrueInterest()
         }
@@ -950,6 +1080,30 @@ pub contract LendingPool {
                 borrower: borrower,
                 scaledBorrowerCollateralLpTokenToSeize: scaledBorrowerCollateralLpTokenToSeize
             )
+        }
+
+        pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
+            LendingPool.supply(supplierAddr: supplierAddr, inUnderlyingVault: <-inUnderlyingVault)
+        }
+
+        pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault {
+            return <-LendingPool.redeem(userCertificateCap: userCertificateCap, numLpTokenToRedeem: numLpTokenToRedeem)
+        }
+
+        pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault {
+            return <-LendingPool.borrow(userCertificateCap: userCertificateCap, borrowAmount: borrowAmount)
+        }
+
+        pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+            return <-LendingPool.repayBorrow(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
+        }
+
+        pub fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+            return <-LendingPool.liquidate(liquidator: liquidator, borrower: borrower, poolCollateralizedToSeize: poolCollateralizedToSeize, repayUnderlyingVault: <-repayUnderlyingVault)
+        }
+
+        pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {
+            LendingPool.flashloan(executorCap: executorCap, requestedAmount: requestedAmount, params: params)
         }
     }
 
@@ -1088,6 +1242,19 @@ pub contract LendingPool {
 
             return <- LendingPool.underlyingVault.withdraw(amount: reduceAmount)
         }
+
+        pub fun setFlashloanRateBps(rateBps: UInt64) {
+            pre {
+                rateBps >= 0 && rateBps <= 10000:
+                    LendingError.ErrorEncode(
+                        msg: "LendingPool: flashloan rateBps should be in [0, 10000]",
+                        err: LendingError.ErrorCode.INVALID_PARAMETERS
+                    )
+            }
+            let oldRateBps = (LendingPool._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
+            emit FlashloanRateChanged(oldRateBps: oldRateBps, newRateBps: rateBps)
+            LendingPool._reservedFields["flashloanRateBps"] = rateBps
+        }
     }
 
     init() {
@@ -1128,3 +1295,4 @@ pub contract LendingPool {
         self.account.link<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
     }
 }
+ 
