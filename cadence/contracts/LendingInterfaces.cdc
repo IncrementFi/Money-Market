@@ -5,6 +5,8 @@
 # Author: Increment Labs
 
 */
+import FungibleToken from "./tokens/FungibleToken.cdc"
+
 pub contract interface LendingInterfaces {
     
     pub resource interface PoolPublic {
@@ -35,6 +37,7 @@ pub contract interface LendingInterfaces {
         pub fun getPoolBorrowerList(): [Address]
         pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
         pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
+        pub fun getFlashloanRateBps(): UInt64
         
         /// Accrue pool interest and checkpoint latest data to pool states
         pub fun accrueInterest()
@@ -49,8 +52,19 @@ pub contract interface LendingInterfaces {
             borrower: Address,
             scaledBorrowerCollateralLpTokenToSeize: UInt256
         )
+
+        pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault)
+        pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault
+        pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault
+        pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
+        pub fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
+        pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {return}
     }
 
+    pub resource interface FlashLoanExecutor {
+        pub fun executeAndRepay(loanedToken: @FungibleToken.Vault, params: {String: AnyStruct}): @FungibleToken.Vault
+    }
+    
     pub resource interface InterestRateModelPublic {
         /// exposing model specific fields, e.g.: modelName, model params.
         pub fun getInterestRateModelParams(): {String: AnyStruct}

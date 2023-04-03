@@ -35,6 +35,8 @@ pub contract LendingError {
         pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SUPPLY_NOT_ALLOWED_EXCEED_SUPPLY_CAP
+        
+        pub case REENTRANT
     }
 
     pub fun ErrorEncode(msg: String, err: ErrorCode): String {
