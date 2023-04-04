@@ -34,9 +34,10 @@ pub contract LendingError {
         pub case LIQUIDATION_NOT_ALLOWED_SEIZE_MORE_THAN_BALANCE
         pub case LIQUIDATION_NOT_ALLOWED_POSITION_ABOVE_WATER
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
-        pub case SUPPLY_NOT_ALLOWED_EXCEED_SUPPLY_CAP
+        pub case SUPPLY_NOT_ALLOWED_EXCEED_SUPPLY_CAP // 25
         
         pub case REENTRANT
+        pub case FLASHLOAN_EXECUTOR_SETUP
     }
 
     pub fun ErrorEncode(msg: String, err: ErrorCode): String {

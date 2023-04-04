@@ -12,6 +12,7 @@ pub contract interface LendingInterfaces {
     pub resource interface PoolPublic {
         pub fun getPoolAddress(): Address
         pub fun getUnderlyingTypeString(): String
+        pub fun getUnderlyingAssetType(): String
         pub fun getUnderlyingToLpTokenRateScaled(): UInt256
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
         /// Return snapshot of account borrowed balance in scaled UInt256 format
@@ -55,6 +56,7 @@ pub contract interface LendingInterfaces {
 
         pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault)
         pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault
+        pub fun redeemUnderlying(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numUnderlyingToRedeem: UFix64): @FungibleToken.Vault
         pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault
         pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
         pub fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
