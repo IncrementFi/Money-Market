@@ -107,7 +107,7 @@ pub contract LendingPool {
     /// Event emitted when the flashloanRateChanged is changed
     pub event FlashloanRateChanged(oldRateBps: UInt64, newRateBps: UInt64)
     /// Event emitted when the flashloan is executed
-    pub event Flashloan(executor: Address, originator: Address, amount: UFix64, executorCallback: Type)
+    pub event Flashloan(executor: Address, executorType: Type, originator: Address, amount: UFix64)
 
     // Return underlying asset's type of current pool
     pub fun getUnderlyingAssetType(): String {
@@ -794,6 +794,10 @@ pub contract LendingPool {
                     msg: "LendingError: flashloan invalid requested amount",
                     err: LendingError.ErrorCode.INVALID_PARAMETERS
                 )
+            executorCap.check(): LendingError.ErrorEncode(
+                    msg: "LendingError: flashloan executor resource not properly setup",
+                    err: LendingError.ErrorCode.FLASHLOAN_EXECUTOR_SETUP
+                )
             self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
         post {
@@ -824,7 +828,7 @@ pub contract LendingPool {
 
         self.underlyingVault.deposit(from: <- tokenIn)
         
-        emit Flashloan(executor: executorCap.borrow()!.owner!.address, originator: self.account.address, amount: requestedAmount, executorCallback: executorCap.borrow()!.getType())
+        emit Flashloan(executor: executorCap.borrow()!.owner!.address, executorType: executorCap.borrow()!.getType(), originator: self.account.address, amount: requestedAmount)
 
         self.setLock(false)
     }
@@ -868,6 +872,10 @@ pub contract LendingPool {
             let underlyingType = LendingPool.getUnderlyingAssetType()
             // "A.1654653399040a61.FlowToken.Vault" => "FlowToken"
             return underlyingType.slice(from: 19, upTo: underlyingType.length - 6)
+        }
+
+        pub fun getUnderlyingAssetType(): String {
+            return LendingPool.getUnderlyingAssetType()
         }
 
         pub fun getUnderlyingToLpTokenRateScaled(): UInt256 {
@@ -1088,6 +1096,10 @@ pub contract LendingPool {
 
         pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault {
             return <-LendingPool.redeem(userCertificateCap: userCertificateCap, numLpTokenToRedeem: numLpTokenToRedeem)
+        }
+
+        pub fun redeemUnderlying(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numUnderlyingToRedeem: UFix64): @FungibleToken.Vault {
+            return <-LendingPool.redeemUnderlying(userCertificateCap: userCertificateCap, numUnderlyingToRedeem: numUnderlyingToRedeem)
         }
 
         pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault {
