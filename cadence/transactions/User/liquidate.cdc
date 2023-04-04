@@ -2,6 +2,7 @@ import FlowToken from "../../contracts/tokens/FlowToken.cdc"
 import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"
+import LendingComptroller from "../../contracts/LendingComptroller.cdc"
 //import SwapRouter from 0xa6850776a94e6551
 import SwapRouter from 0x2f8af5ed05bbde0d
 
@@ -45,6 +46,16 @@ transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFi
         liquidateInAmount = liquidateInAmount - repayWallet.balance
 
         // redeem all
+        if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
+            destroy <-signer.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
+            
+            let userCertificate <- LendingComptroller.IssueUserCertificate()
+            signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
+            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
+        }
+        if (signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath).check()==false) {
+            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
+        }
         let userCertificateCap = signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath)
         let redeemedVault <- poolSeizeRef.redeemUnderlying(userCertificateCap: userCertificateCap, numUnderlyingToRedeem: UFix64.max)
         
@@ -59,7 +70,7 @@ transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFi
         if swapPath.length > 0 {
             let vaultOut <- SwapRouter.swapWithPath(vaultIn: <- redeemedVault, tokenKeyPath: swapPath, exactAmounts: nil)
             assert(vaultOut.balance > liquidateInAmount, message: "liquidate with no profit")
-            repayWallet.deposit(from: vaultOut)
+            repayWallet.deposit(from: <-vaultOut)
         } else {
             // no swap
             seizeWallet.deposit(from: <-redeemedVault)
