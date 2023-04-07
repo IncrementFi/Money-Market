@@ -525,7 +525,7 @@ pub contract LendingComptroller {
         /// @Param scaledAmountLPTokenToRedeem - The number of LPTokens to hypothetically redeem
         /// @Param scaledAmountUnderlyingToBorrow - The amount of underlying to hypothetically borrow
         /// @Return: 0. hypothetical cross-market total collateral value normalized in usd
-        ///          1. hypothetical cross-market tatal borrow value normalized in usd
+        ///          1. hypothetical cross-market total borrow value normalized in usd
         ///          2. hypothetical cross-market total supply value normalized in usd
         ///
         access(self) fun getHypotheticalAccountLiquidity(
@@ -637,19 +637,19 @@ pub contract LendingComptroller {
             if (isMining != nil) {
                 self.markets[pool]!.setMiningStatus(isMining: isMining!)
             }
-            let oldCollateralFactor = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? (0 as UInt256))
+            let oldCollateralFactor = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledCollateralFactor ?? 0)
             if (collateralFactor != nil) {
                 self.markets[pool]!.setCollateralFactor(newCollateralFactor: collateralFactor!)
             }
-            let oldLiquidationPenalty = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? (0 as UInt256))
+            let oldLiquidationPenalty = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledLiquidationPenalty ?? 0)
             if (liquidationPenalty != nil) {
                 self.markets[pool]!.setLiquidationPenalty(newLiquidationPenalty: liquidationPenalty!)
             }
-            let oldBorrowCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? (0 as UInt256))
+            let oldBorrowCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledBorrowCap ?? 0)
             if (borrowCap != nil) {
                 self.markets[pool]!.setBorrowCap(newBorrowCap: borrowCap!)
             }
-            let oldSupplyCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledSupplyCap ?? (0 as UInt256))
+            let oldSupplyCap = LendingConfig.ScaledUInt256ToUFix64(self.markets[pool]?.scaledSupplyCap ?? 0)
             if (supplyCap != nil) {
                 self.markets[pool]!.setSupplyCap(newSupplyCap: supplyCap!)
             }

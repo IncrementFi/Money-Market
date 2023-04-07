@@ -251,7 +251,7 @@ pub contract LendingPool {
         let underlyingToken2LpTokenRateScaled = self.underlyingToLpTokenRateSnapshotScaled()
         let scaledMintVirtualAmount = scaledAmount * LendingConfig.scaleFactor / underlyingToken2LpTokenRateScaled
         // mint pool tokens for supply certificate
-        self.accountLpTokens[supplierAddr] = scaledMintVirtualAmount + (self.accountLpTokens[supplierAddr] ?? (0 as UInt256))
+        self.accountLpTokens[supplierAddr] = scaledMintVirtualAmount + (self.accountLpTokens[supplierAddr] ?? 0)
         self.scaledTotalSupply = self.scaledTotalSupply + scaledMintVirtualAmount
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
@@ -777,7 +777,7 @@ pub contract LendingPool {
         } else {
             self.accountLpTokens[borrower] = self.accountLpTokens[borrower]! - scaledBorrowerLpTokenToSeize
         }
-        self.accountLpTokens[liquidator] = scaledLiquidatorSeizedLpTokens + (self.accountLpTokens[liquidator] ?? (0 as UInt256))
+        self.accountLpTokens[liquidator] = scaledLiquidatorSeizedLpTokens + (self.accountLpTokens[liquidator] ?? 0)
 
         emit ReservesAdded(donator: self.poolAddress, scaledAddedUnderlyingAmount: scaledAddedUnderlyingReserves, scaledNewTotalReserves: self.scaledTotalReserves)
     }
@@ -792,7 +792,7 @@ pub contract LendingPool {
         pre {
             requestedAmount > 0.0 && requestedAmount < self.underlyingVault.balance: LendingError.ErrorEncode(
                     msg: "LendingError: flashloan invalid requested amount",
-                    err: LendingError.ErrorCode.INVALID_PARAMETERS
+                    err: LendingError.ErrorCode.INSUFFICIENT_POOL_LIQUIDITY
                 )
             executorCap.check(): LendingError.ErrorEncode(
                     msg: "LendingError: flashloan executor resource not properly setup",
@@ -809,13 +809,10 @@ pub contract LendingPool {
         self.accrueInterest()
 
         let requestedAmountScaled = LendingConfig.UFix64ToScaledUInt256(requestedAmount)
-
-        let underlyingBalanceBefore = self.underlyingVault.balance
-        var tokenOut <-self.underlyingVault.withdraw(amount: requestedAmount)
+        let tokenOut <-self.underlyingVault.withdraw(amount: requestedAmount)
         self.scaledTotalBorrows = self.scaledTotalBorrows + requestedAmountScaled
 
         let tokenIn <- executorCap.borrow()!.executeAndRepay(loanedToken: <- tokenOut, params: params)
-
         assert(tokenIn.isInstance(self.underlyingAssetType), message:
             LendingError.ErrorEncode(
                 msg: "LendingError: flashloan repaid incompatible token",
@@ -831,7 +828,7 @@ pub contract LendingPool {
 
         self.underlyingVault.deposit(from: <- tokenIn)
         self.scaledTotalBorrows = self.scaledTotalBorrows - requestedAmountScaled
-        
+
         emit Flashloan(executor: executorCap.borrow()!.owner!.address, executorType: executorCap.borrow()!.getType(), originator: self.account.address, amount: requestedAmount)
 
         self.setLock(false)
@@ -852,7 +849,7 @@ pub contract LendingPool {
     }
 
     pub fun getFlashloanRateBps(): UInt64 {
-        return (LendingPool._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
+        return (self._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
     }
 
     /// PoolCertificate
@@ -887,7 +884,7 @@ pub contract LendingPool {
         }
 
         pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256 {
-            return LendingPool.accountLpTokens[account] ?? (0 as UInt256)
+            return LendingPool.accountLpTokens[account] ?? 0
         }
 
         pub fun getAccountBorrowBalanceScaled(account: Address): UInt256 {
@@ -1267,8 +1264,7 @@ pub contract LendingPool {
                         err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let oldRateBps = (LendingPool._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
-            emit FlashloanRateChanged(oldRateBps: oldRateBps, newRateBps: rateBps)
+            emit FlashloanRateChanged(oldRateBps: LendingPool.getFlashloanRateBps(), newRateBps: rateBps)
             LendingPool._reservedFields["flashloanRateBps"] = rateBps
         }
     }
@@ -1311,4 +1307,3 @@ pub contract LendingPool {
         self.account.link<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
     }
 }
- 
