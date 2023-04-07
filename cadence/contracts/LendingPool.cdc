@@ -808,8 +808,11 @@ pub contract LendingPool {
         // Accrues interests and checkpoints latest states
         self.accrueInterest()
 
+        let requestedAmountScaled = LendingConfig.UFix64ToScaledUInt256(requestedAmount)
+
         let underlyingBalanceBefore = self.underlyingVault.balance
         var tokenOut <-self.underlyingVault.withdraw(amount: requestedAmount)
+        self.scaledTotalBorrows = self.scaledTotalBorrows + requestedAmountScaled
 
         let tokenIn <- executorCap.borrow()!.executeAndRepay(loanedToken: <- tokenOut, params: params)
 
@@ -827,6 +830,7 @@ pub contract LendingPool {
         )
 
         self.underlyingVault.deposit(from: <- tokenIn)
+        self.scaledTotalBorrows = self.scaledTotalBorrows - requestedAmountScaled
         
         emit Flashloan(executor: executorCap.borrow()!.owner!.address, executorType: executorCap.borrow()!.getType(), originator: self.account.address, amount: requestedAmount)
 
