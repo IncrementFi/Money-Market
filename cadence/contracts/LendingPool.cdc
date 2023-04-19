@@ -39,6 +39,7 @@ pub contract LendingPool {
     /// Reserved parameter fields: {ParamName: Value}
     /// Used fields:
     ///   |__ 1. "flashloanRateBps" -> UInt64
+    ///   |__ 1. "isFlashloanOpen" -> Bool
     access(self) let _reservedFields: {String: AnyStruct}
 
     /// BorrowSnapshot
@@ -105,6 +106,8 @@ pub contract LendingPool {
     pub event NewComptroller(_ oldComptrollerAddress: Address?, _ newComptrollerAddress: Address)
     /// Event emitted when the flashloanRateChanged is changed
     pub event FlashloanRateChanged(oldRateBps: UInt64, newRateBps: UInt64)
+    /// Event emitted when the isFlashloanOpen is changed
+    pub event FlashloanOpen(isOpen: Bool)
     /// Event emitted when the flashloan is executed
     pub event Flashloan(executor: Address, executorType: Type, originator: Address, amount: UFix64)
 
@@ -741,6 +744,10 @@ pub contract LendingPool {
     ///
     pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {
         pre {
+            self.isFlashloanOpen(): LendingError.ErrorEncode(
+                    msg: "LendingError: flashloan is not open",
+                    err: LendingError.ErrorCode.MARKET_NOT_OPEN
+                )
             requestedAmount > 0.0 && requestedAmount < self.underlyingVault.balance: LendingError.ErrorEncode(
                     msg: "LendingError: flashloan invalid requested amount",
                     err: LendingError.ErrorCode.INSUFFICIENT_POOL_LIQUIDITY
@@ -785,6 +792,10 @@ pub contract LendingPool {
 
     pub fun getFlashloanRateBps(): UInt64 {
         return (self._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
+    }
+
+    pub fun isFlashloanOpen(): Bool {
+        return (self._reservedFields["isFlashloanOpen"] as! Bool?) ?? true
     }
 
     /// PoolCertificate
@@ -1201,6 +1212,11 @@ pub contract LendingPool {
             }
             emit FlashloanRateChanged(oldRateBps: LendingPool.getFlashloanRateBps(), newRateBps: rateBps)
             LendingPool._reservedFields["flashloanRateBps"] = rateBps
+        }
+
+        pub fun setFlashloanOpen(isOpen: Bool) {
+            emit FlashloanOpen(isOpen: isOpen)
+            LendingPool._reservedFields["isFlashloanOpen"] = isOpen
         }
     }
 
