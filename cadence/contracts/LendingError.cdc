@@ -36,7 +36,6 @@ pub contract LendingError {
         pub case LIQUIDATION_NOT_ALLOWED_TOO_MUCH_REPAY
         pub case SUPPLY_NOT_ALLOWED_EXCEED_SUPPLY_CAP // 25
         
-        pub case REENTRANT
         pub case FLASHLOAN_EXECUTOR_SETUP
     }
 
