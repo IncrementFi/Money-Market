@@ -39,7 +39,6 @@ pub contract LendingPool {
     /// Reserved parameter fields: {ParamName: Value}
     /// Used fields:
     ///   |__ 1. "flashloanRateBps" -> UInt64
-    ///   |__ 2. "lock" -> Bool
     access(self) let _reservedFields: {String: AnyStruct}
 
     /// BorrowSnapshot
@@ -227,12 +226,7 @@ pub contract LendingPool {
                     msg: "Supplied vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
 
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
@@ -256,7 +250,6 @@ pub contract LendingPool {
         self.underlyingVault.deposit(from: <-inUnderlyingVault)
 
         emit Supply(supplier: supplierAddr, scaledSuppliedUnderlyingAmount: scaledAmount, scaledMintedLpTokenAmount: scaledMintVirtualAmount)
-        self.setLock(false)
     }
 
     /// Redeems lpTokens for the underlying asset's vault
@@ -381,13 +374,8 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
+        
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         let res <- self.redeemInternal(
             redeemer: redeemerAddress,
@@ -395,7 +383,6 @@ pub contract LendingPool {
             numUnderlyingToRedeem: 0.0
         )
 
-        self.setLock(false)
         return <- res
     }
 
@@ -427,13 +414,7 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
+        }        
         let redeemerAddress = userCertificateCap.borrow()!.owner!.address
         let res <- self.redeemInternal(
             redeemer: redeemerAddress,
@@ -441,7 +422,6 @@ pub contract LendingPool {
             numUnderlyingToRedeem: numUnderlyingToRedeem
         )
 
-        self.setLock(false)
         return <- res
     }
 
@@ -471,13 +451,7 @@ pub contract LendingPool {
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -507,7 +481,6 @@ pub contract LendingPool {
         emit Borrow(borrower: borrower, scaledBorrowAmount: scaledBorrowAmount, scaledBorrowerTotalBorrows: scaledBorrowBalanceNew, scaledPoolTotalBorrows: self.scaledTotalBorrows)
         
         let res <- self.underlyingVault.withdraw(amount: borrowAmount)
-        self.setLock(false)
         return <- res
     }
 
@@ -566,19 +539,12 @@ pub contract LendingPool {
                     msg: "Repaid vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
         // Accrues interests and checkpoints latest states
         self.accrueInterest()
 
         let res <- self.repayBorrowInternal(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
 
-        self.setLock(false)
         return <- res
     }
 
@@ -605,13 +571,7 @@ pub contract LendingPool {
                     msg: "Liquidator repaid vault and pool underlying type mismatch",
                     err: LendingError.ErrorCode.MISMATCHED_INPUT_VAULT_TYPE_WITH_POOL
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
         // 1. Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -679,7 +639,6 @@ pub contract LendingPool {
             scaledCollateralPoolLpTokenSeized: scaledCollateralLpTokenSeizedAmount
         )
 
-        self.setLock(false)
         return <-remainingVault
     }
 
@@ -706,13 +665,7 @@ pub contract LendingPool {
                     msg: "External seize only, seizerPool cannot be current pool",
                     err: LendingError.ErrorCode.EXTERNAL_SEIZE_FROM_SELF
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
         // 1. Check and verify caller from another LendingPool contract
         let err = self.comptrollerCap!.borrow()!.callerAllowed(
             callerCertificate: <- seizerPoolCertificate,
@@ -729,8 +682,6 @@ pub contract LendingPool {
             borrower: borrower,
             scaledBorrowerLpTokenToSeize: scaledBorrowerCollateralLpTokenToSeize
         )
-
-        self.setLock(false)
     }
 
     /// Internal seize
@@ -798,13 +749,7 @@ pub contract LendingPool {
                     msg: "LendingError: flashloan executor resource not properly setup",
                     err: LendingError.ErrorCode.FLASHLOAN_EXECUTOR_SETUP
                 )
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
         }
-        post {
-            self.getLock() == false: LendingError.ErrorEncode(msg: "LendingError: Reentrant", err: LendingError.ErrorCode.REENTRANT)
-        }
-        self.setLock(true)
-
         // Accrues interests and checkpoints latest states
         self.accrueInterest()
 
@@ -830,22 +775,12 @@ pub contract LendingPool {
         self.scaledTotalBorrows = self.scaledTotalBorrows - requestedAmountScaled
 
         emit Flashloan(executor: executorCap.borrow()!.owner!.address, executorType: executorCap.borrow()!.getType(), originator: self.account.address, amount: requestedAmount)
-
-        self.setLock(false)
     }
 
     /// Check whether or not the given certificate is issued by system
     ///
     access(self) fun checkUserCertificateType(certCap: Capability<&{LendingInterfaces.IdentityCertificate}>): Bool {
         return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
-    }
-
-    access(self) fun getLock(): Bool {
-        return (self._reservedFields["lock"] as! Bool?) ?? false
-    }
-
-    access(self) fun setLock(_ lock: Bool) {
-        self._reservedFields["lock"] = lock
     }
 
     pub fun getFlashloanRateBps(): UInt64 {
