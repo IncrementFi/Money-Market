@@ -39,7 +39,7 @@ pub contract LendingPool {
     /// Reserved parameter fields: {ParamName: Value}
     /// Used fields:
     ///   |__ 1. "flashloanRateBps" -> UInt64
-    ///   |__ 1. "isFlashloanOpen" -> Bool
+    ///   |__ 2. "isFlashloanOpen" -> Bool
     access(self) let _reservedFields: {String: AnyStruct}
 
     /// BorrowSnapshot
@@ -795,7 +795,7 @@ pub contract LendingPool {
     }
 
     pub fun isFlashloanOpen(): Bool {
-        return (self._reservedFields["isFlashloanOpen"] as! Bool?) ?? true
+        return (self._reservedFields["isFlashloanOpen"] as! Bool?) ?? false
     }
 
     /// PoolCertificate
