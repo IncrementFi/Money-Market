@@ -1068,7 +1068,7 @@ pub contract LendingPool {
 
     /// PoolAdmin
     ///
-    pub resource PoolAdmin {
+    pub resource PoolAdmin: LendingInterfaces.PoolAdminPublic {
         /// Admin function to call accrueInterest() to checkpoint latest states, and then update the interest rate model
         pub fun setInterestRateModel(newInterestRateModelAddress: Address) {
             post {
@@ -1199,7 +1199,7 @@ pub contract LendingPool {
             
             emit ReservesReduced(scaledReduceAmount: reduceAmountScaled, scaledNewTotalReserves: LendingPool.scaledTotalReserves)
 
-            return <- LendingPool.underlyingVault.withdraw(amount: reduceAmount)
+            return <- LendingPool.underlyingVault.withdraw(amount: LendingConfig.ScaledUInt256ToUFix64(reduceAmountScaled))
         }
 
         pub fun setFlashloanRateBps(rateBps: UInt64) {

@@ -63,6 +63,18 @@ pub contract interface LendingInterfaces {
         pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {return}
     }
 
+    pub resource interface PoolAdminPublic {
+        pub fun setInterestRateModel(newInterestRateModelAddress: Address)
+        pub fun setReserveFactor(newReserveFactor: UFix64)
+        pub fun setPoolSeizeShare(newPoolSeizeShare: UFix64)
+        pub fun setComptroller(newComptrollerAddress: Address)
+        /// A pool can only be initialized once
+        pub fun initializePool(reserveFactor: UFix64, poolSeizeShare: UFix64, interestRateModelAddress: Address)
+        pub fun withdrawReserves(reduceAmount: UFix64): @FungibleToken.Vault
+        pub fun setFlashloanRateBps(rateBps: UInt64)
+        pub fun setFlashloanOpen(isOpen: Bool)
+    }
+
     pub resource interface FlashLoanExecutor {
         pub fun executeAndRepay(loanedToken: @FungibleToken.Vault, params: {String: AnyStruct}): @FungibleToken.Vault
     }
