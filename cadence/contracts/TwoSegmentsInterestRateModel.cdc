@@ -8,18 +8,16 @@
 import LendingInterfaces from "./LendingInterfaces.cdc"
 import LendingConfig from "./LendingConfig.cdc"
 
-pub contract TwoSegmentsInterestRateModel {
+access(all) contract TwoSegmentsInterestRateModel {
     /// The storage path for the Admin resource
-    pub let InterestRateModelAdminStoragePath: StoragePath
+    access(all) let InterestRateModelAdminStoragePath: StoragePath
     /// The storage path for the InterestRateModel resource
-    pub let InterestRateModelStoragePath: StoragePath
-    /// The private path for the capability to InterestRateModel which is for admin to update model parameters
-    pub let InterestRateModelPrivatePath: PrivatePath
+    access(all) let InterestRateModelStoragePath: StoragePath
     /// Reserved parameter fields: {ParamName: Value}
     access(self) let _reservedFields: {String: AnyStruct}
 
     /// Event which is emitted when Interest Rate Model is created or model parameter gets updated
-    pub event InterestRateModelUpdated(
+    access(all) event InterestRateModelUpdated(
         _ oldBlocksPerYear: UInt256, _ newBlocksPerYear: UInt256,
         _ oldScaledBaseRatePerBlock: UInt256, _ newScaledBaseRatePerBlock: UInt256,
         _ oldScaledBaseMultiplierPerBlock: UInt256, _ newScaledBaseMultiplierPerBlock: UInt256,
@@ -27,7 +25,7 @@ pub contract TwoSegmentsInterestRateModel {
         _ oldScaledCriticalUtilRate: UInt256, _ newScaledCriticalUtilRate: UInt256
     )
 
-    pub resource InterestRateModel: LendingInterfaces.InterestRateModelPublic {
+    access(all) resource InterestRateModel: LendingInterfaces.InterestRateModelPublic {
         access(self) let modelName: String
         /// See: https://docs.onflow.org/cadence/measuring-time/#time-on-the-flow-blockchain
         access(self) var blocksPerYear: UInt256
@@ -43,7 +41,7 @@ pub contract TwoSegmentsInterestRateModel {
         access(self) let _reservedFields: {String: AnyStruct}
 
         /// pool's capital utilization rate (scaled up by self.scaleFactor, e.g. 1e18)
-        pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
+        access(all) view fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
             if (borrows == 0) {
                 return 0
             }
@@ -51,7 +49,7 @@ pub contract TwoSegmentsInterestRateModel {
         }
 
         /// Get the borrow interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
-        pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
+        access(all) view fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256 {
             let scaleFactor = LendingConfig.scaleFactor
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
             if (scaledUtilRate <= self.scaledCriticalUtilRate) {
@@ -63,7 +61,7 @@ pub contract TwoSegmentsInterestRateModel {
         }
 
         /// Get the supply interest rate per block (scaled up by self.scaleFactor, e.g. 1e18)
-        pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256 {
+        access(all) view fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256 {
             assert(reserveFactor < LendingConfig.scaleFactor, message: "reserveFactor should always be less than 1.0 x scaleFactor")
 
             let scaledUtilRate = self.getUtilizationRate(cash: cash, borrows: borrows, reserves: reserves)
@@ -73,11 +71,11 @@ pub contract TwoSegmentsInterestRateModel {
         }
 
         ///
-        pub fun getBlocksPerYear(): UInt256 {
+        access(all) view fun getBlocksPerYear(): UInt256 {
             return self.blocksPerYear
         }
 
-        pub fun getInterestRateModelParams(): {String: AnyStruct} {
+        access(all) view fun getInterestRateModelParams(): {String: AnyStruct} {
             return {
                 "modelName": self.modelName,
                 "blocksPerYear": self.blocksPerYear,
@@ -164,8 +162,8 @@ pub contract TwoSegmentsInterestRateModel {
         }
     }
 
-    pub resource Admin {
-        pub fun createInterestRateModel(
+    access(all) resource Admin {
+        access(all) fun createInterestRateModel(
             modelName: String,
             blocksPerYear: UInt256,
             scaledZeroUtilInterestRatePerYear: UInt256,
@@ -183,15 +181,15 @@ pub contract TwoSegmentsInterestRateModel {
             )
         }
 
-        pub fun updateInterestRateModelParams(
-            updateCapability: Capability<&InterestRateModel>,
+        access(all) fun updateInterestRateModelParams(
+            interestRateModel: &InterestRateModel,
             newBlocksPerYear: UInt256,
             newScaledZeroUtilInterestRatePerYear: UInt256,
             newScaledCriticalUtilInterestRatePerYear: UInt256,
             newScaledFullUtilInterestRatePerYear: UInt256,
             newScaledCriticalUtilPoint: UInt256
         ) {
-            updateCapability.borrow()!.setInterestRateModelParams(
+            interestRateModel.setInterestRateModelParams(
                 newBlocksPerYear,
                 newScaledZeroUtilInterestRatePerYear,
                 newScaledCriticalUtilInterestRatePerYear,
@@ -204,10 +202,9 @@ pub contract TwoSegmentsInterestRateModel {
     init() {
         self.InterestRateModelAdminStoragePath = /storage/InterestRateModelAdmin
         self.InterestRateModelStoragePath = /storage/InterestRateModel
-        self.InterestRateModelPrivatePath = /private/InterestRateModel
         self._reservedFields = {}
 
-        destroy <-self.account.load<@AnyResource>(from: self.InterestRateModelAdminStoragePath)
-        self.account.save(<-create Admin(), to: self.InterestRateModelAdminStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.InterestRateModelAdminStoragePath)
+        self.account.storage.save(<-create Admin(), to: self.InterestRateModelAdminStoragePath)
     }
 }

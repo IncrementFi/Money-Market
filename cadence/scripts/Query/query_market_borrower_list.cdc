@@ -2,8 +2,8 @@ import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingError from "../../contracts/LendingError.cdc"
 
-pub fun main(comptrollerAddr: Address, poolAddr: Address, from: UInt64, to: UInt64): [Address] {
-    let comptrollerRef = getAccount(comptrollerAddr).getCapability<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath).borrow() 
+access(all) fun main(comptrollerAddr: Address, poolAddr: Address, from: UInt64, to: UInt64): [Address] {
+    let comptrollerRef = getAccount(comptrollerAddr).capabilities.borrow<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath) 
         ?? panic(
             LendingError.ErrorEncode (
                 msg: "Invailid comptroller cap.",
@@ -15,5 +15,4 @@ pub fun main(comptrollerAddr: Address, poolAddr: Address, from: UInt64, to: UInt
     } else {
         return comptrollerRef.getPoolPublicRef(poolAddr: poolAddr).getPoolBorrowerSlicedList(from: from, to: to)
     }
-    
 }

@@ -13,9 +13,9 @@ import SwapRouter from 0x2f8af5ed05bbde0d
 // Repaied LIQUIDATEAMOUNT LIQUIDATETOKEN on your behalf
 //
 transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFix64, borrower: Address) {
-    prepare(signer: AuthAccount) {
-        let poolRepayRef = getAccount(repayPoolAddr).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath).borrow()!
-        let poolSeizeRef = getAccount(seizePoolAddr).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath).borrow()!
+    prepare(signer: auth(Storage, Capabilities) &Account) {
+        let poolRepayRef = getAccount(repayPoolAddr).capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)!
+        let poolSeizeRef = getAccount(seizePoolAddr).capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)!
 
         let repayTokenStr = poolRepayRef.getUnderlyingTypeString()
         let seizeTokenStr = poolSeizeRef.getUnderlyingTypeString()
@@ -25,8 +25,10 @@ transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFi
         var repayVaultPath = getTokenVaultPath(repayTokenStr)
         var seizeVaultPath = getTokenVaultPath(seizeTokenStr)
 
-        var repayWallet = signer.borrow<&FungibleToken.Vault>(from: repayVaultPath)!
-        var seizeWallet = signer.borrow<&FungibleToken.Vault>(from: seizeVaultPath)!
+        var repayWallet = signer.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Vault}>(from: repayVaultPath)
+            ?? panic("cannot borrow auth(FT.Withdraw) reference to repaid FT.Vault")
+        var seizeWallet = signer.storage.borrow<&{FungibleToken.Vault}>(from: seizeVaultPath)
+            ?? panic("cannot borrow reference to seized FT.Vault")
 
         var liquidateInAmount = repayWallet.balance
         let repayVault <- repayWallet.withdraw(amount: amountLiquidate)
@@ -46,18 +48,14 @@ transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFi
         liquidateInAmount = liquidateInAmount - repayWallet.balance
 
         // redeem all
-        if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
-            destroy <-signer.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
-            
+        if (signer.storage.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
+            destroy <-signer.storage.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
             let userCertificate <- LendingComptroller.IssueUserCertificate()
-            signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
-            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
+            signer.storage.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
         }
-        if (signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath).check()==false) {
-            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
-        }
-        let userCertificateCap = signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath)
-        let redeemedVault <- poolSeizeRef.redeemUnderlying(userCertificateCap: userCertificateCap, numUnderlyingToRedeem: UFix64.max)
+        let userCertificate = signer.storage.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath)
+            ?? panic("cannot borrow reference to UserCertificate")
+        let redeemedVault <- poolSeizeRef.redeemUnderlying(userCertificate: userCertificate, numUnderlyingToRedeem: UFix64.max)
         
         // swap or withdraw
         var swapPath: [String] = []
@@ -77,13 +75,13 @@ transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFi
         }        
         
         // inform
-        let informVault <- signer.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)!.withdraw(amount: 0.00000001)
-        let flowTokenReceiverRef = getAccount(borrower).getCapability(/public/flowTokenReceiver).borrow<&{FungibleToken.Receiver}>()!
+        let informVault <- signer.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Vault}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.00000001)
+        let flowTokenReceiverRef = getAccount(borrower).capabilities.borrow<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
         flowTokenReceiverRef.deposit(from: <-informVault)
     }
 }
 
-pub fun getTokenVaultPath(_ tokenStr: String): StoragePath {
+access(all) fun getTokenVaultPath(_ tokenStr: String): StoragePath {
     var vaultPath = /storage/null
     switch tokenStr {
         case "FlowToken": vaultPath = /storage/flowTokenVault
@@ -95,6 +93,7 @@ pub fun getTokenVaultPath(_ tokenStr: String): StoragePath {
 
     return vaultPath
 }
-pub fun getTokenTypeStr(_ vaultTypeStr: String): String {
+
+access(all) fun getTokenTypeStr(_ vaultTypeStr: String): String {
     return vaultTypeStr.slice(from: 0, upTo: vaultTypeStr.length - 6)
 }

@@ -6,8 +6,8 @@ import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 
 // Bot periodically sample all lending markets' apr data and store them on-chain. 
 transaction() {
-    prepare(bot: AuthAccount) {
-        let comptrollerRef = getAccount(LendingComptroller.comptrollerAddress).getCapability<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath).borrow()
+    prepare(bot: &Account) {
+        let comptrollerRef = getAccount(LendingComptroller.comptrollerAddress).capabilities.borrow<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath)
             ?? panic("cannot borrow reference to ComptrollerPublic")
 
         let poolArrays = comptrollerRef.getAllMarkets()

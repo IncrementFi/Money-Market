@@ -3,8 +3,8 @@ import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingError from "../../contracts/LendingError.cdc"
 
 
-pub fun main(userAddrs: [Address], comptrollerAddr: Address): {Address: AnyStruct} {
-    let comptrollerRef = getAccount(comptrollerAddr).getCapability<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath).borrow()
+access(all) fun main(userAddrs: [Address], comptrollerAddr: Address): {Address: AnyStruct} {
+    let comptrollerRef = getAccount(comptrollerAddr).capabilities.borrow<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath)
         ?? panic(
             LendingError.ErrorEncode (
                 msg: "Invailid comptroller cap.",

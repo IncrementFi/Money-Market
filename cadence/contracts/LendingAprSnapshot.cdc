@@ -2,26 +2,26 @@ import LendingConfig from "./LendingConfig.cdc"
 import LendingError from "./LendingError.cdc"
 import LendingInterfaces from "./LendingInterfaces.cdc"
 
-pub contract LendingAprSnapshot {
-    pub let AdminStoragePath: StoragePath
+access(all) contract LendingAprSnapshot {
+    access(all) let AdminStoragePath: StoragePath
     /// { marketAddr => perMarketAprData}
     access(self) let _markets: {Address: AprSnapshot}
 
     /// Reserved parameter fields: {ParamName: Value}
     access(self) let _reservedFields: {String: AnyStruct}
 
-    pub event MarketDataTracked(market: Address, marketType: String, startTrackingFrom: UFix64)
-    pub event MarketDataErased(market: Address, erasedFrom: UFix64)
-    pub event AprSampled(market: Address, truncatedTimestamp: UInt64, supplyApr: UFix64, borrowApr: UFix64)
+    access(all) event MarketDataTracked(market: Address, marketType: String, startTrackingFrom: UFix64)
+    access(all) event MarketDataErased(market: Address, erasedFrom: UFix64)
+    access(all) event AprSampled(market: Address, truncatedTimestamp: UInt64, supplyApr: UFix64, borrowApr: UFix64)
 
     /// Per-snapshot data point
-    pub struct Observation {
+    access(all) struct Observation {
         // Unix timestamp
-        pub let timestamp: UFix64
+        access(all) let timestamp: UFix64
         // supplyApr in ufix64
-        pub let supplyApr: UFix64
+        access(all) let supplyApr: UFix64
         // borrowApr in ufix64 (e.g. 0.12345678 => 12.35%)
-        pub let borrowApr: UFix64
+        access(all) let borrowApr: UFix64
 
         init (t: UFix64, supplyApr: UFix64, borrowApr: UFix64) {
             self.timestamp = t
@@ -31,24 +31,24 @@ pub contract LendingAprSnapshot {
     }
 
     /// Per-market snapshot configurations and data points
-    pub struct AprSnapshot {
+    access(all) struct AprSnapshot {
         /// Contains functions to query public market data
-        pub let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
+        access(all) let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
         /// Each sample covers a 6-hour window: i.e. sampleLength = 21600s
-        pub let sampleLength: UInt64
+        access(all) let sampleLength: UInt64
         /// We store 1 year of apr data in maximum: i.e. numSamples = 1460
-        pub let numSamples: UInt64
+        access(all) let numSamples: UInt64
         /// A circular buffer storing apr samples
         access(self) let aprObservations: [Observation]
         /// Reserved parameter fields: {ParamName: Value}
         access(self) let _reservedFields: {String: AnyStruct}
 
         /// Returns the index into the circular buffer of the given timestamp
-        pub fun observationIndexOf(timestamp: UFix64): UInt64 {
+        access(all) fun observationIndexOf(timestamp: UFix64): UInt64 {
             return UInt64(timestamp) / self.sampleLength % self.numSamples
         }
 
-        pub fun sample(): Bool {
+        access(all) fun sample(): Bool {
             let now = getCurrentBlock().timestamp
             let idx = self.observationIndexOf(timestamp: now)
             let ob = self.aprObservations[idx]
@@ -68,7 +68,7 @@ pub contract LendingAprSnapshot {
             return false
         }
 
-        pub fun queryHistoricalAprData(scale: UInt8, plotPoints: UInt64): [Observation] {
+        access(all) fun queryHistoricalAprData(scale: UInt8, plotPoints: UInt64): [Observation] {
             let now = getCurrentBlock().timestamp
             let idxNow: UInt64 = self.observationIndexOf(timestamp: now)
             var idxPrev: UInt64 = 0
@@ -114,7 +114,7 @@ pub contract LendingAprSnapshot {
             return res
         }
 
-        pub fun getLatestData(): Observation {
+        access(all) fun getLatestData(): Observation {
             let now = getCurrentBlock().timestamp
             let idx = self.observationIndexOf(timestamp: now)
             return self.aprObservations[idx]
@@ -140,7 +140,7 @@ pub contract LendingAprSnapshot {
 
     /// sample() is made public so everyone can sample the given market's apr data, as long as it's expired.
     /// @Returns sampled or not
-    pub fun sample(poolAddr: Address): Bool {
+    access(all) fun sample(poolAddr: Address): Bool {
         pre {
             self._markets.containsKey(poolAddr) == true:
                 LendingError.ErrorEncode(
@@ -151,12 +151,11 @@ pub contract LendingAprSnapshot {
         return self._markets[poolAddr]!.sample()
     }
 
-/////////////// TODO: Check if it's ok to pull 120 x (3 UFix64) in 1 script?
     /// A getter function for frontend to query stored samples and plot data.
     /// @scale: Spanning of time the drawing should cover - 0 (1 month), 1 (6 months), 2 (1 year). 
     /// @plotPoints: Maximum data points the drawing needs, e.g. 120 points in maximum
     /// @Returns historical apy data in a timestamp-ascending order. Note: only meaningful data is returned, so the length is not guaranteed to be equal to `plotPoints`.
-    pub fun queryHistoricalAprData(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [Observation] {
+    access(all) fun queryHistoricalAprData(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [Observation] {
         pre {
             self._markets.containsKey(poolAddr) == true:
                 LendingError.ErrorEncode(
@@ -167,7 +166,7 @@ pub contract LendingAprSnapshot {
         return self._markets[poolAddr]!.queryHistoricalAprData(scale: scale, plotPoints: plotPoints)
     }
 
-    pub fun getLatestData(poolAddr: Address): Observation {
+    access(all) fun getLatestData(poolAddr: Address): Observation {
         return self._markets[poolAddr]!.getLatestData()
     }
 
@@ -180,18 +179,18 @@ pub contract LendingAprSnapshot {
                 )         
         }
         // Start tracking a new market
-        let poolPublicCap = getAccount(poolAddr).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
-        assert(poolPublicCap.check() == true, message:
+        let poolPublicCap = getAccount(poolAddr).capabilities.get<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
+        assert(poolPublicCap != nil && poolPublicCap!.check() == true, message:
             LendingError.ErrorEncode(
                 msg: "Cannot borrow reference to PoolPublic resource",
                 err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
             )
         )
 
-        self._markets[poolAddr] = AprSnapshot(poolPublicCap: poolPublicCap)
+        self._markets[poolAddr] = AprSnapshot(poolPublicCap: poolPublicCap!)
         emit MarketDataTracked(
             market: poolAddr,
-            marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
+            marketType: poolPublicCap!.borrow()!.getUnderlyingTypeString(),
             startTrackingFrom: getCurrentBlock().timestamp
         )
     }
@@ -211,11 +210,11 @@ pub contract LendingAprSnapshot {
         )
     }
   
-    pub resource Admin {
-        pub fun trackMarketData(poolAddr: Address) {
+    access(all) resource Admin {
+        access(all) fun trackMarketData(poolAddr: Address) {
             LendingAprSnapshot.trackMarketData(poolAddr: poolAddr)
         }
-        pub fun eraseMarketData(poolAddr: Address) {
+        access(all) fun eraseMarketData(poolAddr: Address) {
             LendingAprSnapshot.eraseMarketData(poolAddr: poolAddr)
         }
     }
@@ -225,7 +224,7 @@ pub contract LendingAprSnapshot {
         self._markets = {}
         self._reservedFields = {}
 
-        destroy <-self.account.load<@AnyResource>(from: self.AdminStoragePath)
-        self.account.save(<-create Admin(), to: self.AdminStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.AdminStoragePath)
+        self.account.storage.save(<-create Admin(), to: self.AdminStoragePath)
     }
 }

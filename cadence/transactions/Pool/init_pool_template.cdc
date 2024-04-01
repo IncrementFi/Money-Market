@@ -4,8 +4,8 @@ transaction(interestRateModelAddr: Address, comptrollerAddr: Address, reserveFac
 
     let PoolAdminRef: &LendingPool.PoolAdmin
 
-    prepare(poolAccount: AuthAccount) {
-        self.PoolAdminRef = poolAccount.borrow<&LendingPool.PoolAdmin>(from: LendingPool.PoolAdminStoragePath) ?? panic("Lost pool admin.")
+    prepare(poolAccount: auth(BorrowValue) &Account) {
+        self.PoolAdminRef = poolAccount.storage.borrow<&LendingPool.PoolAdmin>(from: LendingPool.PoolAdminStoragePath) ?? panic("Lost pool admin.")
     }
 
     execute {

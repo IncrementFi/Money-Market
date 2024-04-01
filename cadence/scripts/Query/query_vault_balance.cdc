@@ -1,9 +1,9 @@
 import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
-pub fun main(userAddr: Address, vaultPath: PublicPath): UFix64 {
-    let vaultBalance = getAccount(userAddr).getCapability<&{FungibleToken.Balance}>(vaultPath)
-    if vaultBalance.check() == false || vaultBalance.borrow() == nil {
+access(all) fun main(userAddr: Address, vaultPath: PublicPath): UFix64 {
+    let vaultBalCap = getAccount(userAddr).capabilities.get<&{FungibleToken.Balance}>(vaultPath)
+    if vaultBalCap == nil || vaultBalCap!.check() == false || vaultBalCap!.borrow() == nil {
         return 0.0
     }
-    return vaultBalance.borrow()!.balance
+    return vaultBalCap!.borrow()!.balance
 }

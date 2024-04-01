@@ -5,8 +5,8 @@ transaction(oracleAddr: Address, closeFactor: UFix64) {
 
     let comptrollerAdminRef: &LendingComptroller.Admin
 
-    prepare(comptrollerAccount: AuthAccount) {
-        self.comptrollerAdminRef = comptrollerAccount.borrow<&LendingComptroller.Admin>(from: LendingComptroller.AdminStoragePath) ?? panic("Lost comptroller admin.")
+    prepare(comptrollerAccount: auth(BorrowValue) &Account) {
+        self.comptrollerAdminRef = comptrollerAccount.storage.borrow<&LendingComptroller.Admin>(from: LendingComptroller.AdminStoragePath) ?? panic("Lost comptroller admin.")
     }
 
     execute {

@@ -13,27 +13,27 @@ import LendingInterfaces from "./LendingInterfaces.cdc"
 import LendingConfig from "./LendingConfig.cdc"
 import LendingError from "./LendingError.cdc"
 
-pub contract LendingPool {
+access(all) contract LendingPool {
     /// Account address the pool is deployed to, i.e. the pool 'contract address'
-    pub let poolAddress: Address
+    access(all) let poolAddress: Address
     /// Initial exchange rate (when LendingPool.totalSupply == 0) between the virtual lpToken and pool underlying token
-    pub let scaledInitialExchangeRate: UInt256
+    access(all) let scaledInitialExchangeRate: UInt256
     /// Block number that interest was last accrued at
-    pub var accrualBlockNumber: UInt256
+    access(all) var accrualBlockNumber: UInt256
     /// Accumulator of the total earned interest rate since the opening of the market, scaled up by 1e18
-    pub var scaledBorrowIndex: UInt256
+    access(all) var scaledBorrowIndex: UInt256
     /// Total amount of outstanding borrows of the underlying in this market, scaled up by 1e18
-    pub var scaledTotalBorrows: UInt256
+    access(all) var scaledTotalBorrows: UInt256
     /// Total amount of reserves of the underlying held in this market, scaled up by 1e18
-    pub var scaledTotalReserves: UInt256
+    access(all) var scaledTotalReserves: UInt256
     /// Total number of virtual lpTokens, scaled up by 1e18
-    pub var scaledTotalSupply: UInt256
+    access(all) var scaledTotalSupply: UInt256
     /// Fraction of generated interest added to protocol reserves, scaled up by 1e18
     /// Must be in [0.0, 1.0] x scaleFactor
-    pub var scaledReserveFactor: UInt256
+    access(all) var scaledReserveFactor: UInt256
     /// Share of seized collateral that is added to reserves when liquidation happenes, e.g. 0.028 x 1e18.
     /// Must be in [0.0, 1.0] x scaleFactor
-    pub var scaledPoolSeizeShare: UInt256
+    access(all) var scaledPoolSeizeShare: UInt256
     /// { supplierAddress => # of virtual lpToken the supplier owns, scaled up by 1e18 }
     access(self) let accountLpTokens: {Address: UInt256}
     /// Reserved parameter fields: {ParamName: Value}
@@ -46,11 +46,11 @@ pub contract LendingPool {
     ///
     /// Container for borrow balance information
     ///
-    pub struct BorrowSnapshot {
+    access(all) struct BorrowSnapshot {
         /// Total balance (with accrued interest), after applying the most recent balance-change action
-        pub var scaledPrincipal: UInt256
+        access(all) var scaledPrincipal: UInt256
         /// Global borrowIndex as of the most recent balance-change action
-        pub var scaledInterestIndex: UInt256
+        access(all) var scaledInterestIndex: UInt256
     
         init(principal: UInt256, interestIndex: UInt256) {
             self.scaledPrincipal = principal
@@ -62,62 +62,62 @@ pub contract LendingPool {
     access(self) let accountBorrows: {Address: BorrowSnapshot}
 
     /// Model used to calculate underlying asset's borrow interest rate
-    pub var interestRateModelAddress: Address?
-    pub var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
+    access(all) var interestRateModelAddress: Address?
+    access(all) var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
     
     /// The address of the comptroller contract
-    pub var comptrollerAddress: Address?
-    pub var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
+    access(all) var comptrollerAddress: Address?
+    access(all) var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
 
     /// Save underlying asset deposited into this pool
-    access(self) let underlyingVault: @FungibleToken.Vault
+    access(self) let underlyingVault: @{FungibleToken.Vault}
     /// Underlying type
     access(self) let underlyingAssetType: Type
     
     /// Path
-    pub let PoolAdminStoragePath: StoragePath
-    pub let UnderlyingAssetVaultStoragePath: StoragePath
-    pub let PoolPublicStoragePath: StoragePath
-    pub let PoolPublicPublicPath: PublicPath
+    access(all) let PoolAdminStoragePath: StoragePath
+    access(all) let UnderlyingAssetVaultStoragePath: StoragePath
+    access(all) let PoolPublicStoragePath: StoragePath
+    access(all) let PoolPublicPublicPath: PublicPath
 
     /// Event emitted when interest is accrued
-    pub event AccrueInterest(_ scaledCashPrior: UInt256, _ scaledInterestAccumulated: UInt256, _ scaledBorrowIndexNew: UInt256, _ scaledTotalBorrowsNew: UInt256)
+    access(all) event AccrueInterest(_ scaledCashPrior: UInt256, _ scaledInterestAccumulated: UInt256, _ scaledBorrowIndexNew: UInt256, _ scaledTotalBorrowsNew: UInt256)
     /// Event emitted when underlying asset is deposited into pool
-    pub event Supply(supplier: Address, scaledSuppliedUnderlyingAmount: UInt256, scaledMintedLpTokenAmount: UInt256)
+    access(all) event Supply(supplier: Address, scaledSuppliedUnderlyingAmount: UInt256, scaledMintedLpTokenAmount: UInt256)
     /// Event emitted when virtual lpToken is burnt and redeemed for underlying asset
-    pub event Redeem(redeemer: Address, scaledLpTokenToRedeem: UInt256, scaledRedeemedUnderlyingAmount: UInt256)
+    access(all) event Redeem(redeemer: Address, scaledLpTokenToRedeem: UInt256, scaledRedeemedUnderlyingAmount: UInt256)
     /// Event emitted when user borrows underlying from the pool
-    pub event Borrow(borrower: Address, scaledBorrowAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
+    access(all) event Borrow(borrower: Address, scaledBorrowAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
     /// Event emitted when user repays underlying to pool
-    pub event Repay(borrower: Address, scaledActualRepayAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
+    access(all) event Repay(borrower: Address, scaledActualRepayAmount: UInt256, scaledBorrowerTotalBorrows: UInt256, scaledPoolTotalBorrows: UInt256)
     /// Event emitted when pool reserves get added
-    pub event ReservesAdded(donator: Address, scaledAddedUnderlyingAmount: UInt256, scaledNewTotalReserves: UInt256)
+    access(all) event ReservesAdded(donator: Address, scaledAddedUnderlyingAmount: UInt256, scaledNewTotalReserves: UInt256)
     /// Event emitted when pool reserves is reduced
-    pub event ReservesReduced(scaledReduceAmount: UInt256, scaledNewTotalReserves: UInt256)
+    access(all) event ReservesReduced(scaledReduceAmount: UInt256, scaledNewTotalReserves: UInt256)
     /// Event emitted when liquidation happenes
-    pub event Liquidate(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
+    access(all) event Liquidate(liquidator: Address, borrower: Address, scaledActualRepaidUnderlying: UInt256, collateralPoolToSeize: Address, scaledCollateralPoolLpTokenSeized: UInt256)
     /// Event emitted when interestRateModel is changed
-    pub event NewInterestRateModel(_ oldInterestRateModelAddress: Address?, _ newInterestRateModelAddress: Address)
+    access(all) event NewInterestRateModel(_ oldInterestRateModelAddress: Address?, _ newInterestRateModelAddress: Address)
     /// Event emitted when the reserveFactor is changed
-    pub event NewReserveFactor(_ oldReserveFactor: UFix64, _ newReserveFactor: UFix64)
+    access(all) event NewReserveFactor(_ oldReserveFactor: UFix64, _ newReserveFactor: UFix64)
     /// Event emitted when the poolSeizeShare is changed
-    pub event NewPoolSeizeShare(_ oldPoolSeizeShare: UFix64, _ newPoolSeizeShare: UFix64)
+    access(all) event NewPoolSeizeShare(_ oldPoolSeizeShare: UFix64, _ newPoolSeizeShare: UFix64)
     /// Event emitted when the comptroller is changed
-    pub event NewComptroller(_ oldComptrollerAddress: Address?, _ newComptrollerAddress: Address)
+    access(all) event NewComptroller(_ oldComptrollerAddress: Address?, _ newComptrollerAddress: Address)
     /// Event emitted when the flashloanRateChanged is changed
-    pub event FlashloanRateChanged(oldRateBps: UInt64, newRateBps: UInt64)
+    access(all) event FlashloanRateChanged(oldRateBps: UInt64, newRateBps: UInt64)
     /// Event emitted when the isFlashloanOpen is changed
-    pub event FlashloanOpen(isOpen: Bool)
+    access(all) event FlashloanOpen(isOpen: Bool)
     /// Event emitted when the flashloan is executed
-    pub event Flashloan(executor: Address, executorType: Type, originator: Address, amount: UFix64)
+    access(all) event Flashloan(executor: Address, executorType: Type, originator: Address, amount: UFix64)
 
     // Return underlying asset's type of current pool
-    pub fun getUnderlyingAssetType(): String {
+    access(all) view fun getUnderlyingAssetType(): String {
         return self.underlyingAssetType.identifier
     }
 
     // Gets current underlying balance of this pool, scaled up by 1e18
-    pub fun getPoolCash(): UInt256 {
+    access(all) view fun getPoolCash(): UInt256 {
         return LendingConfig.UFix64ToScaledUInt256(self.underlyingVault.balance)
     }
 
@@ -131,7 +131,7 @@ pub contract LendingPool {
     /// Calculates interest accrued from the last checkpointed block to the current block 
     /// This function is a readonly function and can be called by scripts.
     ///
-    pub fun accrueInterestReadonly(): [UInt256; 4] {
+    access(all) view fun accrueInterestReadonly(): [UInt256; 4] {
         pre {
             self.interestRateModelCap != nil && self.interestRateModelCap!.check() == true:
                 LendingError.ErrorEncode(
@@ -170,7 +170,7 @@ pub contract LendingPool {
     ///
     /// Applies accrued interest to total borrows and reserves.
     ///
-    pub fun accrueInterest() {
+    access(all) fun accrueInterest() {
         // Return early if accrue 0 interest
         if (UInt256(getCurrentBlock().height) == self.accrualBlockNumber) {
             return
@@ -192,7 +192,7 @@ pub contract LendingPool {
     /// Calculates the exchange rate from the underlying to virtual lpToken (i.e. how many UnderlyingToken per virtual lpToken)
     /// Note: It doesn't call accrueInterest() first to update with latest states which is used in calculating the exchange rate.
     ///
-    pub fun underlyingToLpTokenRateSnapshotScaled(): UInt256 {
+    access(all) view fun underlyingToLpTokenRateSnapshotScaled(): UInt256 {
         if (self.scaledTotalSupply == 0) {
             return self.scaledInitialExchangeRate
         } else {
@@ -203,7 +203,7 @@ pub contract LendingPool {
     /// Calculates the scaled borrow balance of borrower address based on stored states
     /// Note: It doesn't call accrueInterest() first to update with latest states which is used in calculating the borrow balance.
     ///
-    pub fun borrowBalanceSnapshotScaled(borrowerAddress: Address): UInt256 {
+    access(all) view fun borrowBalanceSnapshotScaled(borrowerAddress: Address): UInt256 {
         if (self.accountBorrows.containsKey(borrowerAddress) == false) {
             return 0
         }
@@ -220,7 +220,7 @@ pub contract LendingPool {
     /// The lending pool will mint the corresponding lptoken according to the current
     /// exchange rate of lptoken as the user's deposit certificate and save it in the contract.
     /// 
-    pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
+    access(all) fun supply(supplierAddr: Address, inUnderlyingVault: @{FungibleToken.Vault}) {
         pre {
             inUnderlyingVault.balance > 0.0: 
                 LendingError.ErrorEncode(msg: "Supplied zero", err: LendingError.ErrorCode.EMPTY_FUNGIBLE_TOKEN_VAULT)
@@ -270,7 +270,7 @@ pub contract LendingPool {
         redeemer: Address,
         numLpTokenToRedeem: UFix64,
         numUnderlyingToRedeem: UFix64
-    ): @FungibleToken.Vault {
+    ): @{FungibleToken.Vault} {
         pre {
             numLpTokenToRedeem == 0.0 || numUnderlyingToRedeem == 0.0:
                 LendingError.ErrorEncode(
@@ -357,29 +357,28 @@ pub contract LendingPool {
     ///
     /// @Notice It is more convenient to use a resource certificate on flow for authentication than signing a signature.
     ///
-    /// RedeemerAddress is inferred from the private capability to the IdentityCertificate resource,
-    /// which is stored in user account and can only be given by its owner.
+    /// RedeemerAddress is inferred from IdentityCertificate resource, which is stored in user account and can only be given by its owner.
     /// The special value of numLpTokenToRedeem `UFIx64.max` indicating to redeem all virtual LP tokens the redeemer has.
     ///
-    pub fun redeem(
-        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
+    access(all) fun redeem(
+        userCertificate: &{LendingInterfaces.IdentityCertificate},
         numLpTokenToRedeem: UFix64
-    ): @FungibleToken.Vault {
+    ): @{FungibleToken.Vault} {
         pre {
             numLpTokenToRedeem > 0.0: LendingError.ErrorEncode(msg: "Redeemed zero", err: LendingError.ErrorCode.INVALID_PARAMETERS)
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+            userCertificate.owner != nil:
                 LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to IdentityCertificate",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.checkUserCertificateType(certCap: userCertificateCap):
+            self.checkUserCertificateType(cert: userCertificate):
                 LendingError.ErrorEncode(
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
         }
         
-        let redeemerAddress = userCertificateCap.borrow()!.owner!.address
+        let redeemerAddress = userCertificate.owner!.address
         let res <- self.redeemInternal(
             redeemer: redeemerAddress,
             numLpTokenToRedeem: numLpTokenToRedeem,
@@ -401,24 +400,24 @@ pub contract LendingPool {
     /// which is stored in user account and can only be given by its owner.
     /// The special value of numUnderlyingToRedeem `UFIx64.max` indicating to redeem all the underlying liquidity.
     ///
-    pub fun redeemUnderlying(
-        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
+    access(all) fun redeemUnderlying(
+        userCertificate: &{LendingInterfaces.IdentityCertificate},
         numUnderlyingToRedeem: UFix64
-    ): @FungibleToken.Vault {
+    ): @{FungibleToken.Vault} {
         pre {
             numUnderlyingToRedeem > 0.0: LendingError.ErrorEncode(msg: "Redeemed zero", err: LendingError.ErrorCode.INVALID_PARAMETERS)
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+            userCertificate.owner != nil:
                 LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to IdentityCertificate",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.checkUserCertificateType(certCap: userCertificateCap):
+            self.checkUserCertificateType(cert: userCertificate):
                 LendingError.ErrorEncode(
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
         }        
-        let redeemerAddress = userCertificateCap.borrow()!.owner!.address
+        let redeemerAddress = userCertificate.owner!.address
         let res <- self.redeemInternal(
             redeemer: redeemerAddress,
             numLpTokenToRedeem: 0.0,
@@ -438,18 +437,18 @@ pub contract LendingPool {
     ///
     /// Since borrower would decrease his overall collateral ratio across all markets, safety check happenes inside comptroller
     ///
-    pub fun borrow(
-        userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>,
+    access(all) fun borrow(
+        userCertificate: &{LendingInterfaces.IdentityCertificate},
         borrowAmount: UFix64,
-    ): @FungibleToken.Vault {
+    ): @{FungibleToken.Vault} {
         pre {
             borrowAmount > 0.0: LendingError.ErrorEncode(msg: "borrowAmount zero", err: LendingError.ErrorCode.INVALID_PARAMETERS)
-            userCertificateCap.check() && userCertificateCap.borrow()!.owner != nil:
+            userCertificate.owner != nil:
                 LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to IdentityCertificate",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
                 )
-            self.checkUserCertificateType(certCap: userCertificateCap):
+            self.checkUserCertificateType(cert: userCertificate):
                 LendingError.ErrorEncode(
                     msg: "Certificate not issued by system",
                     err: LendingError.ErrorCode.INVALID_USER_CERTIFICATE
@@ -468,7 +467,7 @@ pub contract LendingPool {
         )
 
         // 3. Check whether or not borrowAllowed()
-        let borrower = userCertificateCap.borrow()!.owner!.address
+        let borrower = userCertificate.owner!.address
         let err = self.comptrollerCap!.borrow()!.borrowAllowed(
             poolCertificate: <- create PoolCertificate(),
             poolAddress: self.poolAddress,
@@ -495,7 +494,7 @@ pub contract LendingPool {
     ///
     /// @Note: Caller ensures that LendingPool.accrueInterest() has been called with latest states checkpointed
     ///
-    access(self) fun repayBorrowInternal(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+    access(self) fun repayBorrowInternal(borrower: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}? {
         // Check whether or not repayAllowed()
         let scaledRepayAmount = LendingConfig.UFix64ToScaledUInt256(repayUnderlyingVault.balance)
         let scaledAccountTotalBorrows = self.borrowBalanceSnapshotScaled(borrowerAddress: borrower)
@@ -534,7 +533,7 @@ pub contract LendingPool {
     /// @Note: Note that the borrower address can potentially not be the same as the repayer address (which means someone can repay on behave of borrower),
     ///        this is allowed as there's no safety issue to do so.
     ///
-    pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+    access(all) fun repayBorrow(borrower: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}? {
         pre {
             repayUnderlyingVault.balance > 0.0: LendingError.ErrorEncode(msg: "Repaid zero", err: LendingError.ErrorCode.EMPTY_FUNGIBLE_TOKEN_VAULT)
             repayUnderlyingVault.isInstance(self.underlyingAssetType):
@@ -561,12 +560,12 @@ pub contract LendingPool {
     ///
     /// The collateral lpTokens seized is transferred to the liquidator.
     ///
-    pub fun liquidate(
+    access(all) fun liquidate(
         liquidator: Address,
         borrower: Address,
         poolCollateralizedToSeize: Address,
-        repayUnderlyingVault: @FungibleToken.Vault
-    ): @FungibleToken.Vault? {
+        repayUnderlyingVault: @{FungibleToken.Vault}
+    ): @{FungibleToken.Vault}? {
         pre {
             repayUnderlyingVault.balance > 0.0: LendingError.ErrorEncode(msg: "Liquidator repaid zero", err: LendingError.ErrorCode.EMPTY_FUNGIBLE_TOKEN_VAULT)
             repayUnderlyingVault.isInstance(self.underlyingAssetType):
@@ -618,7 +617,7 @@ pub contract LendingPool {
         } else {
             // Seize external
             let externalPoolPublicRef = getAccount(poolCollateralizedToSeize)
-                .getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath).borrow() 
+                .capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
                     ?? panic(
                         LendingError.ErrorEncode(
                             msg: "Cannot borrow reference to external PoolPublic resource",
@@ -655,7 +654,7 @@ pub contract LendingPool {
     ///
     /// Only used for "external" seize. Run-time type check of pool certificate ensures it can only be called by other supported markets.
     ///
-    pub fun seize(
+    access(all) fun seize(
         seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
         seizerPool: Address,
         liquidator: Address,
@@ -742,7 +741,7 @@ pub contract LendingPool {
     /// all in one atomic function call.
     /// @params: User-definited extra data passed to executor for further auth/check/decode
     ///
-    pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {
+    access(all) fun flashloan(executor: &{LendingInterfaces.FlashLoanExecutor}, requestedAmount: UFix64, params: {String: AnyStruct}) {
         pre {
             self.isFlashloanOpen(): LendingError.ErrorEncode(
                     msg: "LendingError: flashloan is not open",
@@ -752,10 +751,6 @@ pub contract LendingPool {
                     msg: "LendingError: flashloan invalid requested amount",
                     err: LendingError.ErrorCode.INSUFFICIENT_POOL_LIQUIDITY
                 )
-            executorCap.check(): LendingError.ErrorEncode(
-                    msg: "LendingError: flashloan executor resource not properly setup",
-                    err: LendingError.ErrorCode.FLASHLOAN_EXECUTOR_SETUP
-                )
         }
         // Accrues interests and checkpoints latest states
         self.accrueInterest()
@@ -764,7 +759,7 @@ pub contract LendingPool {
         let tokenOut <-self.underlyingVault.withdraw(amount: requestedAmount)
         self.scaledTotalBorrows = self.scaledTotalBorrows + requestedAmountScaled
 
-        let tokenIn <- executorCap.borrow()!.executeAndRepay(loanedToken: <- tokenOut, params: params)
+        let tokenIn <- executor.executeAndRepay(loanedToken: <- tokenOut, params: params)
         assert(tokenIn.isInstance(self.underlyingAssetType), message:
             LendingError.ErrorEncode(
                 msg: "LendingError: flashloan repaid incompatible token",
@@ -781,20 +776,20 @@ pub contract LendingPool {
         self.underlyingVault.deposit(from: <- tokenIn)
         self.scaledTotalBorrows = self.scaledTotalBorrows - requestedAmountScaled
 
-        emit Flashloan(executor: executorCap.borrow()!.owner!.address, executorType: executorCap.borrow()!.getType(), originator: self.account.address, amount: requestedAmount)
+        emit Flashloan(executor: executor.owner!.address, executorType: executor.getType(), originator: self.account.address, amount: requestedAmount)
     }
 
     /// Check whether or not the given certificate is issued by system
     ///
-    access(self) fun checkUserCertificateType(certCap: Capability<&{LendingInterfaces.IdentityCertificate}>): Bool {
-        return certCap.borrow()!.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
+    access(self) view fun checkUserCertificateType(cert: &{LendingInterfaces.IdentityCertificate}): Bool {
+        return cert.isInstance(self.comptrollerCap!.borrow()!.getUserCertificateType())
     }
 
-    pub fun getFlashloanRateBps(): UInt64 {
+    access(all) view fun getFlashloanRateBps(): UInt64 {
         return (self._reservedFields["flashloanRateBps"] as! UInt64?) ?? 5
     }
 
-    pub fun isFlashloanOpen(): Bool {
+    access(all) view fun isFlashloanOpen(): Bool {
         return (self._reservedFields["isFlashloanOpen"] as! Bool?) ?? false
     }
 
@@ -803,41 +798,41 @@ pub contract LendingPool {
     /// Inherited from IdentityCertificate.
     /// Proof of identity for the pool.
     ///
-    pub resource PoolCertificate: LendingInterfaces.IdentityCertificate {}
+    access(all) resource PoolCertificate: LendingInterfaces.IdentityCertificate {}
 
     /// PoolPublic
     ///
     /// The external interfaces of the pool, and will be exposed as a public capability.
     ///
-    pub resource PoolPublic: LendingInterfaces.PoolPublic {
+    access(all) resource PoolPublic: LendingInterfaces.PoolPublic {
 
-        pub fun getPoolAddress(): Address {
+        access(all) view fun getPoolAddress(): Address {
             return LendingPool.poolAddress
         }
 
-        pub fun getUnderlyingTypeString(): String {
+        access(all) view fun getUnderlyingTypeString(): String {
             let underlyingType = LendingPool.getUnderlyingAssetType()
             // "A.1654653399040a61.FlowToken.Vault" => "FlowToken"
             return underlyingType.slice(from: 19, upTo: underlyingType.length - 6)
         }
 
-        pub fun getUnderlyingAssetType(): String {
+        access(all) view fun getUnderlyingAssetType(): String {
             return LendingPool.getUnderlyingAssetType()
         }
 
-        pub fun getUnderlyingToLpTokenRateScaled(): UInt256 {
+        access(all) view fun getUnderlyingToLpTokenRateScaled(): UInt256 {
             return LendingPool.underlyingToLpTokenRateSnapshotScaled()
         }
 
-        pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256 {
+        access(all) view fun getAccountLpTokenBalanceScaled(account: Address): UInt256 {
             return LendingPool.accountLpTokens[account] ?? 0
         }
 
-        pub fun getAccountBorrowBalanceScaled(account: Address): UInt256 {
+        access(all) view fun getAccountBorrowBalanceScaled(account: Address): UInt256 {
             return LendingPool.borrowBalanceSnapshotScaled(borrowerAddress: account)
         }
 
-        pub fun getAccountBorrowPrincipalSnapshotScaled(account: Address): UInt256 {
+        access(all) view fun getAccountBorrowPrincipalSnapshotScaled(account: Address): UInt256 {
             if (LendingPool.accountBorrows.containsKey(account) == false) {
                 return 0
             } else {
@@ -845,7 +840,7 @@ pub contract LendingPool {
             }
         }
 
-        pub fun getAccountBorrowIndexSnapshotScaled(account: Address): UInt256 {
+        access(all) view fun getAccountBorrowIndexSnapshotScaled(account: Address): UInt256 {
             if (LendingPool.accountBorrows.containsKey(account) == false) {
                 return 0
             } else {
@@ -853,7 +848,7 @@ pub contract LendingPool {
             }
         }
 
-        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5] {
+        access(all) view fun getAccountSnapshotScaled(account: Address): [UInt256; 5] {
             return [
                 self.getUnderlyingToLpTokenRateScaled(),
                 self.getAccountLpTokenBalanceScaled(account: account),
@@ -863,7 +858,7 @@ pub contract LendingPool {
             ]
         }
 
-        pub fun getAccountRealtimeScaled(account: Address): [UInt256; 5] {
+        access(all) view fun getAccountRealtimeScaled(account: Address): [UInt256; 5] {
             let accrueInterestRealtimeRes = self.accrueInterestReadonly()
             let poolBorrowIndexRealtime = accrueInterestRealtimeRes[1]
             let poolTotalBorrowRealtime = accrueInterestRealtimeRes[2]
@@ -885,55 +880,55 @@ pub contract LendingPool {
             ]
         }
 
-        pub fun getPoolReserveFactorScaled(): UInt256 {
+        access(all) view fun getPoolReserveFactorScaled(): UInt256 {
             return LendingPool.scaledReserveFactor
         }
 
-        pub fun getInterestRateModelAddress(): Address {
+        access(all) view fun getInterestRateModelAddress(): Address {
             return LendingPool.interestRateModelAddress!
         }
 
-        pub fun getPoolTotalBorrowsScaled(): UInt256 {
+        access(all) view fun getPoolTotalBorrowsScaled(): UInt256 {
             return LendingPool.scaledTotalBorrows
         }
 
-        pub fun getPoolAccrualBlockNumber(): UInt256 {
+        access(all) view fun getPoolAccrualBlockNumber(): UInt256 {
             return LendingPool.accrualBlockNumber
         }
 
-        pub fun getPoolBorrowIndexScaled(): UInt256 {
+        access(all) view fun getPoolBorrowIndexScaled(): UInt256 {
             return LendingPool.scaledBorrowIndex
         }
 
-        pub fun getPoolTotalLpTokenSupplyScaled(): UInt256 {
+        access(all) view fun getPoolTotalLpTokenSupplyScaled(): UInt256 {
             return LendingPool.scaledTotalSupply
         }
 
-        pub fun getPoolTotalSupplyScaled(): UInt256 {
+        access(all) view fun getPoolTotalSupplyScaled(): UInt256 {
             return LendingPool.getPoolCash() + LendingPool.scaledTotalBorrows
         }
 
-        pub fun getPoolTotalReservesScaled(): UInt256 {
+        access(all) view fun getPoolTotalReservesScaled(): UInt256 {
             return LendingPool.scaledTotalReserves
         }
 
-        pub fun getPoolCash(): UInt256 {
+        access(all) view fun getPoolCash(): UInt256 {
             return LendingPool.getPoolCash()
         }
 
-        pub fun getPoolSupplierCount(): UInt256 {
+        access(all) view fun getPoolSupplierCount(): UInt256 {
             return UInt256(LendingPool.accountLpTokens.length)
         }
 
-        pub fun getPoolBorrowerCount(): UInt256 {
+        access(all) view fun getPoolBorrowerCount(): UInt256 {
             return UInt256(LendingPool.accountBorrows.length)
         }
 
-        pub fun getPoolSupplierList(): [Address] {
+        access(all) view fun getPoolSupplierList(): [Address] {
             return LendingPool.accountLpTokens.keys
         }
 
-        pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
+        access(all) fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
                 from <= to && to < UInt64(LendingPool.accountLpTokens.length):
                     LendingError.ErrorEncode(
@@ -941,7 +936,7 @@ pub contract LendingPool {
                         err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let borrowers: &[Address] = &LendingPool.accountLpTokens.keys as &[Address]
+            let borrowers = &LendingPool.accountLpTokens.keys as &[Address]
             let list: [Address] = []
             var i = from
             while i <= to {
@@ -951,11 +946,11 @@ pub contract LendingPool {
             return list
         }
 
-        pub fun getPoolBorrowerList(): [Address] {
+        access(all) view fun getPoolBorrowerList(): [Address] {
             return LendingPool.accountBorrows.keys
         }
 
-        pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
+        access(all) fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
                 from <= to && to < UInt64(LendingPool.accountBorrows.length):
                     LendingError.ErrorEncode(
@@ -963,7 +958,7 @@ pub contract LendingPool {
                         err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let borrowers: &[Address] = &LendingPool.accountBorrows.keys as &[Address]
+            let borrowers = &LendingPool.accountBorrows.keys as &[Address]
             let list: [Address] = []
             var i = from
             while i <= to {
@@ -973,7 +968,7 @@ pub contract LendingPool {
             return list
         }
 
-        pub fun getPoolBorrowRateScaled(): UInt256 {
+        access(all) view fun getPoolBorrowRateScaled(): UInt256 {
             return LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
                 cash: LendingPool.getPoolCash(),
                 borrows: LendingPool.scaledTotalBorrows,
@@ -981,7 +976,7 @@ pub contract LendingPool {
             )
         }
 
-        pub fun getPoolBorrowAprScaled(): UInt256 {
+        access(all) view fun getPoolBorrowAprScaled(): UInt256 {
             let scaledBorrowRatePerBlock =
                 LendingPool.interestRateModelCap!.borrow()!.getBorrowRate(
                     cash: LendingPool.getPoolCash(),
@@ -992,7 +987,7 @@ pub contract LendingPool {
             return scaledBorrowRatePerBlock * blocksPerYear
         }
 
-        pub fun getPoolSupplyAprScaled(): UInt256 {
+        access(all) view fun getPoolSupplyAprScaled(): UInt256 {
             let scaledSupplyRatePerBlock =
                 LendingPool.interestRateModelCap!.borrow()!.getSupplyRate(
                     cash: LendingPool.getPoolCash(),
@@ -1005,23 +1000,23 @@ pub contract LendingPool {
         }
 
         /// The default flashloan rate is 5 bps (0.05%)
-        pub fun getFlashloanRateBps(): UInt64 {
+        access(all) view fun getFlashloanRateBps(): UInt64 {
             return LendingPool.getFlashloanRateBps()
         }
 
-        pub fun accrueInterest() {
+        access(all) fun accrueInterest() {
             LendingPool.accrueInterest()
         }
 
-        pub fun accrueInterestReadonly(): [UInt256; 4] {
+        access(all) view fun accrueInterestReadonly(): [UInt256; 4] {
             return LendingPool.accrueInterestReadonly()
         }
 
-        pub fun getPoolCertificateType(): Type {
+        access(all) view fun getPoolCertificateType(): Type {
             return Type<@LendingPool.PoolCertificate>()
         }
 
-        pub fun seize(
+        access(all) fun seize(
             seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
             seizerPool: Address,
             liquidator: Address,
@@ -1037,40 +1032,40 @@ pub contract LendingPool {
             )
         }
 
-        pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault) {
+        access(all) fun supply(supplierAddr: Address, inUnderlyingVault: @{FungibleToken.Vault}) {
             LendingPool.supply(supplierAddr: supplierAddr, inUnderlyingVault: <-inUnderlyingVault)
         }
 
-        pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault {
-            return <-LendingPool.redeem(userCertificateCap: userCertificateCap, numLpTokenToRedeem: numLpTokenToRedeem)
+        access(all) fun redeem(userCertificate: &{LendingInterfaces.IdentityCertificate}, numLpTokenToRedeem: UFix64): @{FungibleToken.Vault} {
+            return <-LendingPool.redeem(userCertificate: userCertificate, numLpTokenToRedeem: numLpTokenToRedeem)
         }
 
-        pub fun redeemUnderlying(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numUnderlyingToRedeem: UFix64): @FungibleToken.Vault {
-            return <-LendingPool.redeemUnderlying(userCertificateCap: userCertificateCap, numUnderlyingToRedeem: numUnderlyingToRedeem)
+        access(all) fun redeemUnderlying(userCertificate: &{LendingInterfaces.IdentityCertificate}, numUnderlyingToRedeem: UFix64): @{FungibleToken.Vault} {
+            return <-LendingPool.redeemUnderlying(userCertificate: userCertificate, numUnderlyingToRedeem: numUnderlyingToRedeem)
         }
 
-        pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault {
-            return <-LendingPool.borrow(userCertificateCap: userCertificateCap, borrowAmount: borrowAmount)
+        access(all) fun borrow(userCertificate: &{LendingInterfaces.IdentityCertificate}, borrowAmount: UFix64): @{FungibleToken.Vault} {
+            return <-LendingPool.borrow(userCertificate: userCertificate, borrowAmount: borrowAmount)
         }
 
-        pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+        access(all) fun repayBorrow(borrower: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}? {
             return <-LendingPool.repayBorrow(borrower: borrower, repayUnderlyingVault: <-repayUnderlyingVault)
         }
 
-        pub fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault? {
+        access(all) fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}? {
             return <-LendingPool.liquidate(liquidator: liquidator, borrower: borrower, poolCollateralizedToSeize: poolCollateralizedToSeize, repayUnderlyingVault: <-repayUnderlyingVault)
         }
 
-        pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {
-            LendingPool.flashloan(executorCap: executorCap, requestedAmount: requestedAmount, params: params)
+        access(all) fun flashloan(executor: &{LendingInterfaces.FlashLoanExecutor}, requestedAmount: UFix64, params: {String: AnyStruct}) {
+            LendingPool.flashloan(executor: executor, requestedAmount: requestedAmount, params: params)
         }
     }
 
     /// PoolAdmin
     ///
-    pub resource PoolAdmin: LendingInterfaces.PoolAdminPublic {
+    access(all) resource PoolAdmin: LendingInterfaces.PoolAdminPublic {
         /// Admin function to call accrueInterest() to checkpoint latest states, and then update the interest rate model
-        pub fun setInterestRateModel(newInterestRateModelAddress: Address) {
+        access(all) fun setInterestRateModel(newInterestRateModelAddress: Address) {
             post {
                 LendingPool.interestRateModelCap != nil && LendingPool.interestRateModelCap!.check() == true:
                     LendingError.ErrorEncode(
@@ -1084,14 +1079,14 @@ pub contract LendingPool {
                 let oldInterestRateModelAddress = LendingPool.interestRateModelAddress
                 LendingPool.interestRateModelAddress = newInterestRateModelAddress
                 LendingPool.interestRateModelCap = getAccount(newInterestRateModelAddress)
-                    .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
+                    .capabilities.get<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
                 emit NewInterestRateModel(oldInterestRateModelAddress, newInterestRateModelAddress)
             }
             return
         }
 
         /// Admin function to call accrueInterest() to checkpoint latest states, and then update reserveFactor
-        pub fun setReserveFactor(newReserveFactor: UFix64) {
+        access(all) fun setReserveFactor(newReserveFactor: UFix64) {
             pre {
                 newReserveFactor <= 1.0:
                 LendingError.ErrorEncode(
@@ -1109,7 +1104,7 @@ pub contract LendingPool {
         }
 
         /// Admin function to update poolSeizeShare
-        pub fun setPoolSeizeShare(newPoolSeizeShare: UFix64) {
+        access(all) fun setPoolSeizeShare(newPoolSeizeShare: UFix64) {
             pre {
                 newPoolSeizeShare <= 1.0:
                 LendingError.ErrorEncode(
@@ -1125,7 +1120,7 @@ pub contract LendingPool {
         }
 
         /// Admin function to set comptroller
-        pub fun setComptroller(newComptrollerAddress: Address) {
+        access(all) fun setComptroller(newComptrollerAddress: Address) {
             post {
                 LendingPool.comptrollerCap != nil && LendingPool.comptrollerCap!.check() == true:
                     LendingError.ErrorEncode(
@@ -1138,14 +1133,14 @@ pub contract LendingPool {
                 let oldComptrollerAddress = LendingPool.comptrollerAddress
                 LendingPool.comptrollerAddress = newComptrollerAddress
                 LendingPool.comptrollerCap = getAccount(newComptrollerAddress)
-                    .getCapability<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath)
+                    .capabilities.get<&{LendingInterfaces.ComptrollerPublic}>(LendingConfig.ComptrollerPublicPath)
                 emit NewComptroller(oldComptrollerAddress, newComptrollerAddress)
             }
         }
 
         /// Admin function to initialize pool.
         /// Note: can be called only once
-        pub fun initializePool(
+        access(all) fun initializePool(
             reserveFactor: UFix64,
             poolSeizeShare: UFix64,
             interestRateModelAddress: Address
@@ -1175,11 +1170,11 @@ pub contract LendingPool {
             LendingPool.scaledPoolSeizeShare = LendingConfig.UFix64ToScaledUInt256(poolSeizeShare)
             LendingPool.interestRateModelAddress = interestRateModelAddress
             LendingPool.interestRateModelCap = getAccount(interestRateModelAddress)
-                .getCapability<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
+                .capabilities.get<&{LendingInterfaces.InterestRateModelPublic}>(LendingConfig.InterestRateModelPublicPath)
         }
 
         /// Admin function to withdraw pool reserve
-        pub fun withdrawReserves(reduceAmount: UFix64): @FungibleToken.Vault {
+        access(all) fun withdrawReserves(reduceAmount: UFix64): @{FungibleToken.Vault} {
             LendingPool.accrueInterest()
             
             let reduceAmountScaled = reduceAmount == UFix64.max ? LendingPool.scaledTotalReserves : LendingConfig.UFix64ToScaledUInt256(reduceAmount)
@@ -1202,7 +1197,7 @@ pub contract LendingPool {
             return <- LendingPool.underlyingVault.withdraw(amount: LendingConfig.ScaledUInt256ToUFix64(reduceAmountScaled))
         }
 
-        pub fun setFlashloanRateBps(rateBps: UInt64) {
+        access(all) fun setFlashloanRateBps(rateBps: UInt64) {
             pre {
                 rateBps >= 0 && rateBps <= 10000:
                     LendingError.ErrorEncode(
@@ -1214,7 +1209,7 @@ pub contract LendingPool {
             LendingPool._reservedFields["flashloanRateBps"] = rateBps
         }
 
-        pub fun setFlashloanOpen(isOpen: Bool) {
+        access(all) fun setFlashloanOpen(isOpen: Bool) {
             emit FlashloanOpen(isOpen: isOpen)
             LendingPool._reservedFields["isFlashloanOpen"] = isOpen
         }
@@ -1242,19 +1237,22 @@ pub contract LendingPool {
         self.comptrollerAddress = nil
         self.comptrollerCap = nil
         self._reservedFields = {}
-        self.underlyingVault <- self.account.load<@FungibleToken.Vault>(from: self.UnderlyingAssetVaultStoragePath)
+        self.underlyingVault <- self.account.storage.load<@{FungibleToken.Vault}>(from: self.UnderlyingAssetVaultStoragePath)
             ?? panic("Deployer should own zero-balanced underlying asset vault first")
         self.underlyingAssetType = self.underlyingVault.getType()
         assert(self.underlyingVault.balance == 0.0, message: "Must initialize pool with zero-balanced underlying asset vault")
 
         // save pool admin
-        destroy <-self.account.load<@AnyResource>(from: self.PoolAdminStoragePath)
-        self.account.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.PoolAdminStoragePath)
+        self.account.storage.save(<-create PoolAdmin(), to: self.PoolAdminStoragePath)
         // save pool public interface
-        self.account.unlink(self.PoolPublicPublicPath)
-        destroy <-self.account.load<@AnyResource>(from: self.PoolPublicStoragePath)
-        self.account.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
-        self.account.unlink(self.PoolPublicPublicPath)
-        self.account.link<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath, target: self.PoolPublicStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.PoolPublicStoragePath)
+        self.account.storage.save(<-create PoolPublic(), to: self.PoolPublicStoragePath)
+        // Create and link public storage capability
+        self.account.capabilities.unpublish(self.PoolPublicPublicPath)
+        self.account.capabilities.publish(
+            self.account.capabilities.storage.issue<&{LendingInterfaces.PoolPublic}>(self.PoolPublicStoragePath),
+            at: LendingConfig.PoolPublicPublicPath
+        )
     }
 }

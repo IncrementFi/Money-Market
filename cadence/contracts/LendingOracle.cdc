@@ -10,22 +10,22 @@ import OracleInterface from "./env/OracleInterface.cdc"
 import OracleConfig from "./env/OracleConfig.cdc"
 
 
-pub contract LendingOracle {
+access(all) contract LendingOracle {
     /// The storage path for the Admin resource
-    pub let OracleAdminStoragePath: StoragePath
+    access(all) let OracleAdminStoragePath: StoragePath
     /// The storage path for the Oracle resource
-    pub let OracleStoragePath: StoragePath
+    access(all) let OracleStoragePath: StoragePath
     /// The public path for the capability to restricted to &{LendingInterfaces.OraclePublic}
-    pub let OraclePublicPath: PublicPath
+    access(all) let OraclePublicPath: PublicPath
     /// Reserved parameter fields: {ParamName: Value}
     access(self) let _reservedFields: {String: AnyStruct}
 
 
-    pub event PriceFeedAdded(for pool: Address, oracleAddr: Address)
-    pub event PriceFeedRemoved(from pool: Address)
+    access(all) event PriceFeedAdded(poolAddr: Address, oracleAddr: Address)
+    access(all) event PriceFeedRemoved(poolAddr: Address)
     
 
-    pub resource OracleReaders: LendingInterfaces.OraclePublic {
+    access(all) resource OracleReaders: LendingInterfaces.OraclePublic {
         access(self) let feeds: [Address]
         access(self) let oracleAddrDict: {Address: Address}
         /// Reserved parameter fields: {ParamName: Value}
@@ -34,7 +34,7 @@ pub contract LendingOracle {
 
         /// Return underlying asset price of the pool, denominated in USD.
         /// Return 0.0 means price feed for the given pool is not available.  
-        pub fun getUnderlyingPrice(pool: Address): UFix64 {
+        access(all) view fun getUnderlyingPrice(pool: Address): UFix64 {
             if (!self.feeds.contains(pool)) {
                 return 0.0
             }
@@ -42,13 +42,13 @@ pub contract LendingOracle {
         }
 
         /// Return pool's latest data point in form of (timestamp, data)
-        pub fun latestResult(pool: Address): [UFix64; 2] {
+        access(all) view fun latestResult(pool: Address): [UFix64; 2] {
             var oracleAddr = self.oracleAddrDict[pool]!
-            let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).getCapability<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath).borrow()
-                                                      ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
+            let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).capabilities.borrow<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath)
+                ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
             let priceReaderSuggestedPath = oraclePublicInterface_ReaderRef.getPriceReaderStoragePath()
-            let priceReaderRef = LendingOracle.account.borrow<&OracleInterface.PriceReader>(from: priceReaderSuggestedPath)
-                                 ?? panic("Lost local price reader resource.")
+            let priceReaderRef = LendingOracle.account.storage.borrow<&{OracleInterface.PriceReader}>(from: priceReaderSuggestedPath)
+                ?? panic("Lost local price reader resource.")
             let price = priceReaderRef.getMedianPrice()
 
             return [
@@ -57,29 +57,29 @@ pub contract LendingOracle {
             ]
         }
 
-        pub fun getSupportedFeeds(): [Address] {
+        access(all) view fun getSupportedFeeds(): [Address] {
             return self.feeds
         }
 
 
-        access(contract) fun addPriceFeed(for pool: Address, oracleAddr: Address) {
+        access(contract) fun addPriceFeed(pool: Address, oracleAddr: Address) {
             if (!self.feeds.contains(pool)) {
                 /// 1. Append new feed
                 self.feeds.append(pool)
                 /// 2. Record oracle address for this feed
                 self.oracleAddrDict[pool] = oracleAddr
                 /// 3. Mint oracle reader
-                let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).getCapability<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath).borrow()
-                                                      ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
+                let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).capabilities.borrow<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath)
+                    ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
                 let priceReaderSuggestedPath = oraclePublicInterface_ReaderRef.getPriceReaderStoragePath()
-                if (LendingOracle.account.borrow<&OracleInterface.PriceReader>(from: priceReaderSuggestedPath) == nil) {
+                if (LendingOracle.account.storage.borrow<&{OracleInterface.PriceReader}>(from: priceReaderSuggestedPath) == nil) {
                     let priceReader <- oraclePublicInterface_ReaderRef.mintPriceReader()
 
-                    destroy <- LendingOracle.account.load<@AnyResource>(from: priceReaderSuggestedPath)
-                    LendingOracle.account.save(<- priceReader, to: priceReaderSuggestedPath)
+                    destroy <- LendingOracle.account.storage.load<@AnyResource>(from: priceReaderSuggestedPath)
+                    LendingOracle.account.storage.save(<- priceReader, to: priceReaderSuggestedPath)
                 }
 
-                emit PriceFeedAdded(for: pool, oracleAddr: oracleAddr)
+                emit PriceFeedAdded(poolAddr: pool, oracleAddr: oracleAddr)
             }
 
         }
@@ -102,12 +102,12 @@ pub contract LendingOracle {
                 var oracleAddr = self.oracleAddrDict[pool]!
                 self.oracleAddrDict.remove(key: pool)
                 /// 3. Remove local oracle reader resource
-                let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).getCapability<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath).borrow()
-                                                      ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
+                let oraclePublicInterface_ReaderRef = getAccount(oracleAddr).capabilities.borrow<&{OracleInterface.OraclePublicInterface_Reader}>(OracleConfig.OraclePublicInterface_ReaderPath)
+                    ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
                 let priceReaderSuggestedPath = oraclePublicInterface_ReaderRef.getPriceReaderStoragePath()
-                destroy <- LendingOracle.account.load<@AnyResource>(from: priceReaderSuggestedPath)
+                destroy <- LendingOracle.account.storage.load<@AnyResource>(from: priceReaderSuggestedPath)
                 
-                emit PriceFeedRemoved(from: pool)
+                emit PriceFeedRemoved(poolAddr: pool)
             }
         }
 
@@ -116,22 +116,19 @@ pub contract LendingOracle {
             self.oracleAddrDict = {}
             self._reservedFields = {}
         }
-
-        destroy() {
-        }
     }
 
-    pub resource Admin {
+    access(all) resource Admin {
         /// Creating an Oracle resource which holds @maxCapacity data points at most.
-        pub fun createOracleResource(): @OracleReaders {
+        access(all) fun createOracleResource(): @OracleReaders {
             return <- create OracleReaders()
         }
         
-        pub fun addPriceFeed(oracleRef: &OracleReaders, pool: Address, oracleAddr: Address) {
-            oracleRef.addPriceFeed(for: pool, oracleAddr: oracleAddr)
+        access(all) fun addPriceFeed(oracleRef: &OracleReaders, pool: Address, oracleAddr: Address) {
+            oracleRef.addPriceFeed(pool: pool, oracleAddr: oracleAddr)
         }
 
-        pub fun removePriceFeed(oracleRef: &OracleReaders, pool: Address) {
+        access(all) fun removePriceFeed(oracleRef: &OracleReaders, pool: Address) {
             oracleRef.removePriceFeed(pool: pool)
         }
     }
@@ -142,17 +139,20 @@ pub contract LendingOracle {
         self.OracleStoragePath = /storage/oracleModule
         self.OraclePublicPath = /public/oracleModule
         
-        destroy <-self.account.load<@AnyResource>(from: self.OracleAdminStoragePath)
-        self.account.save(<-create Admin(), to: self.OracleAdminStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.OracleAdminStoragePath)
+        self.account.storage.save(<-create Admin(), to: self.OracleAdminStoragePath)
 
-        var adminRef = self.account.borrow<&LendingOracle.Admin>(from: self.OracleAdminStoragePath)!
+        var adminRef = self.account.storage.borrow<&LendingOracle.Admin>(from: self.OracleAdminStoragePath)!
 
-        destroy <-self.account.load<@AnyResource>(from: self.OracleStoragePath)
+        destroy <-self.account.storage.load<@AnyResource>(from: self.OracleStoragePath)
         // Create and store a new Oracle resource
-        self.account.save(<-adminRef.createOracleResource(), to: self.OracleStoragePath)
+        self.account.storage.save(<-adminRef.createOracleResource(), to: self.OracleStoragePath)
         // Create a public capability to Oracle resource that only exposes {OraclePublic} interface to public.
-        self.account.unlink(self.OraclePublicPath)
-        self.account.link<&{LendingInterfaces.OraclePublic}>(self.OraclePublicPath, target: self.OracleStoragePath)
+        self.account.capabilities.unpublish(self.OraclePublicPath)
+        self.account.capabilities.publish(
+            self.account.capabilities.storage.issue<&{LendingInterfaces.OraclePublic}>(self.OracleStoragePath),
+            at: self.OraclePublicPath
+        )
         self._reservedFields = {}
     }
 }

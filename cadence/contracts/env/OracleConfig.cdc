@@ -1,20 +1,20 @@
 /**
 
-# Desc This contract stores some commonly used paths for PriceOracle
+# This contract stores some commonly used paths & library functions for PriceOracle
 
 # Author Increment Labs
 
 */
 
-pub contract OracleConfig {
+access(all) contract OracleConfig {
     // Admin resource stored in every PriceOracle contract
-    pub let OracleAdminPath: StoragePath
+    access(all) let OracleAdminPath: StoragePath
     // Reader public interface exposed in every PriceOracle contract
-    pub let OraclePublicInterface_ReaderPath: PublicPath
+    access(all) let OraclePublicInterface_ReaderPath: PublicPath
     // Feeder public interface exposed in every PriceOracle contract
-    pub let OraclePublicInterface_FeederPath: PublicPath
+    access(all) let OraclePublicInterface_FeederPath: PublicPath
     // Recommended storage path of reader's certificate
-    pub let ReaderCertificateStoragePath: StoragePath
+    access(all) let ReaderCertificateStoragePath: StoragePath
 
     init() {
         self.OracleAdminPath = /storage/increment_oracle_admin
