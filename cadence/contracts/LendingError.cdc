@@ -43,7 +43,4 @@ access(all) contract LendingError {
         return "[IncErrorMsg:".concat(msg).concat("]").concat(
                "[IncErrorCode:").concat(err.rawValue.toString()).concat("]")
     }
-    
-    init() {
-    }
 }

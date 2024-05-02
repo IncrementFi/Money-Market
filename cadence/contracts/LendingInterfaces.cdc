@@ -36,14 +36,14 @@ access(all) contract interface LendingInterfaces {
         access(all) view fun getPoolBorrowerCount(): UInt256
         access(all) view fun getPoolSupplierList(): [Address]
         access(all) view fun getPoolBorrowerList(): [Address]
-        access(all) fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
-        access(all) fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
+        access(all) view fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
+        access(all) view fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
         access(all) view fun getFlashloanRateBps(): UInt64
         
         /// Accrue pool interest and checkpoint latest data to pool states
         access(all) fun accrueInterest()
         access(all) view fun accrueInterestReadonly(): [UInt256; 4]
-        access(all) fun getPoolCertificateType(): Type
+        access(all) view fun getPoolCertificateType(): Type
         /// Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
         /// so that this public seize function can only be invoked by another LendingPool contract
         access(all) fun seize(

@@ -9,7 +9,6 @@ import LendingInterfaces from "./LendingInterfaces.cdc"
 import OracleInterface from "./env/OracleInterface.cdc"
 import OracleConfig from "./env/OracleConfig.cdc"
 
-
 access(all) contract LendingOracle {
     /// The storage path for the Admin resource
     access(all) let OracleAdminStoragePath: StoragePath
@@ -20,17 +19,14 @@ access(all) contract LendingOracle {
     /// Reserved parameter fields: {ParamName: Value}
     access(self) let _reservedFields: {String: AnyStruct}
 
-
     access(all) event PriceFeedAdded(poolAddr: Address, oracleAddr: Address)
     access(all) event PriceFeedRemoved(poolAddr: Address)
-    
 
     access(all) resource OracleReaders: LendingInterfaces.OraclePublic {
         access(self) let feeds: [Address]
         access(self) let oracleAddrDict: {Address: Address}
         /// Reserved parameter fields: {ParamName: Value}
         access(self) let _reservedFields: {String: AnyStruct}
-
 
         /// Return underlying asset price of the pool, denominated in USD.
         /// Return 0.0 means price feed for the given pool is not available.  
@@ -60,7 +56,6 @@ access(all) contract LendingOracle {
         access(all) view fun getSupportedFeeds(): [Address] {
             return self.feeds
         }
-
 
         access(contract) fun addPriceFeed(pool: Address, oracleAddr: Address) {
             if (!self.feeds.contains(pool)) {
@@ -106,7 +101,7 @@ access(all) contract LendingOracle {
                     ?? panic("Lost oracle public capability at ".concat(oracleAddr.toString()))
                 let priceReaderSuggestedPath = oraclePublicInterface_ReaderRef.getPriceReaderStoragePath()
                 destroy <- LendingOracle.account.storage.load<@AnyResource>(from: priceReaderSuggestedPath)
-                
+
                 emit PriceFeedRemoved(poolAddr: pool)
             }
         }
@@ -135,14 +130,13 @@ access(all) contract LendingOracle {
 
     init() {
         self.OracleAdminStoragePath = /storage/oracleAdmin
-
         self.OracleStoragePath = /storage/oracleModule
         self.OraclePublicPath = /public/oracleModule
-        
+
         destroy <-self.account.storage.load<@AnyResource>(from: self.OracleAdminStoragePath)
         self.account.storage.save(<-create Admin(), to: self.OracleAdminStoragePath)
 
-        var adminRef = self.account.storage.borrow<&LendingOracle.Admin>(from: self.OracleAdminStoragePath)!
+        let adminRef = self.account.storage.borrow<&LendingOracle.Admin>(from: self.OracleAdminStoragePath)!
 
         destroy <-self.account.storage.load<@AnyResource>(from: self.OracleStoragePath)
         // Create and store a new Oracle resource

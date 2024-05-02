@@ -23,7 +23,7 @@ access(all) contract LendingAprSnapshot {
         // borrowApr in ufix64 (e.g. 0.12345678 => 12.35%)
         access(all) let borrowApr: UFix64
 
-        init (t: UFix64, supplyApr: UFix64, borrowApr: UFix64) {
+        view init(t: UFix64, supplyApr: UFix64, borrowApr: UFix64) {
             self.timestamp = t
             self.supplyApr = supplyApr
             self.borrowApr = borrowApr
@@ -44,7 +44,7 @@ access(all) contract LendingAprSnapshot {
         access(self) let _reservedFields: {String: AnyStruct}
 
         /// Returns the index into the circular buffer of the given timestamp
-        access(all) fun observationIndexOf(timestamp: UFix64): UInt64 {
+        access(all) view fun observationIndexOf(timestamp: UFix64): UInt64 {
             return UInt64(timestamp) / self.sampleLength % self.numSamples
         }
 
@@ -68,7 +68,7 @@ access(all) contract LendingAprSnapshot {
             return false
         }
 
-        access(all) fun queryHistoricalAprData(scale: UInt8, plotPoints: UInt64): [Observation] {
+        access(all) view fun queryHistoricalAprData(scale: UInt8, plotPoints: UInt64): [Observation] {
             let now = getCurrentBlock().timestamp
             let idxNow: UInt64 = self.observationIndexOf(timestamp: now)
             var idxPrev: UInt64 = 0
@@ -97,12 +97,11 @@ access(all) contract LendingAprSnapshot {
                 let ob = self.aprObservations[idxPrev]
                 // Filtering non-meaningful data
                 if (ob.timestamp > 0.0) {
-                    res.append(
-                        Observation(
-                            t: ob.timestamp,
-                            supplyApr: ob.supplyApr,
-                            borrowApr: ob.borrowApr
-                        )
+                    // TODO: Use concat is a temp solution. Switch to map() once it's made as `view` function.
+                    res = res.concat(
+                        [
+                            Observation(t: ob.timestamp, supplyApr: ob.supplyApr, borrowApr: ob.borrowApr)
+                        ]
                     )
                 }
                 idxPrev = idxPrev + step
@@ -114,7 +113,7 @@ access(all) contract LendingAprSnapshot {
             return res
         }
 
-        access(all) fun getLatestData(): Observation {
+        access(all) view fun getLatestData(): Observation {
             let now = getCurrentBlock().timestamp
             let idx = self.observationIndexOf(timestamp: now)
             return self.aprObservations[idx]
@@ -155,7 +154,7 @@ access(all) contract LendingAprSnapshot {
     /// @scale: Spanning of time the drawing should cover - 0 (1 month), 1 (6 months), 2 (1 year). 
     /// @plotPoints: Maximum data points the drawing needs, e.g. 120 points in maximum
     /// @Returns historical apy data in a timestamp-ascending order. Note: only meaningful data is returned, so the length is not guaranteed to be equal to `plotPoints`.
-    access(all) fun queryHistoricalAprData(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [Observation] {
+    access(all) view fun queryHistoricalAprData(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [Observation] {
         pre {
             self._markets.containsKey(poolAddr) == true:
                 LendingError.ErrorEncode(
@@ -166,7 +165,7 @@ access(all) contract LendingAprSnapshot {
         return self._markets[poolAddr]!.queryHistoricalAprData(scale: scale, plotPoints: plotPoints)
     }
 
-    access(all) fun getLatestData(poolAddr: Address): Observation {
+    access(all) view fun getLatestData(poolAddr: Address): Observation {
         return self._markets[poolAddr]!.getLatestData()
     }
 

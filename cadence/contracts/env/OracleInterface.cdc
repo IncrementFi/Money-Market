@@ -39,15 +39,15 @@ access(all) contract interface OracleInterface {
         ///
         access(all) view fun getMedianPrice(): UFix64
 
-        access(all) fun getPriceIdentifier(): String { return "" }
+        access(all) view fun getPriceIdentifier(): String { return "" }
 
         /// Calculate the *raw* median of the price feed with no filtering of expired data.
         ///
-        access(all) fun getRawMedianPrice(): UFix64 { return 0.0 }
+        access(all) view fun getRawMedianPrice(): UFix64 { return 0.0 }
 
         /// Calculate the published block height of the *raw* median data. If it's an even list, it is the smaller one of the two middle value.
         ///
-        access(all) fun getRawMedianBlockHeight(): UInt64 { return 0 }
+        access(all) view fun getRawMedianBlockHeight(): UInt64 { return 0 }
     }
 
     /// Reader related public interfaces opened on PriceOracle smart contract
@@ -70,18 +70,21 @@ access(all) contract interface OracleInterface {
     */
     /// Panel for publishing price. Every feeder needs to mint this resource locally.
     ///
+    /// An entitlement for allowing feeder to publish price and set price expiration period.
+    access(all) entitlement FeederAuth
+
     access(all) resource interface PriceFeeder: PriceFeederPublic {
         /// The feeder uses this function to offer price at the price panel
         ///
         /// Param price - price from off-chain
         ///
-        access(all) fun publishPrice(price: UFix64)
+        access(FeederAuth) fun publishPrice(price: UFix64)
 
         /// Set valid duration of price. If there is no update within the duration, the price will be expired.
         ///
         /// Param blockheightDuration by the block numbers
         ///
-        access(all) fun setExpiredDuration(blockheightDuration: UInt64)
+        access(FeederAuth) fun setExpiredDuration(blockheightDuration: UInt64)
     }
     access(all) resource interface PriceFeederPublic {
         /// Get the current feed price, this function can only be called by the PriceOracle contract
@@ -90,11 +93,11 @@ access(all) contract interface OracleInterface {
 
         /// Get the current feed price regardless of whether it's expired or not.
         ///
-        access(all) fun getRawPrice(certificate: &{OracleCertificate}): UFix64 { return 0.0 }
+        access(all) view fun getRawPrice(certificate: &{OracleCertificate}): UFix64 { return 0.0 }
 
-        access(all) fun getLatestPublishBlockHeight(): UInt64 { return 0 }
+        access(all) view fun getLatestPublishBlockHeight(): UInt64 { return 0 }
 
-        access(all) fun getExpiredHeightDuration(): UInt64 { return 0 }
+        access(all) view fun getExpiredHeightDuration(): UInt64 { return 0 }
     }
 
 
@@ -111,8 +114,8 @@ access(all) contract interface OracleInterface {
         ///
         /// Feeders need to expose the capabilities at this public path
         ///
-        access(all) fun getPriceFeederPublicPath(): PublicPath
-        access(all) fun getPriceFeederStoragePath(): StoragePath
+        access(all) view fun getPriceFeederPublicPath(): PublicPath
+        access(all) view fun getPriceFeederStoragePath(): StoragePath
     }
     
     /// IdentityCertificate resource which is used to identify account address or perform caller authentication
@@ -140,8 +143,8 @@ access(all) contract interface OracleInterface {
         access(all) fun addReaderWhiteList(readerAddr: Address)
         access(all) fun delFeederWhiteList(feederAddr: Address)
         access(all) fun delReaderWhiteList(readerAddr: Address)
-        access(all) fun getFeederWhiteList(): [Address]
-        access(all) fun getReaderWhiteList(): [Address]
-        access(all) fun getFeederWhiteListPrice(): [UFix64]
+        access(all) view fun getFeederWhiteList(): [Address]
+        access(all) view fun getReaderWhiteList(): [Address]
+        access(all) view fun getFeederWhiteListPrice(): [UFix64]
     }
 }

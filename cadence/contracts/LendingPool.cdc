@@ -351,7 +351,7 @@ access(all) contract LendingPool {
 
     /// User redeems lpTokens for the underlying asset's vault
     ///
-    /// @Param userCertificateCap - User identity certificate and it can provide a valid user address proof
+    /// @Param userCertificate - User identity certificate and it can provide a valid user address proof
     /// @Param numLpTokenToRedeem - The number of lpTokens to redeem into underlying
     /// @Return The redeemed vault resource of pool's underlying token
     ///
@@ -390,7 +390,7 @@ access(all) contract LendingPool {
 
     /// User redeems lpTokens for a specified amount of underlying asset
     ///
-    /// @Param userCertificateCap - User identity certificate and it can provide a valid user address proof        
+    /// @Param userCertificate - User identity certificate and it can provide a valid user address proof
     /// @Param numUnderlyingToRedeem - The amount of underlying to receive from redeeming lpTokens
     /// @Return The redeemed vault resource of pool's underlying token
     ///
@@ -429,7 +429,7 @@ access(all) contract LendingPool {
 
     /// User borrows underlying asset from the pool.
     ///
-    /// @Param userCertificateCap - User identity certificate and it can provide a valid user address proof        
+    /// @Param userCertificate - User identity certificate and it can provide a valid user address proof
     /// @Param borrowAmount - The amount of the underlying asset to borrow
     /// @Return The vault of borrow asset
     ///
@@ -928,7 +928,7 @@ access(all) contract LendingPool {
             return LendingPool.accountLpTokens.keys
         }
 
-        access(all) fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
+        access(all) view fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
                 from <= to && to < UInt64(LendingPool.accountLpTokens.length):
                     LendingError.ErrorEncode(
@@ -936,21 +936,14 @@ access(all) contract LendingPool {
                         err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let borrowers = &LendingPool.accountLpTokens.keys as &[Address]
-            let list: [Address] = []
-            var i = from
-            while i <= to {
-                list.append(borrowers[i])
-                i = i + 1
-            }
-            return list
+            return LendingPool.accountLpTokens.keys.slice(from: Int(from), upTo: Int(to+1))
         }
 
         access(all) view fun getPoolBorrowerList(): [Address] {
             return LendingPool.accountBorrows.keys
         }
 
-        access(all) fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
+        access(all) view fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address] {
             pre {
                 from <= to && to < UInt64(LendingPool.accountBorrows.length):
                     LendingError.ErrorEncode(
@@ -958,14 +951,7 @@ access(all) contract LendingPool {
                         err: LendingError.ErrorCode.INVALID_PARAMETERS
                     )
             }
-            let borrowers = &LendingPool.accountBorrows.keys as &[Address]
-            let list: [Address] = []
-            var i = from
-            while i <= to {
-                list.append(borrowers[i])
-                i = i + 1
-            }
-            return list
+            return LendingPool.accountBorrows.keys.slice(from: Int(from), upTo: Int(to+1))
         }
 
         access(all) view fun getPoolBorrowRateScaled(): UInt256 {
