@@ -179,17 +179,17 @@ access(all) contract LendingAprSnapshot {
         }
         // Start tracking a new market
         let poolPublicCap = getAccount(poolAddr).capabilities.get<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
-        assert(poolPublicCap != nil && poolPublicCap!.check() == true, message:
+        assert(poolPublicCap.check(), message:
             LendingError.ErrorEncode(
                 msg: "Cannot borrow reference to PoolPublic resource",
                 err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
             )
         )
 
-        self._markets[poolAddr] = AprSnapshot(poolPublicCap: poolPublicCap!)
+        self._markets[poolAddr] = AprSnapshot(poolPublicCap: poolPublicCap)
         emit MarketDataTracked(
             market: poolAddr,
-            marketType: poolPublicCap!.borrow()!.getUnderlyingTypeString(),
+            marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
             startTrackingFrom: getCurrentBlock().timestamp
         )
     }

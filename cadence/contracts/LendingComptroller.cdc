@@ -601,7 +601,7 @@ access(all) contract LendingComptroller {
             }
             // Add a new market with collateralFactor of 0.0 and borrowCap of 0.0
             let poolPublicCap = getAccount(poolAddress).capabilities.get<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
-            assert(poolPublicCap != nil && poolPublicCap!.check() == true, message:
+            assert(poolPublicCap.check(), message:
                 LendingError.ErrorEncode(
                     msg: "Cannot borrow reference to PoolPublic resource",
                     err: LendingError.ErrorCode.CANNOT_ACCESS_POOL_PUBLIC_CAPABILITY
@@ -609,10 +609,10 @@ access(all) contract LendingComptroller {
             )
 
             self.markets[poolAddress] =
-                Market(poolPublicCap: poolPublicCap!, isOpen: false, isMining: false, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: 0.0, supplyCap: 0.0)
+                Market(poolPublicCap: poolPublicCap, isOpen: false, isMining: false, liquidationPenalty: liquidationPenalty, collateralFactor: collateralFactor, borrowCap: 0.0, supplyCap: 0.0)
             emit MarketAdded(
                 market: poolAddress,
-                marketType: poolPublicCap!.borrow()!.getUnderlyingTypeString(),
+                marketType: poolPublicCap.borrow()!.getUnderlyingTypeString(),
                 liquidationPenalty: liquidationPenalty,
                 collateralFactor: collateralFactor
             )
