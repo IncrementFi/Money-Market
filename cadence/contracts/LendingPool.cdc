@@ -63,11 +63,11 @@ access(all) contract LendingPool {
 
     /// Model used to calculate underlying asset's borrow interest rate
     access(all) var interestRateModelAddress: Address?
-    access(all) var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
+    access(self) var interestRateModelCap: Capability<&{LendingInterfaces.InterestRateModelPublic}>?
     
     /// The address of the comptroller contract
     access(all) var comptrollerAddress: Address?
-    access(all) var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
+    access(self) var comptrollerCap: Capability<&{LendingInterfaces.ComptrollerPublic}>?
 
     /// Save underlying asset deposited into this pool
     access(self) let underlyingVault: @{FungibleToken.Vault}

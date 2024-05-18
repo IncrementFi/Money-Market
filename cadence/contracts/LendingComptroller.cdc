@@ -41,7 +41,7 @@ access(all) contract LendingComptroller {
     ///
     access(all) struct Market {
         /// Contains functions to query public market data
-        access(all) let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
+        access(contract) let poolPublicCap: Capability<&{LendingInterfaces.PoolPublic}>
         /// Whether market open
         access(all) var isOpen: Bool
         /// Whether or not liquidity mining is enabled for this market
