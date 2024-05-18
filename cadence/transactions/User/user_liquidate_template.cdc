@@ -12,7 +12,7 @@ transaction(amountLiquidate: UFix64, borrower: Address, seizePoolAddr: Address) 
     let liquidatorAddr: Address
     let informVault: @{FungibleToken.Vault}
 
-    prepare(signer: auth(Storage, Capabilities) &Account) {
+    prepare(signer: auth(Storage, StorageCapabilities) &Account) {
         let flowTokenStoragePath = /storage/flowTokenVault
         self.flowTokenVault  = signer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: flowTokenStoragePath)
             ?? panic("cannot borrow auth(FT.Withdraw) reference to FlowToken Vault")

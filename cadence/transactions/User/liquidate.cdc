@@ -13,7 +13,7 @@ import SwapRouter from 0x2f8af5ed05bbde0d
 // Repaied LIQUIDATEAMOUNT LIQUIDATETOKEN on your behalf
 //
 transaction(repayPoolAddr: Address, seizePoolAddr: Address, amountLiquidate: UFix64, borrower: Address) {
-    prepare(signer: auth(Storage, Capabilities) &Account) {
+    prepare(signer: auth(Storage, StorageCapabilities) &Account) {
         let poolRepayRef = getAccount(repayPoolAddr).capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)!
         let poolSeizeRef = getAccount(seizePoolAddr).capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)!
 
