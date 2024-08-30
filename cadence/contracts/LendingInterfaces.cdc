@@ -7,46 +7,46 @@
 */
 import FungibleToken from "./tokens/FungibleToken.cdc"
 
-pub contract interface LendingInterfaces {
+access(all) contract interface LendingInterfaces {
     
-    pub resource interface PoolPublic {
-        pub fun getPoolAddress(): Address
-        pub fun getUnderlyingTypeString(): String
-        pub fun getUnderlyingAssetType(): String
-        pub fun getUnderlyingToLpTokenRateScaled(): UInt256
-        pub fun getAccountLpTokenBalanceScaled(account: Address): UInt256
+    access(all) resource interface PoolPublic {
+        access(all) view fun getPoolAddress(): Address
+        access(all) view fun getUnderlyingTypeString(): String
+        access(all) view fun getUnderlyingAssetType(): String
+        access(all) view fun getUnderlyingToLpTokenRateScaled(): UInt256
+        access(all) view fun getAccountLpTokenBalanceScaled(account: Address): UInt256
         /// Return snapshot of account borrowed balance in scaled UInt256 format
-        pub fun getAccountBorrowBalanceScaled(account: Address): UInt256
+        access(all) view fun getAccountBorrowBalanceScaled(account: Address): UInt256
         /// Return: [scaledExchangeRate, scaledLpTokenBalance, scaledBorrowBalance, scaledAccountBorrowPrincipal, scaledAccountBorrowIndex]
-        pub fun getAccountSnapshotScaled(account: Address): [UInt256; 5]
-        pub fun getAccountRealtimeScaled(account: Address): [UInt256; 5]
-        pub fun getInterestRateModelAddress(): Address
-        pub fun getPoolReserveFactorScaled(): UInt256
-        pub fun getPoolAccrualBlockNumber(): UInt256
-        pub fun getPoolTotalBorrowsScaled(): UInt256
-        pub fun getPoolBorrowIndexScaled(): UInt256
-        pub fun getPoolTotalSupplyScaled(): UInt256
-        pub fun getPoolCash(): UInt256
-        pub fun getPoolTotalLpTokenSupplyScaled(): UInt256
-        pub fun getPoolTotalReservesScaled(): UInt256
-        pub fun getPoolBorrowRateScaled(): UInt256
-        pub fun getPoolSupplyAprScaled(): UInt256
-        pub fun getPoolBorrowAprScaled(): UInt256
-        pub fun getPoolSupplierCount(): UInt256
-        pub fun getPoolBorrowerCount(): UInt256
-        pub fun getPoolSupplierList(): [Address]
-        pub fun getPoolBorrowerList(): [Address]
-        pub fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
-        pub fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
-        pub fun getFlashloanRateBps(): UInt64
+        access(all) view fun getAccountSnapshotScaled(account: Address): [UInt256; 5]
+        access(all) view fun getAccountRealtimeScaled(account: Address): [UInt256; 5]
+        access(all) view fun getInterestRateModelAddress(): Address
+        access(all) view fun getPoolReserveFactorScaled(): UInt256
+        access(all) view fun getPoolAccrualBlockNumber(): UInt256
+        access(all) view fun getPoolTotalBorrowsScaled(): UInt256
+        access(all) view fun getPoolBorrowIndexScaled(): UInt256
+        access(all) view fun getPoolTotalSupplyScaled(): UInt256
+        access(all) view fun getPoolCash(): UInt256
+        access(all) view fun getPoolTotalLpTokenSupplyScaled(): UInt256
+        access(all) view fun getPoolTotalReservesScaled(): UInt256
+        access(all) view fun getPoolBorrowRateScaled(): UInt256
+        access(all) view fun getPoolSupplyAprScaled(): UInt256
+        access(all) view fun getPoolBorrowAprScaled(): UInt256
+        access(all) view fun getPoolSupplierCount(): UInt256
+        access(all) view fun getPoolBorrowerCount(): UInt256
+        access(all) view fun getPoolSupplierList(): [Address]
+        access(all) view fun getPoolBorrowerList(): [Address]
+        access(all) view fun getPoolSupplierSlicedList(from: UInt64, to: UInt64): [Address]
+        access(all) view fun getPoolBorrowerSlicedList(from: UInt64, to: UInt64): [Address]
+        access(all) view fun getFlashloanRateBps(): UInt64
         
         /// Accrue pool interest and checkpoint latest data to pool states
-        pub fun accrueInterest()
-        pub fun accrueInterestReadonly(): [UInt256; 4]
-        pub fun getPoolCertificateType(): Type
+        access(all) fun accrueInterest()
+        access(all) view fun accrueInterestReadonly(): [UInt256; 4]
+        access(all) view fun getPoolCertificateType(): Type
         /// Note: Check to ensure @callerPoolCertificate's run-time type is another LendingPool's.IdentityCertificate,
         /// so that this public seize function can only be invoked by another LendingPool contract
-        pub fun seize(
+        access(all) fun seize(
             seizerPoolCertificate: @{LendingInterfaces.IdentityCertificate},
             seizerPool: Address,
             liquidator: Address,
@@ -54,90 +54,90 @@ pub contract interface LendingInterfaces {
             scaledBorrowerCollateralLpTokenToSeize: UInt256
         )
 
-        pub fun supply(supplierAddr: Address, inUnderlyingVault: @FungibleToken.Vault)
-        pub fun redeem(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numLpTokenToRedeem: UFix64): @FungibleToken.Vault
-        pub fun redeemUnderlying(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, numUnderlyingToRedeem: UFix64): @FungibleToken.Vault
-        pub fun borrow(userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>, borrowAmount: UFix64): @FungibleToken.Vault
-        pub fun repayBorrow(borrower: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
-        pub fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @FungibleToken.Vault): @FungibleToken.Vault?
-        pub fun flashloan(executorCap: Capability<&{LendingInterfaces.FlashLoanExecutor}>, requestedAmount: UFix64, params: {String: AnyStruct}) {return}
+        access(all) fun supply(supplierAddr: Address, inUnderlyingVault: @{FungibleToken.Vault})
+        access(all) fun redeem(userCertificate: &{LendingInterfaces.IdentityCertificate}, numLpTokenToRedeem: UFix64): @{FungibleToken.Vault}
+        access(all) fun redeemUnderlying(userCertificate: &{LendingInterfaces.IdentityCertificate}, numUnderlyingToRedeem: UFix64): @{FungibleToken.Vault}
+        access(all) fun borrow(userCertificate: &{LendingInterfaces.IdentityCertificate}, borrowAmount: UFix64): @{FungibleToken.Vault}
+        access(all) fun repayBorrow(borrower: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}?
+        access(all) fun liquidate(liquidator: Address, borrower: Address, poolCollateralizedToSeize: Address, repayUnderlyingVault: @{FungibleToken.Vault}): @{FungibleToken.Vault}?
+        access(all) fun flashloan(executor: &{LendingInterfaces.FlashLoanExecutor}, requestedAmount: UFix64, params: {String: AnyStruct}) {return}
     }
 
-    pub resource interface PoolAdminPublic {
-        pub fun setInterestRateModel(newInterestRateModelAddress: Address)
-        pub fun setReserveFactor(newReserveFactor: UFix64)
-        pub fun setPoolSeizeShare(newPoolSeizeShare: UFix64)
-        pub fun setComptroller(newComptrollerAddress: Address)
+    access(all) resource interface PoolAdminPublic {
+        access(all) fun setInterestRateModel(newInterestRateModelAddress: Address)
+        access(all) fun setReserveFactor(newReserveFactor: UFix64)
+        access(all) fun setPoolSeizeShare(newPoolSeizeShare: UFix64)
+        access(all) fun setComptroller(newComptrollerAddress: Address)
         /// A pool can only be initialized once
-        pub fun initializePool(reserveFactor: UFix64, poolSeizeShare: UFix64, interestRateModelAddress: Address)
-        pub fun withdrawReserves(reduceAmount: UFix64): @FungibleToken.Vault
-        pub fun setFlashloanRateBps(rateBps: UInt64)
-        pub fun setFlashloanOpen(isOpen: Bool)
+        access(all) fun initializePool(reserveFactor: UFix64, poolSeizeShare: UFix64, interestRateModelAddress: Address)
+        access(all) fun withdrawReserves(reduceAmount: UFix64): @{FungibleToken.Vault}
+        access(all) fun setFlashloanRateBps(rateBps: UInt64)
+        access(all) fun setFlashloanOpen(isOpen: Bool)
     }
 
-    pub resource interface FlashLoanExecutor {
-        pub fun executeAndRepay(loanedToken: @FungibleToken.Vault, params: {String: AnyStruct}): @FungibleToken.Vault
+    access(all) resource interface FlashLoanExecutor {
+        access(all) fun executeAndRepay(loanedToken: @{FungibleToken.Vault}, params: {String: AnyStruct}): @{FungibleToken.Vault}
     }
     
-    pub resource interface InterestRateModelPublic {
+    access(all) resource interface InterestRateModelPublic {
         /// exposing model specific fields, e.g.: modelName, model params.
-        pub fun getInterestRateModelParams(): {String: AnyStruct}
+        access(all) view fun getInterestRateModelParams(): {String: AnyStruct}
         /// pool's capital utilization rate (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        access(all) view fun getUtilizationRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
         /// Get the borrow interest rate per block (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
+        access(all) view fun getBorrowRate(cash: UInt256, borrows: UInt256, reserves: UInt256): UInt256
         /// Get the supply interest rate per block (scaled up by scaleFactor, e.g. 1e18)
-        pub fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
+        access(all) view fun getSupplyRate(cash: UInt256, borrows: UInt256, reserves: UInt256, reserveFactor: UInt256): UInt256
         /// Get the number of blocks per year.
-        pub fun getBlocksPerYear(): UInt256
+        access(all) view fun getBlocksPerYear(): UInt256
     }
 
     /// IdentityCertificate resource which is used to identify account address or perform caller authentication
-    pub resource interface IdentityCertificate {}
+    access(all) resource interface IdentityCertificate {}
 
-    pub resource interface OraclePublic {
+    access(all) resource interface OraclePublic {
         /// Get the given pool's underlying asset price denominated in USD.
         /// Note: Return value of 0.0 means the given pool's price feed is not available.
-        pub fun getUnderlyingPrice(pool: Address): UFix64
+        access(all) view fun getUnderlyingPrice(pool: Address): UFix64
 
         /// Return latest reported data in [timestamp, priceData]
-        pub fun latestResult(pool: Address): [UFix64; 2]
+        access(all) view fun latestResult(pool: Address): [UFix64; 2]
 
         /// Return supported markets' addresses
-        pub fun getSupportedFeeds(): [Address]
+        access(all) view fun getSupportedFeeds(): [Address]
     }
 
-    pub resource interface ComptrollerPublic {
+    access(all) resource interface ComptrollerPublic {
         /// Return error string on condition (or nil)
-        pub fun supplyAllowed(
+        access(all) fun supplyAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             supplierAddress: Address,
             supplyUnderlyingAmountScaled: UInt256
         ): String?
 
-        pub fun redeemAllowed(
+        access(all) fun redeemAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             redeemerAddress: Address,
             redeemLpTokenAmountScaled: UInt256
         ): String?
 
-        pub fun borrowAllowed(
+        access(all) fun borrowAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             borrowUnderlyingAmountScaled: UInt256
         ): String?
         
-        pub fun repayAllowed(
+        access(all) fun repayAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolAddress: Address,
             borrowerAddress: Address,
             repayUnderlyingAmountScaled: UInt256
         ): String?
 
-        pub fun liquidateAllowed(
+        access(all) fun liquidateAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             poolBorrowed: Address,
             poolCollateralized: Address,
@@ -145,7 +145,7 @@ pub contract interface LendingInterfaces {
             repayUnderlyingAmountScaled: UInt256
         ): String?
 
-        pub fun seizeAllowed(
+        access(all) fun seizeAllowed(
             poolCertificate: @{LendingInterfaces.IdentityCertificate},
             borrowPool: Address,
             collateralPool: Address,
@@ -154,24 +154,24 @@ pub contract interface LendingInterfaces {
             seizeCollateralPoolLpTokenAmountScaled: UInt256
         ): String?
 
-        pub fun callerAllowed(
+        access(all) fun callerAllowed(
             callerCertificate: @{LendingInterfaces.IdentityCertificate},
             callerAddress: Address
         ): String?
 
-        pub fun calculateCollateralPoolLpTokenToSeize(
+        access(all) fun calculateCollateralPoolLpTokenToSeize(
             borrower: Address,
             borrowPool: Address,
             collateralPool: Address,
             actualRepaidBorrowAmountScaled: UInt256
         ): UInt256
 
-        pub fun getUserCertificateType(): Type
-        pub fun getPoolPublicRef(poolAddr: Address): &{PoolPublic}
-        pub fun getAllMarkets(): [Address]
-        pub fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
-        pub fun getUserMarkets(userAddr: Address): [Address]
-        pub fun getUserCrossMarketLiquidity(userAddr: Address): [String; 3]
-        pub fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct}
+        access(all) view fun getUserCertificateType(): Type
+        access(all) view fun getPoolPublicRef(poolAddr: Address): &{PoolPublic}
+        access(all) view fun getAllMarkets(): [Address]
+        access(all) view fun getMarketInfo(poolAddr: Address): {String: AnyStruct}
+        access(all) view fun getUserMarkets(userAddr: Address): [Address]
+        access(all) view fun getUserCrossMarketLiquidity(userAddr: Address): [String; 3]
+        access(all) view fun getUserMarketInfo(userAddr: Address, poolAddr: Address): {String: AnyStruct}
     }
 }

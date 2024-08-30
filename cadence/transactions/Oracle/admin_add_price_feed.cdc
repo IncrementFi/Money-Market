@@ -1,13 +1,12 @@
 import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 
 transaction(poolAddress: Address, maxCapacity: Int) {
-    prepare(adminAccount: AuthAccount) {
-        let adminRef = adminAccount
-            .borrow<&SimpleOracle.Admin>(from: SimpleOracle.OracleAdminStoragePath)
-            ?? panic("Could not borrow reference to Oracle Admin")
-        let oracleCap = adminAccount
-            .getCapability<&SimpleOracle.Oracle>(SimpleOracle.OraclePrivatePath)
+    prepare(adminAccount: auth(BorrowValue) &Account) {
+        let adminRef = adminAccount.storage.borrow<&SimpleOracle.Admin>(from: SimpleOracle.OracleAdminStoragePath)
+            ?? panic("Cannot borrow reference to Oracle Admin")
+        let oracleRef = adminAccount.storage.borrow<&SimpleOracle.Oracle>(from: SimpleOracle.OracleStoragePath)
+            ?? panic("Cannot borrow reference to Oracle")
 
-        adminRef.addPriceFeed(oracleCap: oracleCap, pool: poolAddress, capacity: maxCapacity)
+        adminRef.addPriceFeed(oracleRef: oracleRef, pool: poolAddress, capacity: maxCapacity)
     }
 }

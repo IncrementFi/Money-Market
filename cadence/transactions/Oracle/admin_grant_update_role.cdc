@@ -1,23 +1,15 @@
 import SimpleOracle from "../../contracts/SimpleOracle.cdc"
 
 transaction(updater: Address) {
-    let capabilityPrivatePath: CapabilityPath
-    let updaterCapability: Capability<&SimpleOracle.Oracle{SimpleOracle.DataUpdater}>
+    let updaterCapability: Capability<&{SimpleOracle.DataUpdater}>
 
-    prepare(adminAccount: AuthAccount) {
-        // Note!: Admin needs to keep track of this updaterCapability paths
-        self.capabilityPrivatePath = /private/oracleUpdater_001
-        adminAccount.unlink(self.capabilityPrivatePath)
-        self.updaterCapability = adminAccount.link<&SimpleOracle.Oracle{SimpleOracle.DataUpdater}>(
-            self.capabilityPrivatePath,
-            target: SimpleOracle.OracleStoragePath
-        ) ?? panic("Could not create private updateCapability linked to Oracle resource")
+    prepare(adminAccount: auth(Capabilities) &Account) {
+        self.updaterCapability = adminAccount.capabilities.storage.issue<&{SimpleOracle.DataUpdater}>(SimpleOracle.OracleStoragePath)
     }
 
     execute {
-        let capabilityReceiver = getAccount(updater)
-            .getCapability<&SimpleOracle.OracleUpdateProxy{SimpleOracle.OracleUpdateProxyPublic}>(SimpleOracle.UpdaterPublicPath)
-            .borrow() ?? panic("Could not borrow reference to updater")
+        let capabilityReceiver = getAccount(updater).capabilities.borrow<&{SimpleOracle.OracleUpdateProxyPublic}>(SimpleOracle.UpdaterPublicPath)
+            ?? panic("Could not borrow reference to updater")
 
         capabilityReceiver.setUpdaterCapability(cap: self.updaterCapability)
     }

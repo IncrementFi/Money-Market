@@ -3,17 +3,23 @@ import FungibleToken from "../../contracts/tokens/FungibleToken.cdc"
 
 transaction(mintAmount: UFix64) {
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage, Capabilities) &Account) {
         log("Transaction Start ---------------")
         log("user add fusd".concat(mintAmount.toString()))
         let fusdStoragePath = /storage/fusdVault
-        var fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        var fusdVault = signer.storage.borrow<&FUSD.Vault>(from: fusdStoragePath)
         if fusdVault == nil {
-            signer.save(<-FUSD.createEmptyVault(), to: fusdStoragePath)
-            signer.link<&FUSD.Vault{FungibleToken.Receiver}>(/public/fusdReceiver, target: fusdStoragePath)
-            signer.link<&FUSD.Vault{FungibleToken.Balance}>(/public/fusdBalance, target: fusdStoragePath)
+            signer.storage.save(<-FUSD.createEmptyVault(vaultType: Type<@FUSD.Vault>()), to: fusdStoragePath)
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Receiver}>(fusdStoragePath),
+                at: /public/fusdReceiver
+            )
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Balance}>(fusdStoragePath),
+                at: /public/fusdBalance
+            )
         }
-        fusdVault = signer.borrow<&FUSD.Vault>(from: fusdStoragePath)
+        fusdVault = signer.storage.borrow<&FUSD.Vault>(from: fusdStoragePath)
         fusdVault!.deposit(from: <-FUSD.test_minter.mintTokens(amount: mintAmount))
         log("End -----------------------------")
     }

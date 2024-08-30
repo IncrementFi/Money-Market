@@ -2,7 +2,7 @@ import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingPool from "../../contracts/LendingPool.cdc"
 
-pub fun main(): {String: AnyStruct} {
+access(all) fun main(): {String: AnyStruct} {
     var res:{String: AnyStruct} = {
         "BlockNumber": LendingPool.accrualBlockNumber.toString(),
         "BorrowIndex": LendingPool.scaledBorrowIndex.toString(),

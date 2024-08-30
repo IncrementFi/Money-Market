@@ -8,33 +8,35 @@ import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 
 transaction(amountBorrow: UFix64) {
     let flowTokenVault: &FlowToken.Vault
-    let userCertificateCap: Capability<&{LendingInterfaces.IdentityCertificate}>
+    let userCertificate: &{LendingInterfaces.IdentityCertificate}
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage, Capabilities) &Account) {
         let flowTokenStoragePath = /storage/flowTokenVault
-        if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-            signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
-            signer.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
-            signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
+        if (signer.storage.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
+            signer.storage.save(<-FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>()), to: flowTokenStoragePath)
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Receiver}>(flowTokenStoragePath),
+                at: /public/flowTokenReceiver
+            )
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Balance}>(flowTokenStoragePath),
+                at: /public/flowTokenBalance
+            )
         }
-        self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
+        self.flowTokenVault = signer.storage.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
 
         // Get protocol-issued user certificate
-        if (signer.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
-            destroy <-signer.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
-            
+        if (signer.storage.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath) == nil) {
+            destroy <-signer.storage.load<@AnyResource>(from: LendingConfig.UserCertificateStoragePath)
             let userCertificate <- LendingComptroller.IssueUserCertificate()
-            signer.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
-            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
+            signer.storage.save(<-userCertificate, to: LendingConfig.UserCertificateStoragePath)
         }
-        if (signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath).check()==false) {
-            signer.link<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath, target: LendingConfig.UserCertificateStoragePath)
-        }
-        self.userCertificateCap = signer.getCapability<&{LendingInterfaces.IdentityCertificate}>(LendingConfig.UserCertificatePrivatePath)
+        self.userCertificate = signer.storage.borrow<&{LendingInterfaces.IdentityCertificate}>(from: LendingConfig.UserCertificateStoragePath)
+            ?? panic("cannot borrow reference to UserCertificate")
     }
 
     execute {
-        let borrowVault <- LendingPool.borrow(userCertificateCap: self.userCertificateCap, borrowAmount: amountBorrow)
+        let borrowVault <- LendingPool.borrow(userCertificate: self.userCertificate, borrowAmount: amountBorrow)
         self.flowTokenVault.deposit(from: <-borrowVault)
     }
 }

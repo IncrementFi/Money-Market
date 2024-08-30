@@ -5,17 +5,24 @@ import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 import LendingConfig from "../../contracts/LendingConfig.cdc"
 
 transaction() {
-    let flowTokenVault: &FlowToken.Vault
+    let flowTokenVault: auth(FungibleToken.Withdraw) &FlowToken.Vault
     let borrowerAddress: Address
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage, Capabilities) &Account) {
         let flowTokenStoragePath = /storage/flowTokenVault
-        if (signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
-            signer.save(<-FlowToken.createEmptyVault(), to: flowTokenStoragePath)
-            signer.link<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver, target: flowTokenStoragePath)
-            signer.link<&FlowToken.Vault{FungibleToken.Balance}>(/public/flowTokenBalance, target: flowTokenStoragePath)
+        if (signer.storage.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) == nil) {
+            signer.storage.save(<-FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>()), to: flowTokenStoragePath)
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Receiver}>(flowTokenStoragePath),
+                at: /public/flowTokenReceiver
+            )
+            signer.capabilities.publish(
+                signer.capabilities.storage.issue<&{FungibleToken.Balance}>(flowTokenStoragePath),
+                at: /public/flowTokenBalance
+            )
         }
-        self.flowTokenVault = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
+        self.flowTokenVault = signer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: flowTokenStoragePath)
+            ?? panic("cannot borrow auth(FT.Withdraw) reference to FlowToken Vault")
         self.borrowerAddress = signer.address
     }
 

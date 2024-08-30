@@ -8,16 +8,17 @@ import LendingPool from "../../contracts/LendingPool.cdc"
 // Repaied LIQUIDATEAMOUNT LIQUIDATETOKEN on your behalf
 //
 transaction(amountLiquidate: UFix64, borrower: Address, seizePoolAddr: Address) {
-    let flowTokenVault: &FlowToken.Vault
+    let flowTokenVault: auth(FungibleToken.Withdraw) &FlowToken.Vault
     let liquidatorAddr: Address
-    let informVault: @FungibleToken.Vault
+    let informVault: @{FungibleToken.Vault}
 
-    prepare(signer: AuthAccount) {
+    prepare(signer: auth(Storage, StorageCapabilities) &Account) {
         let flowTokenStoragePath = /storage/flowTokenVault
-        self.flowTokenVault  = signer.borrow<&FlowToken.Vault>(from: flowTokenStoragePath) ?? panic("cannot borrow reference to FlowToken Vault")
+        self.flowTokenVault  = signer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: flowTokenStoragePath)
+            ?? panic("cannot borrow auth(FT.Withdraw) reference to FlowToken Vault")
         self.liquidatorAddr = signer.address
 
-        self.informVault <- signer.borrow<&FungibleToken.Vault>(from: /storage/flowTokenVault)!.withdraw(amount: 0.00000001)
+        self.informVault <- signer.storage.borrow<auth(FungibleToken.Withdraw) &{FungibleToken.Vault}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.00000001)
     }
 
     execute {
@@ -36,8 +37,7 @@ transaction(amountLiquidate: UFix64, borrower: Address, seizePoolAddr: Address) 
         }
 
         // inform
-        let flowTokenReceiverRef = getAccount(borrower).getCapability(/public/flowTokenReceiver).borrow<&{FungibleToken.Receiver}>()!
+        let flowTokenReceiverRef = getAccount(borrower).capabilities.borrow<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)!
         flowTokenReceiverRef.deposit(from: <-self.informVault)
     }
 }
- 

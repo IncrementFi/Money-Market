@@ -9,7 +9,7 @@ import LendingAprSnapshot from "../../contracts/LendingAprSnapshot.cdc"
             borrowApr: UFix64
         }
 */
-pub fun main(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [LendingAprSnapshot.Observation] {
+access(all) fun main(poolAddr: Address, scale: UInt8, plotPoints: UInt64): [LendingAprSnapshot.Observation] {
     return LendingAprSnapshot.queryHistoricalAprData(
         poolAddr: poolAddr,
         scale: scale,

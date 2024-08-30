@@ -3,8 +3,8 @@ import LendingConfig from "../../contracts/LendingConfig.cdc"
 import LendingInterfaces from "../../contracts/LendingInterfaces.cdc"
 
 transaction(feeTo: Address) {
-    prepare(poolAccount: AuthAccount) {
-        let poolPublic = getAccount(poolAccount.address).getCapability<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath).borrow()
+    prepare(poolAccount: auth(BorrowValue) &Account) {
+        let poolPublic = getAccount(poolAccount.address).capabilities.borrow<&{LendingInterfaces.PoolPublic}>(LendingConfig.PoolPublicPublicPath)
             ?? panic("cannot borrow reference to PoolPublic")
         let flowReceiverPath = /public/flowTokenReceiver
         let usdcReceiverPath = /public/USDCVaultReceiver
@@ -27,9 +27,9 @@ transaction(feeTo: Address) {
                 panic("non-supported LendingPool")
         }
 
-        let tokenReceiverRef = getAccount(feeTo).getCapability(receiverPath).borrow<&{FungibleToken.Receiver}>()
+        let tokenReceiverRef = getAccount(feeTo).capabilities.borrow<&{FungibleToken.Receiver}>(receiverPath)
             ?? panic("cannot borrow receiver reference to the recipient's Vault")
-        let poolAdmin = poolAccount.borrow<&{LendingInterfaces.PoolAdminPublic}>(from: /storage/incrementLendingPoolAdmin)
+        let poolAdmin = poolAccount.storage.borrow<&{LendingInterfaces.PoolAdminPublic}>(from: /storage/incrementLendingPoolAdmin)
             ?? panic("cannot borrow reference to pool admin")
         tokenReceiverRef.deposit(from: <-poolAdmin.withdrawReserves(reduceAmount: UFix64.max))
     }
